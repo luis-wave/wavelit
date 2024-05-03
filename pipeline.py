@@ -1,47 +1,58 @@
 import logging
+
+import matplotlib.pyplot as plt
+import seaborn as sns
 import mne
-
-from matplotlib.collections import LineCollection
-from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
-from mywaveanalytics.libraries import (
-    filters,
-    references,
-)
-
-from mywaveanalytics.utils.params import ELECTRODE_GROUPING
-
 import numpy as np
 import pandas as pd
-
+from matplotlib.collections import LineCollection
+from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
+from mywaveanalytics.libraries import filters, references
+from mywaveanalytics.utils.params import ELECTRODE_GROUPING
 from scipy.integrate import simps
-from scipy.signal import welch, find_peaks, peak_prominences
+from scipy.signal import find_peaks, peak_prominences, welch
 
 log = logging.getLogger(__name__)
 
 
 class PersistPipeline:
-    def __init__(self, mw_object, time_win=20, ref="le"):
+    def __init__(self, mw_object, time_win=5, ref="le"):
         self.mw_object = mw_object.copy()
+        self.ref = ref
         self.sampling_rate = mw_object.eeg.info["sfreq"]
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
 
         # Flatten psds for DataFrame storage
-        flattened_psds = self.psds.reshape(self.psds.shape[0], -1)  # Flattening epochs, channels, and frequency bins
+        flattened_psds = self.psds.reshape(
+            self.psds.shape[0], -1
+        )  # Flattening epochs, channels, and frequency bins
 
-        self.data = pd.DataFrame({
-            "flattened_psds": list(flattened_psds)  # Store flattened psds
-        })
+        self.data = pd.DataFrame(
+            {"flattened_psds": list(flattened_psds)}  # Store flattened psds
+        )
 
         # Reshape and calculate scores
-        self.data['score'] = self.data['flattened_psds'].apply(
-            lambda flattened_psd: self.get_total_sync_score(self.freqs, np.reshape(flattened_psd, self.psds.shape[1:]))
+        self.data["score"] = self.data["flattened_psds"].apply(
+            lambda flattened_psd: self.get_total_sync_score(
+                self.freqs, np.reshape(flattened_psd, self.psds.shape[1:])
+            )
+        )
+
+        self.data["alpha"] = self.data["flattened_psds"].apply(
+            lambda flattened_psd: get_power(
+                freqs = self.freqs, psd = np.reshape(flattened_psd, self.psds.shape[1:])
+            )
         )
 
         # Sort the DataFrame by score in descending order
-        self.data = self.data.sort_values(by='score', ascending=False)
+        self.data = self.data.sort_values(by="alpha", ascending=False)
 
-    def preprocess_data(self, time_win=20, ref=None):
+
+        for idx in self.data.index:
+            self.combined_plot(epoch_id=idx)
+
+    def preprocess_data(self, time_win=3, ref=None):
         filters.eeg_filter(self.mw_object, 1, None)
         filters.notch(self.mw_object)
         filters.resample(self.mw_object)
@@ -53,7 +64,9 @@ class PersistPipeline:
         if ref == "cz":
             raw = references.centroid(self.mw_object)
 
-        epochs = mne.make_fixed_length_epochs(raw, duration=time_win, preload=True, overlap=time_win - 1)
+        epochs = mne.make_fixed_length_epochs(
+            raw, duration=time_win, preload=True, overlap=time_win - 1
+        )
         return epochs
 
     def calculate_psds(self):
@@ -65,7 +78,9 @@ class PersistPipeline:
         alpha_range = (8, 13)
         frequency_prominence_products = []
         for channel_powers in power_spectral_density:
-            alpha_mask = (eeg_frequencies >= alpha_range[0]) & (eeg_frequencies <= alpha_range[1])
+            alpha_mask = (eeg_frequencies >= alpha_range[0]) & (
+                eeg_frequencies <= alpha_range[1]
+            )
             alpha_frequencies = eeg_frequencies[alpha_mask]
             alpha_powers = channel_powers[alpha_mask]
             peaks, _ = find_peaks(alpha_powers)
@@ -73,4 +88,297 @@ class PersistPipeline:
                 continue
             prominences = peak_prominences(alpha_powers, peaks)[0]
             frequency_prominence_products.extend(alpha_frequencies[peaks] * prominences)
-        return np.median(frequency_prominence_products) if frequency_prominence_products else 0
+        return (
+            np.median(frequency_prominence_products)
+            if frequency_prominence_products
+            else 0
+        )
+
+    def combined_plot(
+        self,
+        epoch_id=1,
+    ):
+        epochs = self.epochs[epoch_id]
+        ref = self.ref
+
+        event_times = self.epochs.events[:, 0] / self.sampling_rate
+
+        # Align channel order to what the lab is used to if applicable
+        if ref != "tcp":
+            new_order = [
+                "Fz",
+                "Cz",
+                "Pz",
+                "Fp1",
+                "Fp2",
+                "F3",
+                "F4",
+                "F7",
+                "F8",
+                "C3",
+                "C4",
+                "T3",
+                "T4",
+                "P3",
+                "P4",
+                "T5",
+                "T6",
+                "O1",
+                "O2",
+            ]
+        if ref == "cz":
+            epochs = epochs.drop_channels(["Cz"])
+            new_order.remove("Cz")
+
+        # Calculate FFT and plot using Welch's method
+        data = epochs.get_data(picks="eeg", units="uV")[0]
+        fs = self.sampling_rate
+        dmin = data.min()  # smallest value in the array
+        dmax = np.percentile(data, 80)  # largest value in the array
+
+        n_rows, n_samples = data.shape
+
+        event_start = event_times[epoch_id]
+
+        rec_date = epochs.info["meas_date"].date().strftime("%d-%b-%Y")
+
+        n_seconds = n_samples / fs
+
+        tmin = epochs.tmin  # start time of each epoch in seconds
+        tmax = epochs.tmax  # end time of each epoch in seconds
+        t = np.linspace(event_start, event_start + n_seconds, n_samples)
+
+        # t = np.arange(0, n_samples / fs, 1/fs)   # Adjusted time vector
+
+        # Prepare figure and axis grid
+        fig = plt.figure(figsize=(24, 9))
+        gs = fig.add_gridspec(
+            n_rows, 2, width_ratios=[2, 1], wspace=-0.2
+        )  # Width ratio set to 2:1
+
+        suffix_map = {
+            "tcp": "- TCP-Referential Montage 1-25Hz Bandpass Filter",
+            "cz": "- Cz-Referential Montage 1-25Hz Bandpass Filter",
+            "le": "1-25Hz Bandpass Filter",
+        }
+
+        channel_suffix_map = {"tcp": "", "cz": "-Cz", "le": "-A1A2"}
+
+        channels = epochs.pick_types(eeg=True).ch_names
+        if ref != "tcp":
+            epochs = epochs.reorder_channels(new_order)
+            channels = epochs.pick_types(eeg=True).ch_names
+        channels = [i + channel_suffix_map[ref] for i in channels]
+
+        plot_title = f"{rec_date} {suffix_map[ref]}"
+
+        fig.text(
+            0.14,
+            0.99,
+            plot_title,
+            fontsize=34,
+            fontweight="bold",
+            va="top",
+            ha="left",
+            **{"fontname": "DejaVu Sans"},
+        )
+
+        dr = (dmax - dmin) * 0.7  # Crowd them a bit.
+        y0 = dmin
+        y1 = (n_rows - 1) * dr + dmax
+        offsets = np.zeros((n_rows, 2), dtype=float)
+        offsets[:, 1] = np.linspace(y0, y1, n_rows)
+        colors = sns.cubehelix_palette(
+            len(channels),
+            rot=-0.20,
+            light=0.90,
+            dark=0.90,
+            hue=1.00,
+            gamma=2.8,
+            start=0,
+        )
+
+        # Reverse the array
+        # data = np.flip(data, axis=0)  # Reverse the order of the data
+
+        linecolor = "slategray"
+
+        # Create subplot for each channel
+        for i in range(n_rows):
+            # Time series plot
+            ax_time = fig.add_subplot(gs[i, 0])
+            pos = ax_time.get_position()
+            pos.x1 = 0.7  # adjust right end
+            ax_time.set_position(pos)
+            ax_time.plot(t, data[i, :] + offsets[i, 1], color="k")
+
+            for s in np.arange(event_start, event_start + n_seconds):
+                ax_time.axvline(s, 0, 1, color=linecolor, linestyle="--", alpha=0.75)
+
+            eeg_scale = round(np.max(data[i, :]), 1)
+            if i == n_rows - 1:
+                ax_time.set_xlabel("Time (s)")
+                ax_time.set_yticks([])
+            else:
+                ax_time.set_xticks([])
+                ax_time.set_yticks([])
+                ax_time.set_yticklabels([])
+
+            # Makes time series amplitude text dyanmic with the width of the plot
+            text_adjust = 20 / n_seconds
+
+            # remove borders, axis ticks, and labels
+            ax_time.set_yticklabels([])
+            ax_time.set_ylabel("")
+            ax_time.text(
+                event_start + tmin - 0.6 / text_adjust,
+                offsets[i][1],
+                channels[i],
+                fontweight="regular",
+                fontsize=9,
+                ha="center",
+                **{"fontname": "DejaVu Sans"},
+            )
+            ax_time.text(
+                event_start + tmax + 0.50 / text_adjust,
+                offsets[i][1],
+                f"{eeg_scale} µV",
+                fontweight="regular",
+                fontsize=8,
+                ha="center",
+                **{"fontname": "DejaVu Sans"},
+            )
+            # set x-axis formatter for ax_time
+            ax_time.xaxis.set_major_formatter(FuncFormatter(format_func))
+            ax_time.yaxis.set_label_coords(-0.05, 0.5)  # Adjust label position
+
+            ax_time.spines["top"].set_visible(False)
+            ax_time.spines["right"].set_visible(False)
+            ax_time.spines["bottom"].set_visible(i == n_rows - 1)
+            ax_time.spines["left"].set_visible(False)
+
+            # Calculate FFT and plot using Welch's method
+            freqs, psd = self.freqs, self.psds[epoch_id][i]
+
+            # idx = np.where(freqs > 2.2)
+
+            # freqs = freqs[idx]
+            # psd = psd[:,idx]
+
+
+            psd = smooth_psd(psd, window_len=3)
+
+            # Select the range of frequencies of interest
+            psd_range = psd[(freqs >= 2.2) & (freqs <= 25)]
+
+            # FFT plot
+            ax_fft = fig.add_subplot(gs[i, 1])
+            pos = ax_fft.get_position()
+            pos.x0 = 0.7  # adjust left start
+            ax_fft.set_position(pos)
+
+            ax_fft.fill_between(
+                freqs, psd, color="#00FFFF"
+            )  #  "#00ffff" # fill the area under the graph
+            ax_fft.plot(freqs, psd, color="#000000", linewidth=1.5)  # 000000
+            ax_fft.set_xlim([0.75, 25])
+            ax_fft.set_ylim([0, psd_range.max()])
+
+            ax_fft.axvline(4, 0, 1, color=linecolor, linestyle="--", alpha=0.75)
+            ax_fft.axvline(8, 0, 1, color=linecolor, linestyle="--", alpha=0.75)
+            ax_fft.axvline(13, 0, 1, color=linecolor, linestyle="--", alpha=0.75)
+
+            psd_ylimit = psd_range.max()
+
+            psd_ylimit = round(psd_ylimit, 1)
+
+            if i == 0:
+                ax_fft.text(
+                    1.00,
+                    0.95,
+                    "\u03BCV\u00B2/Hz",
+                    verticalalignment="top",
+                    horizontalalignment="left",
+                    transform=ax_fft.transAxes,
+                    fontsize=9,
+                    bbox=dict(facecolor="none", edgecolor="none", boxstyle="square"),
+                )
+
+            ax_fft.text(
+                26.5,
+                0,
+                f"{psd_ylimit}",
+                fontweight="regular",
+                fontsize=8,
+                ha="center",
+                **{"fontname": "DejaVu Sans"},
+            )
+
+            if i == n_rows - 1:
+                ax_fft.set_xlabel("Frequency (Hz)")
+                ax_fft.set_yticks([])
+                ax_fft.set_xticks(np.arange(2, 25, 2))
+            else:
+                ax_fft.set_xticks([])
+                ax_fft.set_yticks([])
+
+            ax_fft.spines["top"].set_visible(False)
+            ax_fft.spines["right"].set_visible(False)
+            ax_fft.spines["bottom"].set_visible(i == n_rows - 1)
+            ax_fft.spines["left"].set_visible(False)
+
+            spines = ["top", "right", "left", "bottom"]
+            for s in spines:
+                ax_time.spines[s].set_visible(False)
+                ax_fft.spines[s].set_visible(False)
+
+        # gs.update(wspace= -0.2, hspace= 0)
+        plt.tight_layout()
+        # plt.savefig(save)
+        plt.show()
+
+
+def format_func(value, tick_number):
+    # convert second to minute and second, return as string 'mm:ss'
+    mins, secs = divmod(int(value), 60)
+    return f"{mins:02}:{secs:02}"
+
+
+def smooth_psd(psd, window_len=10):
+    """Smooth the PSD data using a moving average.
+
+    Parameters
+    ----------
+    psd : 1-D array
+        Power spectral density data.
+    window_len : int, optional
+        The length of the smoothing window.
+
+    Returns
+    -------
+    smoothed_psd : 1-D array
+        Smoothed PSD data.
+    """
+    window = np.ones(int(window_len)) / float(window_len)
+    smoothed_psd = np.convolve(psd, window, "same")
+
+    return smoothed_psd
+
+
+def get_power(psd, freqs, f_range=[8, 13]):
+    """Calculate the ratio between a frequency range and total (0-100 Hz)
+    area under the curve.
+
+    :param psd: (numpy.ndarray) power spectral densities.
+    :param freqs: (numpy.ndarray) frequencies
+    :return: delta relative power, expressed as a ratio.
+    """
+
+    fl, fh = f_range
+    band_idx = np.where((freqs >= fl) & (freqs <= fh))[0]
+
+    psd = psd * (10**12)
+    band_power = simps(psd[:, band_idx], dx=freqs[1] - freqs[0])
+    total_power = simps(psd, dx=freqs[1] - freqs[0])
+
+    return sum(band_power / total_power)
