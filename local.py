@@ -3,13 +3,13 @@ from mywaveanalytics.libraries import (
     eeg_artifact_removal,
     eeg_computational_library,
     filters,
-    references,
     mywaveanalytics,
+    references,
 )
 
 from pipeline import PersistPipeline
 
-path = "test_eegs/EEG-1e344494-8933-4bfd-9ffd-c2d276c44f89.dat"
+path = "test_eegs/Camargo, Luis - 2021-11-24T23_40_52.140911Z.dat"
 
 if path.lower().endswith(".dat"):
     eeg_type = 0

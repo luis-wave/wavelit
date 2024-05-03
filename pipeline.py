@@ -1,22 +1,27 @@
 import logging
 
 import matplotlib.pyplot as plt
-import seaborn as sns
 import mne
 import numpy as np
 import pandas as pd
+import seaborn as sns
 from matplotlib.collections import LineCollection
 from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
 from mywaveanalytics.libraries import filters, references
-from mywaveanalytics.utils.params import ELECTRODE_GROUPING
+from mywaveanalytics.utils.params import (
+    ELECTRODE_GROUPING,
+    DEFAULT_RESAMPLING_FREQUENCY,
+)
 from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
+from graph_utils import preprocessing
+import streamlit as st
 
 log = logging.getLogger(__name__)
 
 
 class PersistPipeline:
-    def __init__(self, mw_object, time_win=5, ref="le"):
+    def __init__(self, mw_object, time_win=10, ref="le"):
         self.mw_object = mw_object.copy()
         self.ref = ref
         self.sampling_rate = mw_object.eeg.info["sfreq"]
@@ -41,21 +46,21 @@ class PersistPipeline:
 
         self.data["alpha"] = self.data["flattened_psds"].apply(
             lambda flattened_psd: get_power(
-                freqs = self.freqs, psd = np.reshape(flattened_psd, self.psds.shape[1:])
+                freqs=self.freqs, psd=np.reshape(flattened_psd, self.psds.shape[1:])
             )
         )
 
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(by="alpha", ascending=False)
 
-
-        for idx in self.data.index:
+        for idx in self.data.index[:10]:
             self.combined_plot(epoch_id=idx)
 
-    def preprocess_data(self, time_win=3, ref=None):
+    def preprocess_data(self, time_win=20, ref=None):
         filters.eeg_filter(self.mw_object, 1, None)
         filters.notch(self.mw_object)
         filters.resample(self.mw_object)
+        self.sampling_rate = DEFAULT_RESAMPLING_FREQUENCY
 
         raw = self.mw_object.eeg
 
@@ -265,7 +270,6 @@ class PersistPipeline:
             # freqs = freqs[idx]
             # psd = psd[:,idx]
 
-
             psd = smooth_psd(psd, window_len=3)
 
             # Select the range of frequencies of interest
@@ -335,7 +339,7 @@ class PersistPipeline:
         # gs.update(wspace= -0.2, hspace= 0)
         plt.tight_layout()
         # plt.savefig(save)
-        plt.show()
+        st.pyplot(fig)
 
 
 def format_func(value, tick_number):

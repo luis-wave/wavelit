@@ -8,7 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [0.0.1] - 2023-05-02
+
+## [0.2.0] - 2023-05-03
+
+### Added
+
+- Streamlit application.
+- EEG Upload logic
+- Graphed out sorted eeg epochs and corresponding power spectral densities.
+
+## [0.1.0] - 2023-05-02
 
 ### Added
 
