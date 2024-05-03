@@ -21,7 +21,7 @@ log = logging.getLogger(__name__)
 
 
 class PersistPipeline:
-    def __init__(self, mw_object, time_win=10, ref="le"):
+    def __init__(self, mw_object, time_win=20, ref="le"):
         self.mw_object = mw_object.copy()
         self.ref = ref
         self.sampling_rate = mw_object.eeg.info["sfreq"]
@@ -50,10 +50,14 @@ class PersistPipeline:
             )
         )
 
-        # Sort the DataFrame by score in descending order
-        self.data = self.data.sort_values(by="alpha", ascending=False)
+        self.data["alpha_grade"] = self.data['alpha'].apply(lambda x: grade_alpha(x, self.data['alpha'].values))
 
-        for idx in self.data.index[:10]:
+        # Sort the DataFrame by score in descending order
+        self.data = self.data.sort_values(by=["alpha"], ascending=[False])
+
+
+
+        for idx in self.data.index[:100]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
@@ -270,7 +274,7 @@ class PersistPipeline:
             # freqs = freqs[idx]
             # psd = psd[:,idx]
 
-            psd = smooth_psd(psd, window_len=3)
+            psd = smooth_psd(psd, window_len=2)
 
             # Select the range of frequencies of interest
             psd_range = psd[(freqs >= 2.2) & (freqs <= 25)]
@@ -380,9 +384,44 @@ def get_power(psd, freqs, f_range=[8, 13]):
 
     fl, fh = f_range
     band_idx = np.where((freqs >= fl) & (freqs <= fh))[0]
+    total_band_idx = np.where((freqs >= 4))[0]
 
     psd = psd * (10**12)
     band_power = simps(psd[:, band_idx], dx=freqs[1] - freqs[0])
-    total_power = simps(psd, dx=freqs[1] - freqs[0])
+    total_power = simps(psd[:, total_band_idx], dx=freqs[1] - freqs[0])
 
     return sum(band_power / total_power)
+
+
+def grade_alpha(score, all_scores):
+    """
+    Assign a letter grade based on where the score ranks within all_scores using percentiles.
+
+    Args:
+    - score (float): The score for which you want to determine the grade.
+    - all_scores (list of float): List of all scores to determine the percentiles.
+
+    Returns:
+    - grade (str): The letter grade.
+    """
+
+    A_threshold = np.percentile(all_scores, 85)
+    B_threshold = np.percentile(all_scores, 70)
+    C_threshold = np.percentile(all_scores, 60)
+    D_threshold = np.percentile(all_scores, 50)
+    E_threshold = np.percentile(all_scores, 40)
+
+    if score >= A_threshold:
+        grade = "A"
+    elif score >= B_threshold:
+        grade = "B"
+    elif score >= C_threshold:
+        grade = "C"
+    elif score >= D_threshold:
+        grade = "D"
+    elif score >= E_threshold:
+        grade = "E"
+    else:
+        grade = "F"
+
+    return grade

@@ -1,11 +1,6 @@
-from mywaveanalytics.libraries import (
-    database,
-    eeg_artifact_removal,
-    eeg_computational_library,
-    filters,
-    mywaveanalytics,
-    references,
-)
+from mywaveanalytics.libraries import (database, eeg_artifact_removal,
+                                       eeg_computational_library, filters,
+                                       mywaveanalytics, references)
 
 from pipeline import PersistPipeline
 
