@@ -9,10 +9,11 @@ from pipeline import PersistPipeline
 def run_persist_pipeline(path, eeg_type):
     try:
         mw_object = MyWaveAnalytics(path, None, None, eeg_type)
-        PersistPipeline(mw_object)
-        st.success("Persist pipeline executed successfully!")
+        pipeline = PersistPipeline(mw_object)
+        st.success("EEG Data loaded successfully!")
+        return pipeline
     except Exception as e:
-        st.error(f"Persist pipeline failed for {path}: {e}")
+        st.error(f"Loading failed for {path}: {e}")
 
 
 import tempfile
@@ -33,6 +34,8 @@ def save_uploaded_file(uploaded_file):
 st.title("EEG Epoch Generator")
 
 uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+
+
 if uploaded_file is not None:
     file_details = {"FileName": uploaded_file.name, "FileType": uploaded_file.type}
     st.write(file_details)
@@ -51,7 +54,32 @@ if uploaded_file is not None:
         if eeg_type is None:
             st.error("Unsupported file type.")
         else:
-            with st.spinner("Running analysis..."):
-                run_persist_pipeline(saved_path, eeg_type)
+            # EEG Reference selector
+            ref = st.selectbox(
+                "Choose EEG reference",
+                options=["linked ears", "centroid", "bipolar transverse"],
+                index=0,
+            )
+            # Time window input
+            time_win = st.number_input(
+                "Enter time window (seconds)", min_value=1, value=30, step=1
+            )
+
+            if ref == "linked ears":
+                ref = "le"
+            elif ref == "centroid":
+                ref = "cz"
+            else:
+                ref = "tcp"
+
+            pipeline = run_persist_pipeline(saved_path, eeg_type)
+
+
+            # Button to execute pipeline
+            if st.button("Generate epochs graphs"):
+                with st.spinner("Drawings graphs..."):
+                    pipeline.run(ref=ref, time_win=time_win)
+                    pipeline.generate_graphs()
+                    pipeline.reset()
     else:
         st.error("Failed to process the uploaded file.")

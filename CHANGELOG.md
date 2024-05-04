@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Streamlit application.
 - EEG Upload logic
 - Graphed out sorted eeg epochs and corresponding power spectral densities.
+- Streamlit components to set the eeg reference and set the time length of the epochs.
 
 ## [0.1.0] - 2023-05-02
 

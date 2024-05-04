@@ -1,15 +1,10 @@
-from mywaveanalytics.libraries import (
-    database,
-    eeg_artifact_removal,
-    eeg_computational_library,
-    filters,
-    mywaveanalytics,
-    references,
-)
+from mywaveanalytics.libraries import (database, eeg_artifact_removal,
+                                       eeg_computational_library, filters,
+                                       mywaveanalytics, references)
 
 from pipeline import PersistPipeline
 
-path = "test_eegs/Camargo, Luis - 2021-11-24T23_40_52.140911Z.dat"
+path = ""
 
 if path.lower().endswith(".dat"):
     eeg_type = 0

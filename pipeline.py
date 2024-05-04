@@ -5,26 +5,35 @@ import mne
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import streamlit as st
 from matplotlib.collections import LineCollection
 from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
 from mywaveanalytics.libraries import filters, references
-from mywaveanalytics.utils.params import (
-    ELECTRODE_GROUPING,
-    DEFAULT_RESAMPLING_FREQUENCY,
-)
+from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
+                                          ELECTRODE_GROUPING)
 from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
+
 from graph_utils import preprocessing
-import streamlit as st
 
 log = logging.getLogger(__name__)
 
 
 class PersistPipeline:
-    def __init__(self, mw_object, time_win=10, ref="le"):
+    def __init__(self, mw_object):
         self.mw_object = mw_object.copy()
-        self.ref = ref
+        self.ref = None
         self.sampling_rate = mw_object.eeg.info["sfreq"]
+        self.epochs = None
+        self.freqs = None
+        self.psds = None
+
+    def reset(self, mw_object):
+        self.mw_object = mw_object.copy()
+
+
+    def run(self, time_win=10, ref="le"):
+        self.ref = ref
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
 
@@ -53,11 +62,12 @@ class PersistPipeline:
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(by="alpha", ascending=False)
 
+    def generate_graphs(self):
         for idx in self.data.index[:10]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
-        filters.eeg_filter(self.mw_object, 1, None)
+        filters.eeg_filter(self.mw_object, 1, 25)
         filters.notch(self.mw_object)
         filters.resample(self.mw_object)
         self.sampling_rate = DEFAULT_RESAMPLING_FREQUENCY
@@ -193,15 +203,6 @@ class PersistPipeline:
         y1 = (n_rows - 1) * dr + dmax
         offsets = np.zeros((n_rows, 2), dtype=float)
         offsets[:, 1] = np.linspace(y0, y1, n_rows)
-        colors = sns.cubehelix_palette(
-            len(channels),
-            rot=-0.20,
-            light=0.90,
-            dark=0.90,
-            hue=1.00,
-            gamma=2.8,
-            start=0,
-        )
 
         # Reverse the array
         # data = np.flip(data, axis=0)  # Reverse the order of the data
@@ -262,6 +263,7 @@ class PersistPipeline:
             ax_time.spines["bottom"].set_visible(i == n_rows - 1)
             ax_time.spines["left"].set_visible(False)
 
+        for i in range(n_rows):
             # Calculate FFT and plot using Welch's method
             freqs, psd = self.freqs, self.psds[epoch_id][i]
 
@@ -270,7 +272,7 @@ class PersistPipeline:
             # freqs = freqs[idx]
             # psd = psd[:,idx]
 
-            psd = smooth_psd(psd, window_len=3)
+            psd = smooth_psd(psd, window_len=2)
 
             # Select the range of frequencies of interest
             psd_range = psd[(freqs >= 2.2) & (freqs <= 25)]
