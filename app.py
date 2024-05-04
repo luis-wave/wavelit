@@ -11,7 +11,7 @@ def run_persist_pipeline(path, eeg_type):
         mw_object = MyWaveAnalytics(path, None, None, eeg_type)
         pipeline = PersistPipeline(mw_object)
         st.success("EEG Data loaded successfully!")
-        return pipeline
+        return pipeline, mw_object
     except Exception as e:
         st.error(f"Loading failed for {path}: {e}")
 
@@ -72,14 +72,13 @@ if uploaded_file is not None:
             else:
                 ref = "tcp"
 
-            pipeline = run_persist_pipeline(saved_path, eeg_type)
-
+            pipeline, mw_object = run_persist_pipeline(saved_path, eeg_type)
 
             # Button to execute pipeline
             if st.button("Generate epochs graphs"):
                 with st.spinner("Drawings graphs..."):
                     pipeline.run(ref=ref, time_win=time_win)
                     pipeline.generate_graphs()
-                    pipeline.reset()
+                    pipeline.reset(mw_object)
     else:
         st.error("Failed to process the uploaded file.")

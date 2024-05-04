@@ -31,7 +31,6 @@ class PersistPipeline:
     def reset(self, mw_object):
         self.mw_object = mw_object.copy()
 
-
     def run(self, time_win=10, ref="le"):
         self.ref = ref
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
