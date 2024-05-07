@@ -1,0 +1,9 @@
+# Ignore everything
+**
+
+# But exclude these specific files
+!poetry.lock
+!pipeline.py
+!graph_utils.py
+!app.py
+!pyproject.toml
