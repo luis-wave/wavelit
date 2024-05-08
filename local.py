@@ -1,7 +1,9 @@
 from mywaveanalytics.libraries import (database, eeg_artifact_removal,
                                        eeg_computational_library, filters,
                                        mywaveanalytics, references)
+
 from mywaveanalytics.pipelines import ngboost_protocol_pipeline
+
 
 from pipeline import PersistPipeline
 
