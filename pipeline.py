@@ -5,26 +5,36 @@ import mne
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import streamlit as st
 from matplotlib.collections import LineCollection
 from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
-from mywaveanalytics.libraries import filters, references
-from mywaveanalytics.utils.params import (
-    ELECTRODE_GROUPING,
-    DEFAULT_RESAMPLING_FREQUENCY,
-)
+from mywaveanalytics.libraries import (eeg_computational_library, filters,
+                                       references)
+from mywaveanalytics.utils import params
+from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
+                                          ELECTRODE_GROUPING)
 from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
+
 from graph_utils import preprocessing
-import streamlit as st
 
 log = logging.getLogger(__name__)
 
 
 class PersistPipeline:
-    def __init__(self, mw_object, time_win=20, ref="le"):
+    def __init__(self, mw_object):
         self.mw_object = mw_object.copy()
-        self.ref = ref
+        self.ref = None
         self.sampling_rate = mw_object.eeg.info["sfreq"]
+        self.epochs = None
+        self.freqs = None
+        self.psds = None
+
+    def reset(self, mw_object):
+        self.mw_object = mw_object.copy()
+
+    def run(self, time_win=10, ref="le"):
+        self.ref = ref
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
 
@@ -38,7 +48,7 @@ class PersistPipeline:
         )
 
         # Reshape and calculate scores
-        self.data["score"] = self.data["flattened_psds"].apply(
+        self.data["sync_score"] = self.data["flattened_psds"].apply(
             lambda flattened_psd: self.get_total_sync_score(
                 self.freqs, np.reshape(flattened_psd, self.psds.shape[1:])
             )
@@ -50,18 +60,25 @@ class PersistPipeline:
             )
         )
 
-        self.data["alpha_grade"] = self.data['alpha'].apply(lambda x: grade_alpha(x, self.data['alpha'].values))
+        self.data["graded_alpha"] = self.data["alpha"].apply(
+            lambda x: grade_alpha(x, self.data["alpha"].values)
+        )
+
+        self.data["n_bads"] = [
+            len(find_leads_off(self.epochs[i])) for i in range(len(self.epochs))
+        ]
 
         # Sort the DataFrame by score in descending order
-        self.data = self.data.sort_values(by=["alpha"], ascending=[False])
+        self.data = self.data.sort_values(
+            by=["n_bads", "graded_alpha", "sync_score"], ascending=[True, True, False]
+        )
 
-
-
-        for idx in self.data.index[:100]:
+    def generate_graphs(self):
+        for idx in self.data.index[:10]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
-        filters.eeg_filter(self.mw_object, 1, None)
+        filters.eeg_filter(self.mw_object, 1, 25)
         filters.notch(self.mw_object)
         filters.resample(self.mw_object)
         self.sampling_rate = DEFAULT_RESAMPLING_FREQUENCY
@@ -72,6 +89,10 @@ class PersistPipeline:
             raw = references.temporal_central_parasagittal(self.mw_object)
         if ref == "cz":
             raw = references.centroid(self.mw_object)
+        if ref == "blm":
+            raw = references.bipolar_longitudinal_montage(self.mw_object)
+        if ref == "btm":
+            self.mw_object.eeg = bipolar_transverse_montage(self.mw_object.eeg)
 
         epochs = mne.make_fixed_length_epochs(
             raw, duration=time_win, preload=True, overlap=time_win - 1
@@ -169,12 +190,20 @@ class PersistPipeline:
             "tcp": "- TCP-Referential Montage 1-25Hz Bandpass Filter",
             "cz": "- Cz-Referential Montage 1-25Hz Bandpass Filter",
             "le": "1-25Hz Bandpass Filter",
+            "btm": "- Bipolar Transvere Montage 1-25Hz Bandpass Filter",
+            "blm": "- Bipolar Longitudinal Montage 1-25Hz Bandpass Filter",
         }
 
-        channel_suffix_map = {"tcp": "", "cz": "-Cz", "le": "-A1A2"}
+        channel_suffix_map = {
+            "tcp": "",
+            "cz": "-Cz",
+            "le": "-A1A2",
+            "btm": "",
+            "blm": "",
+        }
 
         channels = epochs.pick_types(eeg=True).ch_names
-        if ref != "tcp":
+        if ref not in ("tcp", "blm", "btm"):
             epochs = epochs.reorder_channels(new_order)
             channels = epochs.pick_types(eeg=True).ch_names
         channels = [i + channel_suffix_map[ref] for i in channels]
@@ -197,15 +226,6 @@ class PersistPipeline:
         y1 = (n_rows - 1) * dr + dmax
         offsets = np.zeros((n_rows, 2), dtype=float)
         offsets[:, 1] = np.linspace(y0, y1, n_rows)
-        colors = sns.cubehelix_palette(
-            len(channels),
-            rot=-0.20,
-            light=0.90,
-            dark=0.90,
-            hue=1.00,
-            gamma=2.8,
-            start=0,
-        )
 
         # Reverse the array
         # data = np.flip(data, axis=0)  # Reverse the order of the data
@@ -266,6 +286,7 @@ class PersistPipeline:
             ax_time.spines["bottom"].set_visible(i == n_rows - 1)
             ax_time.spines["left"].set_visible(False)
 
+        for i in range(n_rows):
             # Calculate FFT and plot using Welch's method
             freqs, psd = self.freqs, self.psds[epoch_id][i]
 
@@ -384,13 +405,98 @@ def get_power(psd, freqs, f_range=[8, 13]):
 
     fl, fh = f_range
     band_idx = np.where((freqs >= fl) & (freqs <= fh))[0]
-    total_band_idx = np.where((freqs >= 4))[0]
 
     psd = psd * (10**12)
     band_power = simps(psd[:, band_idx], dx=freqs[1] - freqs[0])
-    total_power = simps(psd[:, total_band_idx], dx=freqs[1] - freqs[0])
+    total_power = simps(psd, dx=freqs[1] - freqs[0])
 
     return sum(band_power / total_power)
+
+
+def find_leads_off(raw, abs_offset_threshold=20, picks=["eeg"]):
+    """Uses power spectrum analysis to detect which leads are bad (flat, artifact-heavy, high-frequency noise).
+    Time series analysis of the EEG signal is used to determine poor connectivity.
+
+    :param offset_threshold:
+    :param raw:
+    :return:
+    """
+
+    psds, freqs = mne.time_frequency.psd_welch(
+        raw, picks=picks, n_overlap=params.N_OVERLAP
+    )
+
+    # An epoch object returns psds in three dimensions, this line ensures psds has the same shape if it was derived from a raw object.
+    if len(psds.shape) == 3:
+        psds = psds[0]
+
+    # Use variance to determine and isolate bad channels.
+
+    _, high_variance = variance_outliers(raw)
+
+    # Fit a line to FFT. use the offset and the slope of the line to determine bad leads
+    offsets, slopes = eeg_computational_library.get_offsets_slopes(
+        psds, freqs, span=None
+    )
+
+    poor_connections = np.where(offsets > abs_offset_threshold)[0]
+
+    nan_results = np.where(np.isnan(offsets))[
+        0
+    ]  # Leads should not be removed if polyfit fails, leads with high sync alpha and high offtsets are being thrown out. See koenig 3-26-2015
+
+    flat_channels = np.where(np.absolute(offsets) < 0.01)[0]
+
+    high_frequency_noise = np.where(slopes > 0)[0]
+
+    results = {}
+    ch_names = np.asarray(params.CHANNEL_ORDER)
+    ch_names = np.delete(ch_names, -3, axis=0)  # remove ECG channel
+    if (
+        poor_connections.size != 0
+        or nan_results.size != 0
+        or flat_channels.size != 0
+        or high_frequency_noise.size != 0
+        or high_variance.size != 0
+    ):
+        leads_off_indices = np.unique(
+            np.concatenate(
+                (
+                    poor_connections,
+                    flat_channels,
+                    nan_results,
+                    high_frequency_noise,
+                    high_variance,
+                )
+            )
+        )
+
+        leads_off = [ch_names[i] for i in leads_off_indices if i not in nan_results]
+
+    else:
+        leads_off_indices = np.empty((0,))
+    if leads_off_indices.size == 0:
+        return []
+    leads_off = [ch_names[i] for i in leads_off_indices if i not in nan_results]
+    return leads_off
+
+
+def variance_outliers(raw):
+    """Calculate variance for each EEG signal. Threshold was set to 3000,
+    based on empirical obervation from testing across Wave Neuro and NYU datasets.
+
+    params:
+        raw (mne): raw mne object.
+
+    returns:
+        array: index positions of high variance outliers.
+    """
+    eeg = raw.get_data(picks="eeg", units="uV")
+    variance = np.var(eeg, axis=2)
+    threshold = 3000
+    idx = np.where(variance > threshold)[1]
+
+    return variance.tolist(), idx
 
 
 def grade_alpha(score, all_scores):
@@ -425,3 +531,81 @@ def grade_alpha(score, all_scores):
         grade = "F"
 
     return grade
+
+
+def bipolar_transverse_montage(raw):
+    """Set the EEG reference to Bipolar Transverse Montage (BLM).
+
+    params:
+        raw (mne object): Original raw instance.
+    returns
+        raw (mne object): Re-referenced raw instance.
+    """
+    # Define anodes and cathodes for a longitudinal montage
+    anode = [
+        "F7",
+        "Fp1",
+        "Fp2",
+        "F7",
+        "F3",
+        "Fz",
+        "F4",
+        "T3",
+        "C3",
+        "Cz",
+        "C4",
+        "T5",
+        "P3",
+        "Pz",
+        "P4",
+        "T5",
+        "O1",
+        "O2"
+    ]
+    cathode = [
+        "Fp1",
+        "Fp2",
+        "F8",
+        "F3",
+        "Fz",
+        "F4",
+        "F8",
+        "C3",
+        "Cz",
+        "C4",
+        "T4",
+        "P3",
+        "Pz",
+        "P4",
+        "T6",
+        "O1",
+        "O2",
+        "T6",
+    ]
+
+    # Set bipolar reference
+    btm_raw = mne.set_bipolar_reference(raw, anode, cathode)
+    btm_raw = btm_raw.pick_channels(CHANNEL_ORDER_BIPOLAR_TRANSVERSE)
+
+    return btm_raw
+
+CHANNEL_ORDER_BIPOLAR_TRANSVERSE = (
+    'F7-Fp1',
+    'Fp1-Fp2',
+    'Fp2-F8',
+    'F7-F3',
+    'F3-Fz',
+    'Fz-F4',
+    'F4-F8',
+    'T3-C3',
+    'C3-Cz',
+    'Cz-C4',
+    'C4-T4',
+    'T5-P3',
+    'P3-Pz',
+    'Pz-P4',
+    'P4-T6',
+    'T5-O1',
+    'O1-O2',
+    'O2-T6'
+)
