@@ -2,14 +2,15 @@ import tempfile
 from pathlib import Path
 
 import streamlit as st
-from mywaveanalytics.libraries import mywaveanalytics, verify
-from mywaveanalytics.libraries import eeg_computational_library, filters, references
+from mywaveanalytics.libraries import (eeg_computational_library, filters,
+                                       mywaveanalytics, references, verify)
 
 # Initialize Streamlit session state for shared data
-if 'mw_object' not in st.session_state:
+if "mw_object" not in st.session_state:
     st.session_state.mw_object = None
 
 st.title("EEG Analysis Dashboard")
+
 
 def calculate_eqi(mw_object):
     try:
@@ -28,6 +29,7 @@ def calculate_eqi(mw_object):
     except Exception as e:
         st.error(f"EEG quality assessment failed for the following reason: {e}")
 
+
 def load_mw_object(path, eegtype):
     try:
         mw_object = mywaveanalytics.MyWaveAnalytics(path, None, None, eegtype)
@@ -35,6 +37,7 @@ def load_mw_object(path, eegtype):
     except Exception as e:
         st.error(f"Loading failed for {path}: {e}")
         return None
+
 
 def save_uploaded_file(uploaded_file):
     try:
@@ -46,6 +49,7 @@ def save_uploaded_file(uploaded_file):
     except Exception as e:
         st.error(f"Failed to save the uploaded file: {e}")
         return None
+
 
 uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
@@ -70,14 +74,17 @@ if uploaded_file is not None:
         else:
             mw_object = load_mw_object(saved_path, eeg_type)
             st.success("EEG Data loaded successfully!")
-            st.session_state.mw_object = mw_object.copy()
 
-            eqi = calculate_eqi(mw_object)
+            with st.spinner("Processing..."):
+                st.session_state.mw_object = mw_object.copy()
 
-            st.subheader(f"EEG Quality Index: {eqi}")
+                eqi = calculate_eqi(mw_object)
 
-            # Save the relevant state
-            st.session_state.eqi = eqi
+                st.subheader(f"EEG Quality Index: {eqi}")
+                st.caption("Analysis Complete, apps on the left now available.")
+
+                # Save the relevant state
+                st.session_state.eqi = eqi
 
 else:
     st.info("Please upload an EEG file.")

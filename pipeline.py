@@ -560,7 +560,7 @@ def bipolar_transverse_montage(raw):
         "P4",
         "T5",
         "O1",
-        "O2"
+        "O2",
     ]
     cathode = [
         "Fp1",
@@ -589,23 +589,24 @@ def bipolar_transverse_montage(raw):
 
     return btm_raw
 
+
 CHANNEL_ORDER_BIPOLAR_TRANSVERSE = (
-    'F7-Fp1',
-    'Fp1-Fp2',
-    'Fp2-F8',
-    'F7-F3',
-    'F3-Fz',
-    'Fz-F4',
-    'F4-F8',
-    'T3-C3',
-    'C3-Cz',
-    'Cz-C4',
-    'C4-T4',
-    'T5-P3',
-    'P3-Pz',
-    'Pz-P4',
-    'P4-T6',
-    'T5-O1',
-    'O1-O2',
-    'O2-T6'
+    "F7-Fp1",
+    "Fp1-Fp2",
+    "Fp2-F8",
+    "F7-F3",
+    "F3-Fz",
+    "Fz-F4",
+    "F4-F8",
+    "T3-C3",
+    "C3-Cz",
+    "Cz-C4",
+    "C4-T4",
+    "T5-P3",
+    "P3-Pz",
+    "Pz-P4",
+    "P4-T6",
+    "T5-O1",
+    "O1-O2",
+    "O2-T6",
 )

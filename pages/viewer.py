@@ -1,9 +1,10 @@
-import streamlit as st
-import seaborn as sns
-import plotly.graph_objects as go
-from mywaveanalytics.libraries import references
-from pipeline import bipolar_transverse_montage
 import pandas as pd
+import plotly.graph_objects as go
+import seaborn as sns
+import streamlit as st
+from mywaveanalytics.libraries import references
+
+from pipeline import bipolar_transverse_montage
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
@@ -76,7 +77,7 @@ def create_plotly_figure(df, channels, offset_value, colors):
             "tickmode": "array",
             "range": [-100, max(yticks) + offset_value]
         },
-        height=1200,  # Consistent height
+        height=1000,  # Consistent height
     )
     return fig
 
@@ -139,11 +140,11 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
         channels = order_channels(channels, eeg_order)
 
     # Channel multiselect widget
-    selected_channels = st.multiselect(
-        "Select EEG and ECG Channels to Visualize",
-        channels,
-        default=channels
-    )
+    selected_channels = channels #st.multiselect(
+    #     "Select EEG and ECG Channels to Visualize",
+    #     channels,
+    #     default=channels
+    # )
 
     # Offset value slider
     offset_value = st.slider(
@@ -165,10 +166,11 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
             selected_channels = [channel for channel in selected_channels if channel in df.columns]
 
         # Generate the Plotly figure
-        fig = create_plotly_figure(df, selected_channels, offset_value, colors)
+        with st.spinner("Rendering..."):
+            fig = create_plotly_figure(df, selected_channels, offset_value, colors)
 
-        # Display the Plotly figure
-        st.plotly_chart(fig, use_container_width=True)
+            # Display the Plotly figure
+            st.plotly_chart(fig, use_container_width=True)
 
 else:
     st.error("No EEG data available. Please upload an EEG file on the main page.")

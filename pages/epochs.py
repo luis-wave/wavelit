@@ -1,4 +1,5 @@
 import streamlit as st
+
 from pipeline import PersistPipeline
 
 # Streamlit app setup
@@ -22,13 +23,20 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
 
     eqi = st.session_state.get('eqi', None)
     ref = st.session_state.get('ref', 'le')
-    time_win = st.session_state.get('time_win', 15)
+    time_win = st.session_state.get('time_win', 20)
+
+    if eqi < 60:
+        time_win = 20
+    if eqi < 40:
+        time_win = 10
+    if eqi < 20:
+        time_win = 5
 
     # Display EQI
     st.subheader(f"EEG Quality Index: {eqi}")
 
     # EEG Reference selector
-    selected_ref_index = 0 if eqi < 60 else 1
+    selected_ref_index = 0 if eqi > 60 else 1
     ref_options = [
         "linked ears",
         "centroid",

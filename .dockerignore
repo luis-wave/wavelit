@@ -5,5 +5,6 @@
 !poetry.lock
 !pipeline.py
 !graph_utils.py
-!app.py
+!home.py
 !pyproject.toml
+!pages

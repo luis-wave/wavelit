@@ -1,15 +1,16 @@
+from pathlib import Path
+
+import joblib
+import mne
 import numpy as np
-import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
-import joblib
-from pathlib import Path
-from scipy.stats import kurtosis
-from scipy.signal import welch, find_peaks
-from mywaveanalytics.utils.params import NGBOOST_MODEL_FILEPATH, DEFAULT_RESAMPLING_FREQUENCY
+import streamlit as st
 from mywaveanalytics.utils.helpers import iqr_threshold
-
-import mne
+from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
+                                          NGBOOST_MODEL_FILEPATH)
+from scipy.signal import find_peaks, welch
+from scipy.stats import kurtosis
 
 # Load the NGBoost model
 ngb_regressor = joblib.load(NGBOOST_MODEL_FILEPATH)

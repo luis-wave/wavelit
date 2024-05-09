@@ -11,8 +11,7 @@ python = ">=3.10,<3.13"
 streamlit = "^1.33.0"
 mywaveanalytics = {git = "https://github.com/waveneuroscience/MyWaveAnalytics.git"}
 plotly = "^5.22.0"
-streamlit-plotly-events = "^0.0.6"
-plotly-click-show = "^0.1.1"
+
 
 
 [build-system]
