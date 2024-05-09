@@ -1674,6 +1674,24 @@ packaging = "*"
 tenacity = ">=6.2.0"
 
 [[package]]
+name = "plotly-click-show"
+version = "0.1.1"
+description = "Streamlit component that allows to get the coordinate and curvename of plotly plot"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "plotly_click_show-0.1.1-py3-none-any.whl", hash = "sha256:e0533476fe5f9ac9621316d216528a01d7f54d757dc8f62ef4ec223bfebde597"},
+    {file = "plotly_click_show-0.1.1.tar.gz", hash = "sha256:87693e4ffccf1d339fe5f148760b5f34761bdc1d122ecfbb8e12f47710db33d2"},
+]
+
+[package.dependencies]
+plotly = ">=4.0"
+streamlit = ">=0.63"
+
+[package.extras]
+devel = ["playwright (==1.39.0)", "pytest (==7.4.0)", "pytest-playwright-snapshot (==1.0)", "pytest-rerunfailures (==12.0)", "requests (==2.31.0)", "wheel"]
+
+[[package]]
 name = "pooch"
 version = "1.8.1"
 description = "\"Pooch manages your Python library's sample data files: it automatically downloads and stores them in a local directory, with support for versioning and corruption checks.\""
@@ -2517,6 +2535,21 @@ watchdog = {version = ">=2.1.5", markers = "platform_system != \"Darwin\""}
 snowflake = ["snowflake-connector-python (>=2.8.0)", "snowflake-snowpark-python (>=0.9.0)"]
 
 [[package]]
+name = "streamlit-plotly-events"
+version = "0.0.6"
+description = "Plotly chart component for Streamlit that also allows for events to bubble back up to Streamlit."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "streamlit-plotly-events-0.0.6.tar.gz", hash = "sha256:1fe25dbf0e5d803aeb90253be04d7b395f5bcfdf3c654f96ff3c19424e7f9582"},
+    {file = "streamlit_plotly_events-0.0.6-py3-none-any.whl", hash = "sha256:e63fbe3c6a0746fdfce20060fc45ba5cd97805505c332b27372dcbd02c2ede29"},
+]
+
+[package.dependencies]
+plotly = ">=4.14.3"
+streamlit = ">=0.63"
+
+[[package]]
 name = "tenacity"
 version = "8.2.3"
 description = "Retry code until it succeeds"
@@ -2802,4 +2835,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "c372468412cd4ccc6b63f7ec3d4ccc22b98444106e4055b29886395d0cb4c481"
+content-hash = "6380ade32976ea81c31c841e2810bb2aa7f2d126d20940c626fe38770c9ca890"

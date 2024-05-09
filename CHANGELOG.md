@@ -14,9 +14,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bipolar Transverse Montage
 - EQI Score
 - EQI guided tine window and reference selection. Really bad eegs are switched to centroid montage, the lower the eqi the lower the time window. This should make it more convenient for app to find sync alpha bursts.
+- EEG Viewer
+- NGBoost protocol
 
 ### Removed
 - Temporal Central Parasaggital montage option.
+- Deploy Image github action
 
 ### Changed
 - MyWaveObject loads outside of the persist pipeline.

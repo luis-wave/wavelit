@@ -3,7 +3,7 @@ import seaborn as sns
 import plotly.graph_objects as go
 from mywaveanalytics.libraries import references
 from pipeline import bipolar_transverse_montage
-import numpy as np
+import pandas as pd
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
@@ -11,12 +11,9 @@ st.set_page_config(page_title="EEG Visualization", layout="wide")
 # Title
 st.title("EEG Visualization Dashboard")
 
-# Predefined list of channels
-channels = [
-    "Fp1", "Fp2", "F3", "F4", "C3", "C4", "P3", "P4",
-    "O1", "O2", "F7", "F8", "T3", "T4", "T5", "T6",
-    "Fz", "Cz", "Pz"
-]
+# Initialize onsets DataFrame in session state
+if 'onsets' not in st.session_state:
+    st.session_state['onsets'] = pd.DataFrame(columns=['onset'])
 
 # Function to convert a MyWaveAnalytics object to a DataFrame with resampling
 def mw_to_dataframe_resampled(mw_object, sample_rate=50):
@@ -35,9 +32,9 @@ def apply_reference(mw_object, ref):
     ref_func = {
         "linked ears": None,
         "centroid": references.centroid,
-        "bipolar_transverse": bipolar_transverse_montage,
+        "bipolar transverse": bipolar_transverse_montage,
         "bipolar longitudinal": references.bipolar_longitudinal_montage,
-        "temporal_central_parasagittal": references.temporal_central_parasagittal
+        "temporal central parasagittal": references.temporal_central_parasagittal
     }.get(ref, None)
 
     if ref_func:
@@ -48,6 +45,8 @@ def apply_reference(mw_object, ref):
 # Plotly figure creation
 def create_plotly_figure(df, channels, offset_value, colors):
     fig = go.Figure()
+    channels = channels[::-1]
+
     for i, channel in enumerate(channels):
         offset = i * offset_value
         fig.add_trace(
@@ -77,9 +76,26 @@ def create_plotly_figure(df, channels, offset_value, colors):
             "tickmode": "array",
             "range": [-100, max(yticks) + offset_value]
         },
-        height=1000,  # Consistent height
+        height=1200,  # Consistent height
     )
     return fig
+
+# Function to assign ECG channel types if present
+def assign_ecg_channel_type(raw, ecg_channels):
+    existing_channels = raw.ch_names
+    channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
+    raw.set_channel_types(channel_types)
+
+# Function to filter EEG and ECG channels
+def filter_eeg_ecg_channels(raw):
+    picks = raw.pick_types(eeg=True, ecg=True).ch_names
+    return picks
+
+# Function to order channels
+def order_channels(channels, ordered_list):
+    ordered_channels = [ch for ch in ordered_list if ch in channels]
+    remaining_channels = [ch for ch in channels if ch not in ordered_channels]
+    return ordered_channels + remaining_channels
 
 # Check if `mw_object` is available
 if 'mw_object' in st.session_state and st.session_state.mw_object:
@@ -93,9 +109,9 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
         options=[
             "linked ears",
             "centroid",
-            "bipolar_transverse",
+            "bipolar transverse",
             "bipolar longitudinal",
-            "temporal_central_parasagittal"
+            "temporal central parasagittal"
         ],
         index=0  # Default to 'linked ears'
     )
@@ -104,9 +120,27 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     if ref != "linked ears":
         mw_object.eeg = apply_reference(mw_object.eeg, ref)
 
+    # Assign ECG channel type if present
+    ecg_channels = ['ECG', 'ECG1', 'ECG2']
+    assign_ecg_channel_type(mw_object.eeg, ecg_channels)
+
+    # Extract only EEG and ECG channels
+    channels = filter_eeg_ecg_channels(mw_object.eeg)
+
+    # Define the specific ordering
+    eeg_order = [
+        'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
+        'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
+        'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
+    ]
+
+    # Apply specific ordering only if not a bipolar montage or TCP
+    if ref not in ["bipolar transverse", "bipolar longitudinal", "temporal central parasagittal"]:
+        channels = order_channels(channels, eeg_order)
+
     # Channel multiselect widget
     selected_channels = st.multiselect(
-        "Select EEG Channels to Visualize",
+        "Select EEG and ECG Channels to Visualize",
         channels,
         default=channels
     )
@@ -114,7 +148,7 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     # Offset value slider
     offset_value = st.slider(
         "Vertical Offset Between Channels",
-        min_value=5, max_value=150, value=100, step=25
+        min_value=5, max_value=300, value=100, step=5
     )
 
     # Color palette
