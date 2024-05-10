@@ -7,8 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0] - 2023-05-09
+### Added
+- Automatically switch to Epoch generator page after EQI analysis is complete.
 
-## [1.1.0] - 2023-05-06
+### Fixed
+- Bipolar Transverse spelling error, which caused a bug preventing accurate plot generation.
+
+### Removed
+- File name and details, too much clutter.
+
+### Changed
+- Rounded EQI number to an integer
+
+
+## [1.1.0] - 2023-05-08
 ### Added
 - Bipolar Longitudinal Montage
 - Bipolar Transverse Montage

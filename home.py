@@ -2,14 +2,25 @@ import tempfile
 from pathlib import Path
 
 import streamlit as st
+import toml
 from mywaveanalytics.libraries import (eeg_computational_library, filters,
-                                       mywaveanalytics, references, verify)
+                                       mywaveanalytics, references)
 
 # Initialize Streamlit session state for shared data
 if "mw_object" not in st.session_state:
     st.session_state.mw_object = None
 
 st.title("EEG Analysis Dashboard")
+
+
+# Function to read version from pyproject.toml
+def get_version_from_pyproject():
+    try:
+        pyproject_data = toml.load("pyproject.toml")
+        return pyproject_data["tool"]["poetry"]["version"]
+    except Exception as e:
+        st.error(f"Error reading version from pyproject.toml: {e}")
+        return "Unknown"
 
 
 def calculate_eqi(mw_object):
@@ -25,7 +36,7 @@ def calculate_eqi(mw_object):
             z_scored_eqi
         )
 
-        return eqi_score
+        return round(eqi_score)
     except Exception as e:
         st.error(f"EEG quality assessment failed for the following reason: {e}")
 
@@ -54,8 +65,6 @@ def save_uploaded_file(uploaded_file):
 uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
 if uploaded_file is not None:
-    file_details = {"FileName": uploaded_file.name, "FileType": uploaded_file.type}
-    st.write(file_details)
     st.session_state.fname = uploaded_file.name
 
     # Save uploaded file to disk to make it accessible by file path
@@ -80,11 +89,20 @@ if uploaded_file is not None:
 
                 eqi = calculate_eqi(mw_object)
 
-                st.subheader(f"EEG Quality Index: {eqi}")
-                st.caption("Analysis Complete, apps on the left now available.")
-
                 # Save the relevant state
                 st.session_state.eqi = eqi
 
+                st.switch_page('pages/epochs.py')
+
 else:
     st.info("Please upload an EEG file.")
+
+
+# Footer section
+version = get_version_from_pyproject()
+footer_html = f"""
+    <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
+        <span>Version: {version}</span>
+    </div>
+"""
+st.markdown(footer_html, unsafe_allow_html=True)

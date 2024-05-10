@@ -40,7 +40,7 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     ref_options = [
         "linked ears",
         "centroid",
-        "bipolar_transverse",
+        "bipolar transverse",
         "bipolar longitudinal"
     ]
 
@@ -54,7 +54,7 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
         ref = "le"
     elif ref == "centroid":
         ref = "cz"
-    elif ref == "bipolar_transverse":
+    elif ref == "bipolar transverse":
         ref = "btm"
     elif ref == "bipolar longitudinal":
         ref = "blm"
