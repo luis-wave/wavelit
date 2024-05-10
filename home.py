@@ -92,7 +92,7 @@ if uploaded_file is not None:
                 # Save the relevant state
                 st.session_state.eqi = eqi
 
-                st.switch_page('pages/epochs.py')
+                st.switch_page("pages/epochs.py")
 
 else:
     st.info("Please upload an EEG file.")

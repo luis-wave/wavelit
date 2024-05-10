@@ -11,7 +11,6 @@ python = ">=3.10,<3.13"
 streamlit = "^1.33.0"
 mywaveanalytics = {git = "https://github.com/waveneuroscience/MyWaveAnalytics.git"}
 plotly = "^5.22.0"
-streamlit-authenticator = "^0.3.2"
 
 
 
