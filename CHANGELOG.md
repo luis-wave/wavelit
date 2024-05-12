@@ -8,7 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.2.0] - 2023-05-09
+## [1.3.1] - 2023-05-11
+### Removed
+- AEA Detection button, app does not have permission to use it yet.
+
+
+
+
+## [1.3.0] - 2023-05-11
 ### Added
 - Seizure Detection invocation.
 - Feedback mechanism with streamlit data editor and form components.
