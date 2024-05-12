@@ -92,7 +92,7 @@ class PersistPipeline:
         if ref == "blm":
             raw = references.bipolar_longitudinal_montage(self.mw_object)
         if ref == "btm":
-            self.mw_object.eeg = bipolar_transverse_montage(self.mw_object.eeg)
+            raw = bipolar_transverse_montage(self.mw_object.eeg)
 
         epochs = mne.make_fixed_length_epochs(
             raw, duration=time_win, preload=True, overlap=time_win - 1
@@ -134,7 +134,7 @@ class PersistPipeline:
         event_times = self.epochs.events[:, 0] / self.sampling_rate
 
         # Align channel order to what the lab is used to if applicable
-        if ref != "tcp":
+        if ref not in ("tcp", "btm", "blm"):
             new_order = [
                 "Fz",
                 "Cz",
@@ -190,7 +190,7 @@ class PersistPipeline:
             "tcp": "- TCP-Referential Montage 1-25Hz Bandpass Filter",
             "cz": "- Cz-Referential Montage 1-25Hz Bandpass Filter",
             "le": "1-25Hz Bandpass Filter",
-            "btm": "- Bipolar Transvere Montage 1-25Hz Bandpass Filter",
+            "btm": "- Bipolar Transverse Montage 1-25Hz Bandpass Filter",
             "blm": "- Bipolar Longitudinal Montage 1-25Hz Bandpass Filter",
         }
 
@@ -560,7 +560,7 @@ def bipolar_transverse_montage(raw):
         "P4",
         "T5",
         "O1",
-        "O2"
+        "O2",
     ]
     cathode = [
         "Fp1",
@@ -589,23 +589,24 @@ def bipolar_transverse_montage(raw):
 
     return btm_raw
 
+
 CHANNEL_ORDER_BIPOLAR_TRANSVERSE = (
-    'F7-Fp1',
-    'Fp1-Fp2',
-    'Fp2-F8',
-    'F7-F3',
-    'F3-Fz',
-    'Fz-F4',
-    'F4-F8',
-    'T3-C3',
-    'C3-Cz',
-    'Cz-C4',
-    'C4-T4',
-    'T5-P3',
-    'P3-Pz',
-    'Pz-P4',
-    'P4-T6',
-    'T5-O1',
-    'O1-O2',
-    'O2-T6'
+    "F7-Fp1",
+    "Fp1-Fp2",
+    "Fp2-F8",
+    "F7-F3",
+    "F3-Fz",
+    "Fz-F4",
+    "F4-F8",
+    "T3-C3",
+    "C3-Cz",
+    "Cz-C4",
+    "C4-T4",
+    "T5-P3",
+    "P3-Pz",
+    "Pz-P4",
+    "P4-T6",
+    "T5-O1",
+    "O1-O2",
+    "O2-T6",
 )
