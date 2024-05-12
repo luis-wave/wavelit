@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.2.0] - 2023-05-09
+### Added
+- Seizure Detection invocation.
+- Feedback mechanism with streamlit data editor and form components.
+- EEG Graphs update with shading around the onset of seizure activity.
+
+
+
 ## [1.2.0] - 2023-05-09
 ### Added
 - Automatically switch to Epoch generator page after EQI analysis is complete.

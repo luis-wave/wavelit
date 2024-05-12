@@ -1,20 +1,50 @@
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import seaborn as sns
 import streamlit as st
 from mywaveanalytics.libraries import references
+from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
+    SeizureDxPipeline
 
 from pipeline import bipolar_transverse_montage
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
-
+st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
 
-# Initialize onsets DataFrame in session state
-if 'onsets' not in st.session_state:
-    st.session_state['onsets'] = pd.DataFrame(columns=['onset'])
+def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2):
+    # Extract the probabilities array from the dictionary
+    probabilities = predictions['predictions']
+
+    # Initialize lists to store the data
+    onsets = []
+    confidences = []
+    is_seizure = []
+
+    # Iterate through the probabilities to find values above the threshold
+    for index, probability in enumerate(probabilities):
+        if probability > confidence_threshold:
+            onsets.append(index * epoch_length)
+            confidences.append(probability)
+            is_seizure.append(True)
+        else:
+            # Append data for all lists even if they do not meet the threshold
+            onsets.append(index * epoch_length)
+            confidences.append(probability)
+            is_seizure.append(False)
+
+    # Create a DataFrame with the collected data
+    df = pd.DataFrame({
+        'onsets': onsets,
+        'probability': confidences,
+        'is_seizure': is_seizure
+    })
+
+    return df
+
 
 # Function to convert a MyWaveAnalytics object to a DataFrame with resampling
 def mw_to_dataframe_resampled(mw_object, sample_rate=50):
@@ -60,11 +90,40 @@ def create_plotly_figure(df, channels, offset_value, colors):
             )
         )
 
+    seizure_epochs = pd.DataFrame()
+    # Adding shaded regions for seizure activity
+    # Initialize the DataFrame in the session state if it hasn't been initialized yet
+    if 'data' not in st.session_state or st.session_state['data'] is None:
+        st.session_state['data'] = pd.DataFrame()
+
+        # Use a form to contain the data editor and submit button
+    if not st.session_state.data.empty:
+        seizure_epochs = st.session_state.data[st.session_state.data['is_seizure'] == True]['onsets']
+
+
+
+
+    if seizure_epochs.any().any():
+        for onset in seizure_epochs:
+            fig.add_shape(
+                # adding a Rectangle for seizure epoch
+                type="rect",
+                x0=onset,  # start time of seizure
+                x1=onset + 2,  # end time of seizure (2 seconds after start)
+                y0=-150,  # start y (adjust according to your scale)
+                y1=offset * len(channels),  # end y
+                fillcolor="silver",  # color of the shaded area
+                opacity=1,  # transparency
+                layer="below",  # draw below the data
+                line_width=0,
+            )
+
     # Create custom y-axis tick labels and positions
     yticks = [i * offset_value for i in range(len(channels))]
     ytick_labels = channels
 
     filename = st.session_state.get('fname', 'EEG Visualization')
+
 
     fig.update_layout(
         title=filename,
@@ -101,8 +160,7 @@ def order_channels(channels, ordered_list):
 # Check if `mw_object` is available
 if 'mw_object' in st.session_state and st.session_state.mw_object:
     mw_object = st.session_state.mw_object
-
-    mw_object = mw_object.copy()
+    mw_copy = mw_object.copy()
 
     # Reference selection
     ref = st.selectbox(
@@ -119,14 +177,14 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
 
     # Apply the selected reference, but skip re-referencing if "linked ears" is selected
     if ref != "linked ears":
-        mw_object.eeg = apply_reference(mw_object.eeg, ref)
+        mw_copy.eeg = apply_reference(mw_copy.eeg, ref)
 
     # Assign ECG channel type if present
     ecg_channels = ['ECG', 'ECG1', 'ECG2']
-    assign_ecg_channel_type(mw_object.eeg, ecg_channels)
+    assign_ecg_channel_type(mw_copy.eeg, ecg_channels)
 
     # Extract only EEG and ECG channels
-    channels = filter_eeg_ecg_channels(mw_object.eeg)
+    channels = filter_eeg_ecg_channels(mw_copy.eeg)
 
     # Define the specific ordering
     eeg_order = [
@@ -149,15 +207,25 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     # Offset value slider
     offset_value = st.slider(
         "Vertical Offset Between Channels",
-        min_value=5, max_value=300, value=100, step=5
+        min_value=5, max_value=700, value=100, step=5
     )
+
+    if st.button("AEA Detection"):
+        with st.spinner("Running..."):
+            mw_object = st.session_state.mw_object
+            pipeline = SeizureDxPipeline(mw_object.copy(), reference='linked_ears')
+            pipeline.run()
+            analysis_json = pipeline.analysis_json
+
+            aea_df = filter_predictions(analysis_json)
+            st.session_state['data'] = aea_df
 
     # Color palette
     flare_palette = sns.color_palette("flare", len(selected_channels))
     colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in flare_palette]
 
     # Create DataFrame from MyWaveAnalytics object
-    df = mw_to_dataframe_resampled(mw_object, sample_rate=50)
+    df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
     if df is not None:
         # Filter the DataFrame to include only selected channels
         missing_channels = [channel for channel in selected_channels if channel not in df.columns]
@@ -174,3 +242,36 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
 
 else:
     st.error("No EEG data available. Please upload an EEG file on the main page.")
+
+
+# Initialize the DataFrame in the session state if it hasn't been initialized yet
+if 'data' not in st.session_state or st.session_state['data'] is None:
+    st.session_state['data'] = pd.DataFrame()
+
+    # Use a form to contain the data editor and submit button
+if not st.session_state.data.empty:
+    if not st.session_state.data.empty:
+        st.header("Edit AEA Predictions")
+        with st.form("data_editor_form", border=False):
+            edited_df = st.data_editor(
+                st.session_state.data,
+                column_config={
+                    "probability": st.column_config.ProgressColumn(
+                        "Probability",
+                        help="The probability of a seizure occurrence (shown as a percentage)",
+                        min_value=0,
+                        max_value=1,  # Assuming the probability is normalized between 0 and 1
+                    ),
+                },
+                hide_index=True,
+        )
+            # Submit button for the form
+            submitted = st.form_submit_button("Save Changes")
+
+            if submitted:
+                # Update the session state with the edited DataFrame
+                st.session_state['data'] = edited_df
+                st.success("Changes saved successfully!")
+
+                # Display the potentially updated DataFrame
+                st.write("Updated Data:", st.session_state['data'])
