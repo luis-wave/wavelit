@@ -15,7 +15,7 @@ st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
 
-def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2):
+def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2, ref = "N/A"):
     # Extract the probabilities array from the dictionary
     probabilities = predictions['predictions']
 
@@ -30,6 +30,7 @@ def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2):
             onsets.append(index * epoch_length)
             confidences.append(probability)
             is_seizure.append(True)
+
         else:
             # Append data for all lists even if they do not meet the threshold
             onsets.append(index * epoch_length)
@@ -42,6 +43,8 @@ def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2):
         'probability': confidences,
         'is_seizure': is_seizure
     })
+    df['montage'] = ref
+
 
     return df
 
@@ -213,11 +216,21 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     if st.button("AEA Detection"):
         with st.spinner("Running..."):
             mw_object = st.session_state.mw_object
-            pipeline = SeizureDxPipeline(mw_object.copy(), reference='linked_ears')
+
+            if ref == "linked ears":
+                selected_reference = "linked_ears"
+            elif ref == 'bipolar longitudinal':
+                selected_reference = 'bipolar_longitudinal'
+            elif ref == "centroid":
+                selected_reference = "centroid"
+            else:
+                selected_reference = "linked_ears"
+
+            pipeline = SeizureDxPipeline(mw_object.copy(), reference=selected_reference)
             pipeline.run()
             analysis_json = pipeline.analysis_json
 
-            aea_df = filter_predictions(analysis_json)
+            aea_df = filter_predictions(analysis_json, ref=selected_reference)
             st.session_state['data'] = aea_df
 
     # Color palette
