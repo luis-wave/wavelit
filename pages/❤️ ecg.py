@@ -9,18 +9,6 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from pipeline import bipolar_transverse_montage
 
-# Streamlit app setup
-st.set_page_config(page_title="ECG Visualization", layout="wide")
-st.session_state["data"] = None
-
-heart_rate_bpm = round(st.session_state.heart_rate,1)
-heart_rate_std_dev = round(st.session_state.heart_rate_std_dev,1)
-
-# Title
-st.title("ECG Visualization Dashboard")
-
-st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
-
 def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     # Extract the probabilities array from the dictionary
     probabilities = predictions['predictions']
@@ -164,122 +152,144 @@ def order_channels(channels, ordered_list):
     remaining_channels = [ch for ch in channels if ch not in ordered_channels]
     return ordered_channels + remaining_channels
 
-# Check if `mw_object` is available
-if 'mw_object' in st.session_state and st.session_state.mw_object:
-    mw_object = st.session_state.mw_object
-    mw_copy = mw_object.copy()
 
-    # Reference selection
-    ref = 'centroid' #st.selectbox(
-    #     "Choose EEG Reference",
-    #     options=[
-    #         "linked ears",
-    #         "centroid",
-    #         "bipolar transverse",
-    #         "bipolar longitudinal",
-    #         "temporal central parasagittal"
-    #     ],
-    #     index=0  # Default to 'linked ears'
-    # )
 
-    # Apply the selected reference, but skip re-referencing if "linked ears" is selected
-    if ref != "linked ears":
-        mw_copy.eeg = apply_reference(mw_copy.eeg, ref)
+# Streamlit app setup
+st.set_page_config(page_title="ECG Visualization", layout="wide")
+st.session_state["data"] = None
 
-    # Assign ECG channel type if present
-    ecg_channels = ['ECG', 'ECG1', 'ECG2']
-    assign_ecg_channel_type(mw_copy.eeg, ecg_channels)
-
-    # Extract only EEG and ECG channels
-    channels = filter_eeg_ecg_channels(mw_copy.eeg)
-
-    # Define the specific ordering
-    eeg_order = [
-        'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
-        'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
-        'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
-    ]
-
-    # Apply specific ordering only if not a bipolar montage or TCP
-    if ref not in ["bipolar transverse", "bipolar longitudinal", "temporal central parasagittal"]:
-        channels = order_channels(channels, eeg_order)
-
-    # Channel multiselect widget
-    selected_channels = channels #st.multiselect(
-    #     "Select EEG and ECG Channels to Visualize",
-    #     channels,
-    #     default=channels
-    # )
-
-    # Offset value slider
-    offset_value = st.slider(
-        "Vertical Offset Between Channels",
-        min_value=0, max_value=5000, value=2000, step=5
-    )
-
-    # if st.button("AHR Detection"):
-    #     with st.spinner("Running..."):
-    #         mw_object = st.session_state.mw_object
-
-    #         pipeline = ArrhythmiaDxPipeline(mw_object.copy())
-    #         pipeline.run()
-    #         analysis_json = pipeline.analysis_json
-
-    #         ahr_df = filter_predictions(analysis_json)
-    #         st.session_state['data'] = ahr_df
-
-    # Color palette
-    flare_palette = sns.color_palette("flare", len(selected_channels))
-    colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in flare_palette]
-
-    # Create DataFrame from MyWaveAnalytics object
-    df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
-    if df is not None:
-        # Filter the DataFrame to include only selected channels
-        missing_channels = [channel for channel in selected_channels if channel not in df.columns]
-        if missing_channels:
-            st.warning(f"Missing channels in the file: {missing_channels}")
-            selected_channels = [channel for channel in selected_channels if channel in df.columns]
-
-        # Generate the Plotly figure
-        with st.spinner("Rendering..."):
-            fig = create_plotly_figure(df, selected_channels, offset_value, colors)
-
-            # Display the Plotly figure
-            st.plotly_chart(fig, use_container_width=True)
-
+if not st.session_state.heart_rate:
+    st.error("No ECG data available. Please upload an EEG file with ECG data on the main page.")
 else:
-    st.error("No EEG data available. Please upload an EEG file on the main page.")
 
 
-# Initialize the DataFrame in the session state if it hasn't been initialized yet
-if 'data' not in st.session_state or st.session_state['data'] is None:
-    st.session_state['data'] = pd.DataFrame()
 
-    # Use a form to contain the data editor and submit button
-if not st.session_state.data.empty:
-    if not st.session_state.data.empty:
-        st.header("Edit AEA Predictions")
-        with st.form("data_editor_form", border=False):
-            edited_df = st.data_editor(
-                st.session_state.data,
-                column_config={
-                    "probability": st.column_config.ProgressColumn(
-                        "Probability",
-                        help="The probability of a seizure occurrence (shown as a percentage)",
-                        min_value=0,
-                        max_value=1,  # Assuming the probability is normalized between 0 and 1
-                    ),
-                },
-                hide_index=True,
+    heart_rate_bpm = round(st.session_state.heart_rate,1)
+    heart_rate_std_dev = round(st.session_state.heart_rate_std_dev,1)
+
+    # Title
+    st.title("ECG Visualization Dashboard")
+
+    st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
+
+
+
+    # Check if `mw_object` is available
+    if ('mw_object' in st.session_state) and ('heart_rate' in st.session_state) and st.session_state.mw_object:
+        mw_object = st.session_state.mw_object
+        mw_copy = mw_object.copy()
+
+        # Reference selection
+        ref = 'centroid' #st.selectbox(
+        #     "Choose EEG Reference",
+        #     options=[
+        #         "linked ears",
+        #         "centroid",
+        #         "bipolar transverse",
+        #         "bipolar longitudinal",
+        #         "temporal central parasagittal"
+        #     ],
+        #     index=0  # Default to 'linked ears'
+        # )
+
+        # Apply the selected reference, but skip re-referencing if "linked ears" is selected
+        if ref != "linked ears":
+            mw_copy.eeg = apply_reference(mw_copy.eeg, ref)
+
+        # Assign ECG channel type if present
+        ecg_channels = ['ECG', 'ECG1', 'ECG2']
+        assign_ecg_channel_type(mw_copy.eeg, ecg_channels)
+
+        # Extract only EEG and ECG channels
+        channels = filter_eeg_ecg_channels(mw_copy.eeg)
+
+        # Define the specific ordering
+        eeg_order = [
+            'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
+            'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
+            'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
+        ]
+
+        # Apply specific ordering only if not a bipolar montage or TCP
+        if ref not in ["bipolar transverse", "bipolar longitudinal", "temporal central parasagittal"]:
+            channels = order_channels(channels, eeg_order)
+
+        # Channel multiselect widget
+        selected_channels = channels #st.multiselect(
+        #     "Select EEG and ECG Channels to Visualize",
+        #     channels,
+        #     default=channels
+        # )
+
+        # Offset value slider
+        offset_value = st.slider(
+            "Vertical Offset Between Channels",
+            min_value=0, max_value=5000, value=2000, step=5
         )
-            # Submit button for the form
-            submitted = st.form_submit_button("Save Changes")
 
-            if submitted:
-                # Update the session state with the edited DataFrame
-                st.session_state['data'] = edited_df
-                st.success("Changes saved successfully!")
+        # if st.button("AHR Detection"):
+        #     with st.spinner("Running..."):
+        #         mw_object = st.session_state.mw_object
 
-                # Display the potentially updated DataFrame
-                st.write("Updated Data:", st.session_state['data'])
+        #         pipeline = ArrhythmiaDxPipeline(mw_object.copy())
+        #         pipeline.run()
+        #         analysis_json = pipeline.analysis_json
+
+        #         ahr_df = filter_predictions(analysis_json)
+        #         st.session_state['data'] = ahr_df
+
+        # Color palette
+        flare_palette = sns.color_palette("flare", len(selected_channels))
+        colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in flare_palette]
+
+        # Create DataFrame from MyWaveAnalytics object
+        df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
+        if df is not None:
+            # Filter the DataFrame to include only selected channels
+            missing_channels = [channel for channel in selected_channels if channel not in df.columns]
+            if missing_channels:
+                st.warning(f"Missing channels in the file: {missing_channels}")
+                selected_channels = [channel for channel in selected_channels if channel in df.columns]
+
+            # Generate the Plotly figure
+            with st.spinner("Rendering..."):
+                fig = create_plotly_figure(df, selected_channels, offset_value, colors)
+
+                # Display the Plotly figure
+                st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.error("No ECG data available. Please upload an EEG file on the main page.")
+
+
+    # Initialize the DataFrame in the session state if it hasn't been initialized yet
+    if 'data' not in st.session_state or st.session_state['data'] is None:
+        st.session_state['data'] = pd.DataFrame()
+
+        # Use a form to contain the data editor and submit button
+    if not st.session_state.data.empty:
+        if not st.session_state.data.empty:
+            st.header("Edit AEA Predictions")
+            with st.form("data_editor_form", border=False):
+                edited_df = st.data_editor(
+                    st.session_state.data,
+                    column_config={
+                        "probability": st.column_config.ProgressColumn(
+                            "Probability",
+                            help="The probability of a seizure occurrence (shown as a percentage)",
+                            min_value=0,
+                            max_value=1,  # Assuming the probability is normalized between 0 and 1
+                        ),
+                    },
+                    hide_index=True,
+            )
+                # Submit button for the form
+                submitted = st.form_submit_button("Save Changes")
+
+                if submitted:
+                    # Update the session state with the edited DataFrame
+                    st.session_state['data'] = edited_df
+                    st.success("Changes saved successfully!")
+
+                    # Display the potentially updated DataFrame
+                    st.write("Updated Data:", st.session_state['data'])

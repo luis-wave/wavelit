@@ -8,7 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## [1.4.0] - 2023-05-12
+## [1.4.1] - 2023-05-15
+### Fixed
+- ECG Viewer is null until record with ECG is uploaded.
+
+
+## [1.4.0] - 2023-05-14
 ### Added
 - ECG Viewer, heart rate calculation.
 - AHR detection.

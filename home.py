@@ -3,8 +3,9 @@ from pathlib import Path
 
 import streamlit as st
 import toml
-from mywaveanalytics.libraries import (eeg_computational_library, filters,
-                                       mywaveanalytics, references, ecg_statistics)
+from mywaveanalytics.libraries import (ecg_statistics,
+                                       eeg_computational_library, filters,
+                                       mywaveanalytics, references)
 
 # Initialize Streamlit session state for shared data
 if "mw_object" not in st.session_state:
@@ -14,6 +15,7 @@ st.title("EEG Analysis Dashboard")
 
 st.session_state.heart_rate = None
 st.session_state.heart_rate_std_dev = None
+
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -33,7 +35,7 @@ def calculate_eqi(mw_object):
         filters.resample(mw_copy)
         tcp_eeg = references.temporal_central_parasagittal(mw_copy)
 
-        #Artifact ECG signal only before deriving heart rate and heart rate variability measures,
+        # Artifact ECG signal only before deriving heart rate and heart rate variability measures,
         ecg_events_loc = filters.ecgfilter(mw_copy)
 
         # Find heart rate
@@ -43,7 +45,6 @@ def calculate_eqi(mw_object):
 
         st.session_state.heart_rate = heart_rate_bpm
         st.session_state.heart_rate_std_dev = heart_rate_std_dev
-
 
         eqi_features, z_scored_eqi = eeg_computational_library.calculate_eqi(tcp_eeg)
         eqi_predictions, eqi_score = eeg_computational_library.eqi_svm_inference(
