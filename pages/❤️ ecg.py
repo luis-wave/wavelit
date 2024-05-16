@@ -227,16 +227,16 @@ else:
             min_value=0, max_value=5000, value=2000, step=5
         )
 
-        # if st.button("AHR Detection"):
-        #     with st.spinner("Running..."):
-        #         mw_object = st.session_state.mw_object
+        if st.button("AHR Detection"):
+            with st.spinner("Running..."):
+                mw_object = st.session_state.mw_object
 
-        #         pipeline = ArrhythmiaDxPipeline(mw_object.copy())
-        #         pipeline.run()
-        #         analysis_json = pipeline.analysis_json
+                pipeline = ArrhythmiaDxPipeline(mw_object.copy())
+                pipeline.run()
+                analysis_json = pipeline.analysis_json
 
-        #         ahr_df = filter_predictions(analysis_json)
-        #         st.session_state['data'] = ahr_df
+                ahr_df = filter_predictions(analysis_json)
+                st.session_state['data'] = ahr_df
 
         # Color palette
         flare_palette = sns.color_palette("flare", len(selected_channels))

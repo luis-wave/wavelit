@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2023-05-15
+### Added
+- Added AHR and AEA button back.
+
+
 
 ## [1.4.1] - 2023-05-15
 ### Fixed

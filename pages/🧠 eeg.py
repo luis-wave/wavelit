@@ -213,25 +213,25 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
         min_value=5, max_value=700, value=100, step=5
     )
 
-    # if st.button("AEA Detection"):
-    #     with st.spinner("Running..."):
-    #         mw_object = st.session_state.mw_object
+    if st.button("AEA Detection"):
+        with st.spinner("Running..."):
+            mw_object = st.session_state.mw_object
 
-    #         if ref == "linked ears":
-    #             selected_reference = "linked_ears"
-    #         elif ref == 'bipolar longitudinal':
-    #             selected_reference = 'bipolar_longitudinal'
-    #         elif ref == "centroid":
-    #             selected_reference = "centroid"
-    #         else:
-    #             selected_reference = "linked_ears"
+            if ref == "linked ears":
+                selected_reference = "linked_ears"
+            elif ref == 'bipolar longitudinal':
+                selected_reference = 'bipolar_longitudinal'
+            elif ref == "centroid":
+                selected_reference = "centroid"
+            else:
+                selected_reference = "linked_ears"
 
-    #         pipeline = SeizureDxPipeline(mw_object.copy(), reference=selected_reference)
-    #         pipeline.run()
-    #         analysis_json = pipeline.analysis_json
+            pipeline = SeizureDxPipeline(mw_object.copy(), reference=selected_reference)
+            pipeline.run()
+            analysis_json = pipeline.analysis_json
 
-    #         aea_df = filter_predictions(analysis_json, ref=selected_reference)
-    #         st.session_state['data'] = aea_df
+            aea_df = filter_predictions(analysis_json, ref=selected_reference)
+            st.session_state['data'] = aea_df
 
     # Color palette
     flare_palette = sns.color_palette("flare", len(selected_channels))
