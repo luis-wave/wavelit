@@ -145,3 +145,5 @@ cython_debug/
 test_eegs
 
 __pycache__
+
+config.yaml

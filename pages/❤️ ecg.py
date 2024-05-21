@@ -9,6 +9,7 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from pipeline import bipolar_transverse_montage
 
+
 def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     # Extract the probabilities array from the dictionary
     probabilities = predictions['predictions']

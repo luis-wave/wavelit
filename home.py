@@ -2,19 +2,11 @@ import tempfile
 from pathlib import Path
 
 import streamlit as st
+import streamlit_authenticator as stauth
 import toml
 from mywaveanalytics.libraries import (ecg_statistics,
                                        eeg_computational_library, filters,
                                        mywaveanalytics, references)
-
-# Initialize Streamlit session state for shared data
-if "mw_object" not in st.session_state:
-    st.session_state.mw_object = None
-
-st.title("EEG Analysis Dashboard")
-
-st.session_state.heart_rate = None
-st.session_state.heart_rate_std_dev = None
 
 
 # Function to read version from pyproject.toml
@@ -77,47 +69,82 @@ def save_uploaded_file(uploaded_file):
         return None
 
 
-uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+import yaml
+from yaml.loader import SafeLoader
 
-if uploaded_file is not None:
-    st.session_state.fname = uploaded_file.name
+with open("config.yaml") as file:
+    config = yaml.load(file, Loader=SafeLoader)
 
-    # Save uploaded file to disk to make it accessible by file path
-    saved_path = save_uploaded_file(uploaded_file)
-    if saved_path:
-        # Determine EEG type based on file extension
-        eeg_type = (
-            0
-            if uploaded_file.name.lower().endswith(".dat")
-            else 10
-            if uploaded_file.name.lower().endswith(".edf")
-            else None
-        )
-        if eeg_type is None:
-            st.error("Unsupported file type.")
-        else:
-            mw_object = load_mw_object(saved_path, eeg_type)
-            st.success("EEG Data loaded successfully!")
+authenticator = stauth.Authenticate(
+    config["credentials"],
+    config["cookie"]["name"],
+    config["cookie"]["key"],
+    config["cookie"]["expiry_days"],
+    config["pre-authorized"],
+)
 
-            with st.spinner("Processing..."):
-                st.session_state.mw_object = mw_object.copy()
-
-                eqi = calculate_eqi(mw_object)
-
-                # Save the relevant state
-                st.session_state.eqi = eqi
-
-                st.switch_page("pages/epochs.py")
-
-else:
-    st.info("Please upload an EEG file.")
+name, authentication_status, username = authenticator.login()
 
 
-# Footer section
-version = get_version_from_pyproject()
-footer_html = f"""
-    <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
-        <span>Version: {version}</span>
-    </div>
-"""
-st.markdown(footer_html, unsafe_allow_html=True)
+if st.session_state["authentication_status"]:
+    authenticator.logout()
+    st.write(f'Welcome *{st.session_state["name"]}*')
+
+    # Initialize Streamlit session state for shared data
+    if "mw_object" not in st.session_state:
+        st.session_state.mw_object = None
+
+    st.title("EEG Analysis Dashboard")
+
+    st.session_state.heart_rate = None
+    st.session_state.heart_rate_std_dev = None
+
+    uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+
+    if uploaded_file is not None:
+        st.session_state.fname = uploaded_file.name
+
+        # Save uploaded file to disk to make it accessible by file path
+        saved_path = save_uploaded_file(uploaded_file)
+        if saved_path:
+            # Determine EEG type based on file extension
+            eeg_type = (
+                0
+                if uploaded_file.name.lower().endswith(".dat")
+                else 10
+                if uploaded_file.name.lower().endswith(".edf")
+                else None
+            )
+            if eeg_type is None:
+                st.error("Unsupported file type.")
+            else:
+                mw_object = load_mw_object(saved_path, eeg_type)
+                st.success("EEG Data loaded successfully!")
+
+                with st.spinner("Processing..."):
+                    st.session_state.mw_object = mw_object.copy()
+
+                    eqi = calculate_eqi(mw_object)
+
+                    # Save the relevant state
+                    st.session_state.eqi = eqi
+
+                    st.switch_page("pages/epochs.py")
+
+    else:
+        st.info("Please upload an EEG file.")
+
+    # Footer section
+    version = get_version_from_pyproject()
+    footer_html = f"""
+        <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
+            <span>Version: {version}</span>
+        </div>
+    """
+    st.markdown(footer_html, unsafe_allow_html=True)
+
+
+elif st.session_state["authentication_status"] is False:
+    st.error("Username/password is incorrect")
+elif st.session_state["authentication_status"] is None:
+    st.warning("Please enter your username and password")

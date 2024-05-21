@@ -15,7 +15,7 @@ st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
 
-def filter_predictions(predictions, confidence_threshold=0.2, epoch_length=2, ref = "N/A"):
+def filter_predictions(predictions, confidence_threshold=0.75, epoch_length=2, ref = "N/A"):
     # Extract the probabilities array from the dictionary
     probabilities = predictions['predictions']
 

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.7.0] - 2023-05-21
+### Added
+- Protocol dashboard
+
+### Changed
+- Protocol data is retrieved by PatientId instead of EEGId.
+
+
+## [1.6.0] - 2023-05-17
+### Added
+- Login page
+
+### Changed
+- Increased confidence threshold for AEA detection from 0.2 to 0.75.
+
+
+
 ## [1.5.0] - 2023-05-15
 ### Added
 - Added AHR and AEA button back.

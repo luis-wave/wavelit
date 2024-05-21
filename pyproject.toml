@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eeg-plot-streamlit-app"
-version = "1.5.0"
+version = "1.7.0"
 description = "EEG plot generator"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>"]
 license = "Proprietary"
@@ -11,7 +11,9 @@ python = ">=3.10,<3.13"
 streamlit = "^1.33.0"
 mywaveanalytics = {git = "https://github.com/waveneuroscience/MyWaveAnalytics.git"}
 plotly = "^5.22.0"
-
+streamlit-authenticator = "^0.3.2"
+seaborn = "0.11.2"
+matplotlib = "3.4.3"
 
 
 [build-system]
