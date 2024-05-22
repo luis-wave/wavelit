@@ -142,15 +142,19 @@ if st.session_state["authentication_status"]:
                     except Exception as e:
                         st.error(f"Authentication Error for EEG ID {eeg_id}: {e}")
 
-                # Sort by recording date
-                all_recording_dates.sort()
-
                 # Create a dataframe with EEG ID, recording date, and protocol frequency
                 protocol_df = pd.DataFrame({
                     "EEG ID": [eeg_id for _, eeg_id in all_recording_dates],
                     "Recording Date": [recording_date for recording_date, _ in all_recording_dates],
                     "Protocol Frequency": [all_protocol_frequencies[i] for i in range(len(all_protocol_frequencies))]
                 })
+
+                # Sort by recording date
+                protocol_df["Recording Date"] = pd.to_datetime(protocol_df["Recording Date"])
+                protocol_df = protocol_df.sort_values(by="Recording Date")
+
+                # Optionally, reset the index if you want a clean index
+                protocol_df = protocol_df.reset_index(drop=True)
 
                 st.write("EEG ID, Recording Date, and Protocol Frequency:")
                 st.dataframe(protocol_df)
