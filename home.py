@@ -117,7 +117,7 @@ def download_eeg_file(eeg_id, base_url, headers):
         # st.write(f"Request URL: {base_url}/eeg")
         # st.write(f"Request Headers: {headers}")
         # st.write(f"Request Data: {request_data}")
-        st.write(f"Response Status Code: {response.status_code}")
+        # st.write(f"Response Status Code: {response.status_code}")
         # st.write(f"Response Text: {response.text}")
 
         response.raise_for_status()
@@ -226,7 +226,7 @@ if st.session_state["authentication_status"]:
                     # Determine EEG type based on file extension
                     if file_extension.lower() == ".dat":
                         eeg_type = 0
-                    elif file_extension.lower == ".edf":
+                    elif file_extension.lower() == ".edf":
                         eeg_type = 10
                     else:
                         st.error("Unsupported file type.")
