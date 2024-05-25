@@ -15,6 +15,7 @@ from scipy.stats import kurtosis
 # Load the NGBoost model
 ngb_regressor = joblib.load(NGBOOST_MODEL_FILEPATH)
 
+
 def plot_psd_against_freqs(file, psd_avg, freqs, protocol, std_dev):
     psd = np.array(psd_avg)
     psd = (psd * 10**12) ** 0.5
@@ -55,6 +56,7 @@ def plot_psd_against_freqs(file, psd_avg, freqs, protocol, std_dev):
     )
     st.plotly_chart(fig)
 
+
 def compute_ngboost_protocol(mw_object):
     try:
         mw_copy = mw_object.copy()
@@ -63,10 +65,12 @@ def compute_ngboost_protocol(mw_object):
 
         # Predict using the loaded NGBoost model
         ngb_protocol = ngb_regressor.predict(peak_stats)[0]
-        ngb_std_dev = ngb_regressor.pred_dist(peak_stats).params['scale'][0]
+        ngb_std_dev = ngb_regressor.pred_dist(peak_stats).params["scale"][0]
 
         # Compute Power Spectral Density (PSD) stats
-        psd_avg, freqs = mne.time_frequency.psd_welch(mw_copy.eeg, picks=['O1', "O2", "P3", "P4", "Pz"])
+        psd_avg, freqs = mne.time_frequency.psd_welch(
+            mw_copy.eeg, picks=["O1", "O2", "P3", "P4", "Pz"]
+        )
 
         return ngb_protocol, ngb_std_dev, psd_avg.mean(axis=0), freqs
     except Exception as e:
@@ -111,6 +115,7 @@ def slopes_around_maxima(signal):
 
     return np.array(slopes)
 
+
 def make_epochs(mw_object, time_window=20):
     """
     Break MyWaveObject into epochs based on specified time window length.
@@ -129,6 +134,7 @@ def make_epochs(mw_object, time_window=20):
 
     return epochs
 
+
 def filter_psd(psd, fs=DEFAULT_RESAMPLING_FREQUENCY):
     """
     Apply a filtering process to the power spectral density (PSD) data.
@@ -144,6 +150,7 @@ def filter_psd(psd, fs=DEFAULT_RESAMPLING_FREQUENCY):
     threshold = iqr_threshold(psd_values.sum(axis=1))
     valid_indices = np.where(psd_values.sum(axis=1) <= threshold)[0]
     return f, psd_values[valid_indices]
+
 
 def calculate_alpha_peaks(psd, frequencies):
     """
@@ -166,6 +173,7 @@ def calculate_alpha_peaks(psd, frequencies):
         alpha_slopes.extend(slopes[np.where(np.isin(peaks, alpha_peaks_indices))[0]])
     return np.array(alpha_peaks), np.array(alpha_slopes)
 
+
 def filter_by_slope(peaks, slopes, threshold_percentile=67):
     """
     Filter alpha peaks based on their slopes, using a percentile threshold.
@@ -181,6 +189,7 @@ def filter_by_slope(peaks, slopes, threshold_percentile=67):
     threshold = np.percentile(slopes, threshold_percentile)
     valid_indices = np.where(slopes >= threshold)
     return peaks[valid_indices], slopes[valid_indices]
+
 
 def compute_peak_statistics(peaks, slopes, columns):
     """
@@ -202,25 +211,31 @@ def compute_peak_statistics(peaks, slopes, columns):
     stats_dict = {}
     for peak, vals in peak_dict.items():
         if not vals:
-            stats = [0, 0, 0, 0]  # If all peaks are removed within a certain frequency bin, set all stats to 0
+            stats = [
+                0,
+                0,
+                0,
+                0,
+            ]  # If all peaks are removed within a certain frequency bin, set all stats to 0
         else:
             stats = [
                 len(vals),
                 np.median(vals),
                 np.percentile(vals, 99) - np.percentile(vals, 1),
-                kurtosis(vals)
+                kurtosis(vals),
             ]
 
         stats_dict[peak] = {
-            'count': stats[0],
-            'median': stats[1],
-            'std_dev': stats[2],
-            'kurtosis': stats[3]
+            "count": stats[0],
+            "median": stats[1],
+            "std_dev": stats[2],
+            "kurtosis": stats[3],
         }
 
     df = pd.DataFrame(stats_dict, index=["count", "median", "std_dev", "kurtosis"])
 
     return df
+
 
 def compute_alpha_peak_stats(mw_object, time_window=2.56):
     """
@@ -234,7 +249,9 @@ def compute_alpha_peak_stats(mw_object, time_window=2.56):
     Numpy array: flattened array of alpha peak statistics
     """
     epochs = make_epochs(mw_object, time_window)
-    posterior_average_raw_data = epochs.get_data(units="uV", picks=["Pz", "P3", "P4", "O1", "O2"]).mean(axis=1)
+    posterior_average_raw_data = epochs.get_data(
+        units="uV", picks=["Pz", "P3", "P4", "O1", "O2"]
+    ).mean(axis=1)
     frequencies, psd = filter_psd(posterior_average_raw_data)
     alpha_peaks, alpha_slopes = calculate_alpha_peaks(psd, frequencies)
     filtered_peaks, filtered_slopes = filter_by_slope(alpha_peaks, alpha_slopes)
@@ -244,21 +261,29 @@ def compute_alpha_peak_stats(mw_object, time_window=2.56):
     df_normalized = df.div(df.sum(axis=1), axis=0)
 
     # Convert dictionary to features array
-    features = np.array([[float(k), v['count'], v['median'], v['std_dev'], v['kurtosis']] for k, v in df_normalized.to_dict().items()])
+    features = np.array(
+        [
+            [float(k), v["count"], v["median"], v["std_dev"], v["kurtosis"]]
+            for k, v in df_normalized.to_dict().items()
+        ]
+    )
 
     # Extract the first three features for peak_stats
     peak_stats = np.array([i[:3] for i in features]).flatten().reshape(1, -1)
 
     return peak_stats
 
+
 st.title("NGBoost Protocol Recommendations")
 
-if 'mw_object' in st.session_state and st.session_state.mw_object:
+if "mw_object" in st.session_state and st.session_state.mw_object:
     mw_object = st.session_state.mw_object
     protocol, std_dev, psd_avg, freqs = compute_ngboost_protocol(mw_object)
     if protocol is not None:
         st.write(f"Protocol: {protocol:.2f} Hz ± {std_dev:.2f} Hz")
-        plot_psd_against_freqs(st.session_state.fname, psd_avg, freqs, protocol, std_dev)
+        plot_psd_against_freqs(
+            st.session_state.fname, psd_avg, freqs, protocol, std_dev
+        )
     else:
         st.error("Unable to generate protocol for the uploaded file.")
 else:
