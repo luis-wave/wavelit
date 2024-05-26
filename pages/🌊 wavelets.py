@@ -26,15 +26,16 @@ def calculate_and_plot_cwt_spectrogram(mw_object, channels=["P3-Pz", "Pz-P4", "P
     average_signal = np.mean(data, axis=0)
 
     # Manually set the scales to explore 8-13 Hz
-    frequencies = np.linspace(8, 13, num=10)
+    frequencies = np.linspace(8, 13, num=20)
     scales = pywt.scale2frequency('morl', 1) / frequencies * raw.info['sfreq']
 
     # Calculate the CWT spectrogram for the average signal
     spectrogram, freqs = pywt.cwt(average_signal, scales, 'morl', sampling_period=1/raw.info['sfreq'])
     power = np.abs(spectrogram) ** 2
 
-    # Clip the power values
-    power = np.clip(power, None, 7e-9)
+    # Replace power values over a certain threshold with 0
+    threshold = 1.2e-9
+    power[power > threshold] = 0
 
     # Create the plot
     fig = go.Figure()
