@@ -1,13 +1,14 @@
-import streamlit as st
+# epochs.py
 
+import mne
+import numpy as np
+import streamlit as st
 from pipeline import PersistPipeline
 
-# Streamlit app setup
 st.set_page_config(page_title="EEG Epoch Generator", layout="wide")
 
 st.title("EEG Epoch Generator")
 
-# Function to run the PersistPipeline
 def run_persist_pipeline(mw_object):
     try:
         pipeline = PersistPipeline(mw_object)
@@ -32,10 +33,8 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     if eqi < 20:
         time_win = 5
 
-    # Display EQI
     st.subheader(f"EEG Quality Index: {eqi}")
 
-    # EEG Reference selector
     selected_ref_index = 0 if eqi > 60 else 1
     ref_options = [
         "linked ears",
@@ -61,7 +60,6 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
     else:
         ref = "tcp"
 
-    # Time window input
     time_win = st.number_input(
         "Enter time window (seconds)",
         min_value=3,
@@ -70,10 +68,8 @@ if 'mw_object' in st.session_state and st.session_state.mw_object:
         step=5
     )
 
-    # Run PersistPipeline
     pipeline = run_persist_pipeline(mw_object)
 
-    # Button to execute pipeline
     if st.button("Generate graphs"):
         with st.spinner("Drawing..."):
             pipeline.run(ref=ref, time_win=time_win)

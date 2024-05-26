@@ -2,7 +2,7 @@ import base64
 import os
 import tempfile
 from pathlib import Path
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
 import requests
 import streamlit as st
@@ -132,7 +132,9 @@ def download_eeg_file(eeg_id, base_url, headers):
             file_name = os.path.basename(parsed_url.path)
             file_extension = Path(file_name).suffix
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=file_extension
+            ) as tmp_file:
                 tmp_file.write(response.content)
                 return tmp_file.name, file_extension
         else:
@@ -219,7 +221,9 @@ if st.session_state["authentication_status"]:
                 auth_manager = AuthManager(base_url, username, password, api_key)
                 headers = auth_manager.login()
 
-                downloaded_path, file_extension = download_eeg_file(eeg_id, base_url, headers)
+                downloaded_path, file_extension = download_eeg_file(
+                    eeg_id, base_url, headers
+                )
                 if downloaded_path:
                     st.success(f"EEG Data for ID {eeg_id} downloaded successfully!")
 
