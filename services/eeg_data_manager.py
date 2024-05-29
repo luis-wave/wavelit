@@ -29,7 +29,7 @@ class EEGDataManager:
 
     def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
         st.session_state.mw_object = mw_object
-        st.session_state.recording_date = mw_object.info['meas_date']
+        st.session_state.recording_date = mw_object.recording_date
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
 
@@ -54,6 +54,7 @@ class EEGDataManager:
                 mw_object = self.load_mw_object(downloaded_path, eeg_type)
                 if mw_object:
                     self.save_eeg_data_to_session(mw_object, downloaded_path, eeg_id)
+                st.success("Saved eeg data to session")
             try:
                 os.remove(downloaded_path)
             except Exception as e:

@@ -3,6 +3,7 @@ import streamlit as st
 import toml
 from services.eeg_data_manager import EEGDataManager
 from services.auth import authenticate_user
+import traceback
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -47,9 +48,9 @@ def main():
                     if heart_rate is not None and stdev_bpm is not None:
                         st.session_state.heart_rate = heart_rate
                         st.session_state.heart_rate_std_dev = stdev_bpm
-                        st.success(f"Heart Rate: {heart_rate} BPM, Standard Deviation: {stdev_bpm} BPM")
                 except Exception as e:
-                    st.error(f"Authentication or data retrieval failed: {e}")
+                    tb_exception = traceback.TracebackException.from_exception(e)
+                    st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
 
         # Footer section
         version = get_version_from_pyproject()

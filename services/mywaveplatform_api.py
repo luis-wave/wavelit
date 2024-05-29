@@ -3,6 +3,8 @@ import base64
 import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
+import time
+
 
 import requests
 import streamlit as st
@@ -45,7 +47,10 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             response = requests.get(f"{self.base_url}/eeg", headers=headers, json=request_data)
+            st.success(response.json())
             response.raise_for_status()
+            time.sleep(1)
+
 
             download_url = response.json().get("download_url")
             if download_url:
