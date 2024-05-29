@@ -89,7 +89,7 @@ def create_plotly_figure(df, channels, offset_value, colors):
                 y=df[channel] + offset,  # Apply vertical offset
                 mode="lines",
                 name=channel,
-                line=dict(color=colors[i]),
+                line=dict(color="#4E4E4E"),
             )
         )
 
@@ -115,7 +115,7 @@ def create_plotly_figure(df, channels, offset_value, colors):
                 x1=onset + 2,  # end time of seizure (2 seconds after start)
                 y0=-150,  # start y (adjust according to your scale)
                 y1=offset * len(channels),  # end y
-                fillcolor="silver",  # color of the shaded area
+                fillcolor="#FF7373",  # color of the shaded area
                 opacity=1,  # transparency
                 layer="below",  # draw below the data
                 line_width=0,
