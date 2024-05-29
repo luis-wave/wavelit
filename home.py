@@ -13,7 +13,7 @@ from mywaveanalytics.libraries import (ecg_statistics,
                                        eeg_computational_library, filters,
                                        mywaveanalytics, references)
 from yaml.loader import SafeLoader
-
+import time
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -119,6 +119,8 @@ def download_eeg_file(eeg_id, base_url, headers):
         # st.write(f"Request Data: {request_data}")
         # st.write(f"Response Status Code: {response.status_code}")
         # st.write(f"Response Text: {response.text}")
+        response.json()
+        time.sleep(1)
 
         response.raise_for_status()
 
