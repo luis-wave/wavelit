@@ -18,6 +18,9 @@ from scipy.signal import find_peaks, peak_prominences, welch
 
 from graph_utils import preprocessing
 
+import plotly.graph_objs as go
+import plotly.express as px
+
 log = logging.getLogger(__name__)
 
 
@@ -74,7 +77,7 @@ class PersistPipeline:
         )
 
     def generate_graphs(self):
-        for idx in self.data.index[:10]:
+        for idx in self.data.index[:20]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
@@ -365,6 +368,52 @@ class PersistPipeline:
         plt.tight_layout()
         # plt.savefig(save)
         st.pyplot(fig)
+
+    def plot_3d_psd(self):
+        # Prepare data for 3D plot
+        freqs = self.freqs
+        epochs = range(self.psds.shape[0])
+        psd_data = self.psds.mean(axis=1)  # Averaging across channels
+        alpha_scores = self.data.index.values
+
+        # Create a 3D plot
+        fig = go.Figure()
+
+        # Filter frequencies between 4 Hz and 20 Hz
+        freq_mask = (freqs >= 2.2) & (freqs <= 20)
+        filtered_freqs = freqs[freq_mask]
+        filtered_psd_data = psd_data[:, freq_mask]
+
+        # Create a meshgrid for x and y
+        X, Y = np.meshgrid(filtered_freqs, epochs)
+
+        # Stack the Z values (PSD data)
+        Z = np.vstack(filtered_psd_data)
+
+        # Create the surface plot
+        surface = go.Surface(
+            x=X, y=Y, z=Z,
+            surfacecolor=np.tile(alpha_scores, (len(filtered_freqs), 1)).T,
+            colorscale='ice',
+            cmin=0, cmax=np.max(alpha_scores)
+        )
+
+        fig.add_trace(surface)
+
+        fig.update_layout(
+            title="3D PSD Plot Across All Epochs",
+            scene=dict(
+                xaxis_title='Frequency (Hz)',
+                yaxis_title='Epochs',
+                zaxis_title='PSD (uV^2/Hz)',
+                xaxis=dict(range=[2.2, 20]),
+                zaxis=dict(range=[0, 100])
+            ),
+            width=1200,
+            height=1200
+        )
+
+        return fig
 
 
 def format_func(value, tick_number):

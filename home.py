@@ -5,6 +5,9 @@ from services.eeg_data_manager import EEGDataManager
 from services.auth import authenticate_user
 import traceback
 
+st.session_state.heart_rate = None
+st.session_state.eqi = None
+
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
     try:
@@ -34,7 +37,11 @@ def main():
         uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
         if uploaded_file is not None:
-            eeg_manager.handle_uploaded_file(uploaded_file)
+            try:
+                eeg_manager.handle_uploaded_file(uploaded_file)
+            except Exception as e:
+                tb_exception = traceback.TracebackException.from_exception(e)
+                st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
 
         # Download EEG file by EEG ID
         st.write("Or")
@@ -44,10 +51,6 @@ def main():
             with st.spinner("Downloading EEG data..."):
                 try:
                     eeg_manager.handle_downloaded_file(eeg_id)
-                    heart_rate, stdev_bpm = eeg_manager.get_heart_rate_variables(eeg_id)
-                    if heart_rate is not None and stdev_bpm is not None:
-                        st.session_state.heart_rate = heart_rate
-                        st.session_state.heart_rate_std_dev = stdev_bpm
                 except Exception as e:
                     tb_exception = traceback.TracebackException.from_exception(e)
                     st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")

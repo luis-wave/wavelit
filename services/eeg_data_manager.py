@@ -4,6 +4,8 @@ from pathlib import Path
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
 from services.mywaveplatform_api import MyWavePlatformApi
+from dsp.analytics import StandardPipeline
+from datetime import datetime
 
 class EEGDataManager:
     def __init__(self, base_url=None, username=None, password=None, api_key=None):
@@ -29,7 +31,7 @@ class EEGDataManager:
 
     def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
         st.session_state.mw_object = mw_object
-        st.session_state.recording_date = mw_object.recording_date
+        st.session_state.recording_date = datetime.strptime(mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
 
@@ -44,6 +46,8 @@ class EEGDataManager:
                 if mw_object:
                     st.success("EEG Data loaded successfully!")
                     self.save_eeg_data_to_session(mw_object, uploaded_file.name, None)
+                    pipeline = StandardPipeline(mw_object)
+                    pipeline.run()
 
     def handle_downloaded_file(self, eeg_id):
         downloaded_path, file_extension = self.api_service.download_eeg_file(eeg_id, self.headers)
@@ -54,6 +58,8 @@ class EEGDataManager:
                 mw_object = self.load_mw_object(downloaded_path, eeg_type)
                 if mw_object:
                     self.save_eeg_data_to_session(mw_object, downloaded_path, eeg_id)
+                    pipeline = StandardPipeline(mw_object)
+                    pipeline.run()
                 st.success("Saved eeg data to session")
             try:
                 os.remove(downloaded_path)

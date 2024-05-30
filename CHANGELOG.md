@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2023-05-30
+### Added
+- Interactive 3d plot of all Power Spectra across epochs.
+- Selective mode to generate a single plot.
+- EEG Data Manager
+- MyWavePlatform API support.
+- Wavelet viewer
+
+### Changed
+- Generate top 20 plots.
+- Logic to handle eeg uploads.
+- All headers now have either filename (uploaded eegs), eeg_ids (downloaded_eegs), and recording date.
+
+
+
 ## [1.9.0] - 2023-05-28
 ### Added
 - New users
