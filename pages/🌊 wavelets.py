@@ -121,7 +121,7 @@ else:
         mw_object = mw_object.copy()
 
         # Generate and display CWT spectrogram plot
-        fig = calculate_and_plot_cwt_spectrogram2(mw_object)
+        fig = calculate_and_plot_cwt_spectrogram(mw_object)
         st.plotly_chart(fig)
 
     else:

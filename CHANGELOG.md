@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Generate top 20 plots.
 - Logic to handle eeg uploads.
 - All headers now have either filename (uploaded eegs), eeg_ids (downloaded_eegs), and recording date.
+- Added an icon next to epochs.py.
+- Wavelet viewer renders spectrograph in 3d again.
 
 
 

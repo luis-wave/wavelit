@@ -39,7 +39,7 @@ def main():
         if uploaded_file is not None:
             try:
                 eeg_manager.handle_uploaded_file(uploaded_file)
-                st.switch_page("pages/epochs.py")
+                st.switch_page("pages/🏄 epochs.py")
             except Exception as e:
                 tb_exception = traceback.TracebackException.from_exception(e)
                 st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
@@ -52,7 +52,7 @@ def main():
             with st.spinner("Downloading EEG data..."):
                 try:
                     eeg_manager.handle_downloaded_file(eeg_id)
-                    st.switch_page("pages/epochs.py")
+                    st.switch_page("pages/🏄 epochs.py")
                 except Exception as e:
                     tb_exception = traceback.TracebackException.from_exception(e)
                     st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
