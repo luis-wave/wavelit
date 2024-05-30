@@ -84,11 +84,11 @@ else:
         )
 
 
+        with st.spinner("Running pipeline..."):
+            pipeline = run_persist_pipeline(mw_object)
+            pipeline.run(ref=ref, time_win=time_win)
 
-        pipeline = run_persist_pipeline(mw_object)
-        pipeline.run(ref=ref, time_win=time_win)
-
-        with st.spinner("Drawing..."):
+        with st.spinner("Drawing all epochs..."):
             fig = pipeline.plot_3d_psd()
             st.plotly_chart(fig)
 
