@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2023-06-04
+### Added
+- Brought back NGBoost app with retrained model (bipolar transverse + 6-13 Hz frequency range).
+
+### Changed
+- NGBoost app now does batch processing with uploaded zip folders of eeg files.
+
+
 ## [1.10.0] - 2023-05-30
 ### Added
 - Interactive 3d plot of all Power Spectra across epochs.
