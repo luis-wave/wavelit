@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2023-06-10
+### Added
+- Bad lead removal across all epochs. Currently works for monopolar montages.
+- Epoch dataframe to review sync score, alpha score, and average psds.
+
+### Removed
+- Wavelet viewer
+
+
+
 ## [1.11.0] - 2023-06-04
 ### Added
 - Brought back NGBoost app with retrained model (bipolar transverse + 6-13 Hz frequency range).

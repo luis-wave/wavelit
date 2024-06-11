@@ -91,6 +91,13 @@ else:
         with st.spinner("Drawing all epochs..."):
             fig = pipeline.plot_3d_psd()
             st.plotly_chart(fig)
+            pipeline.data['average_psds'] = pipeline.data['flattened_psds'].apply(lambda x: np.array(x).reshape(19,-1).mean(axis=0)[11:51])
+
+            st.write("Epoch metadata")
+            st.dataframe(pipeline.data, use_container_width=True, column_order = ['average_psds','sync_score', 'alpha', 'bads', 'n_bads'],  column_config={
+                "average_psds": st.column_config.AreaChartColumn(label="Average PSD")
+            })
+
 
         epoch_num = int(st.number_input(
             "Enter epoch number"
@@ -98,10 +105,12 @@ else:
         if st.button("Generate epoch graph"):
             with st.spinner("Drawing..."):
                 pipeline.combined_plot(epoch_num)
+                pipeline.reset(mw_object)
 
         if st.button("Generate top 20 epoch graphs"):
             with st.spinner("Drawing.."):
                 pipeline.generate_graphs()
+                pipeline.reset(mw_object)
 
         pipeline.reset(mw_object)
 

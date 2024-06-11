@@ -12,9 +12,11 @@ from mywaveanalytics.libraries import (eeg_computational_library, filters,
                                        references)
 from mywaveanalytics.utils import params
 from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
-                                          ELECTRODE_GROUPING)
+                                          ELECTRODE_GROUPING, CHANNEL_ORDER_EEG)
 from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
+import textwrap
+
 
 from graph_utils import preprocessing
 
@@ -32,9 +34,16 @@ class PersistPipeline:
         self.epochs = None
         self.freqs = None
         self.psds = None
+        self.data = None
 
     def reset(self, mw_object):
         self.mw_object = mw_object.copy()
+        self.ref = None
+        self.sampling_rate = mw_object.eeg.info["sfreq"]
+        self.epochs = None
+        self.freqs = None
+        self.psds = None
+        self.data = None
 
     def run(self, time_win=10, ref="le"):
         self.ref = ref
@@ -67,9 +76,11 @@ class PersistPipeline:
             lambda x: grade_alpha(x, self.data["alpha"].values)
         )
 
-        self.data["n_bads"] = [
-            len(find_leads_off(self.epochs[i])) for i in range(len(self.epochs))
+        self.data["bads"] = [
+            find_leads_off(self.epochs[i]) for i in range(len(self.epochs))
         ]
+
+        self.data["n_bads"] = self.data["bads"].apply(lambda x: len(x))
 
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
@@ -134,6 +145,8 @@ class PersistPipeline:
         epochs = self.epochs[epoch_id]
         ref = self.ref
 
+        bads = self.data['bads'][epoch_id]
+
         event_times = self.epochs.events[:, 0] / self.sampling_rate
 
         # Align channel order to what the lab is used to if applicable
@@ -162,6 +175,10 @@ class PersistPipeline:
         if ref == "cz":
             epochs = epochs.drop_channels(["Cz"])
             new_order.remove("Cz")
+
+        if bads:
+            epochs = epochs.drop_channels(bads)
+            new_order = [item for item in new_order if item not in bads]
 
         # Calculate FFT and plot using Welch's method
         data = epochs.get_data(picks="eeg", units="uV")[0]
@@ -212,6 +229,13 @@ class PersistPipeline:
         channels = [i + channel_suffix_map[ref] for i in channels]
 
         plot_title = f"{rec_date} {suffix_map[ref]}"
+
+        if bads:
+            plot_title = plot_title + f" ({', '.join(bads)} removed)"
+
+            # Wrap title if it's too long
+            wrapper = textwrap.TextWrapper(width=60)  # Adjust 'width' to your needs
+            plot_title = "\n".join(wrapper.wrap(plot_title))
 
         fig.text(
             0.14,
@@ -373,8 +397,11 @@ class PersistPipeline:
         # Prepare data for 3D plot
         freqs = self.freqs
         epochs = range(self.psds.shape[0])
+
         psd_data = self.psds.mean(axis=1)  # Averaging across channels
         alpha_scores = self.data.index.values
+
+        excess_sync_score = self.data['sync_score'] > 150
 
         # Create a 3D plot
         fig = go.Figure()
@@ -383,6 +410,9 @@ class PersistPipeline:
         freq_mask = (freqs >= 2.2) & (freqs <= 20)
         filtered_freqs = freqs[freq_mask]
         filtered_psd_data = psd_data[:, freq_mask]
+
+        # Set indices of filtered_psd_data where sync_score is over 150 to 0
+        filtered_psd_data[excess_sync_score, :] = 0
 
         # Create a meshgrid for x and y
         X, Y = np.meshgrid(filtered_freqs, epochs)
@@ -414,6 +444,8 @@ class PersistPipeline:
         )
 
         return fig
+
+
 
 
 def format_func(value, tick_number):
