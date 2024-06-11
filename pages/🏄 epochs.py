@@ -93,9 +93,9 @@ else:
             st.plotly_chart(fig)
             pipeline.data['average_psds'] = pipeline.data['flattened_psds'].apply(lambda x: np.array(x).reshape(19,-1).mean(axis=0)[11:51])
 
-            st.write("Epoch metadata")
+            st.write("Epochs Metadata")
             st.dataframe(pipeline.data, use_container_width=True, column_order = ['average_psds','sync_score', 'alpha', 'bads', 'n_bads'],  column_config={
-                "average_psds": st.column_config.AreaChartColumn(label="Average PSD")
+                "average_psds": st.column_config.AreaChartColumn(label="Average PSD (4-20 Hz)")
             })
 
 
