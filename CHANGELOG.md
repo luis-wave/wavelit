@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [1.13.0] - 2023-06-10
+### Added
+- Asynchronous calls to AEA, AHR, Autoreject endpoints to MyWavePlatform.
+- Loaded data from asynchronous calls to session state. All eegs called by eeg_ids will instantly have abnormal EEG data available for visualizations.
+- Installed aihttp, aidns libraries.
+
+
+
 ## [1.12.0] - 2023-06-10
 ### Added
 - Bad lead removal across all epochs. Currently works for monopolar montages.

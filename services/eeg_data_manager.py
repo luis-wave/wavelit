@@ -6,11 +6,14 @@ from mywaveanalytics.libraries import mywaveanalytics
 from services.mywaveplatform_api import MyWavePlatformApi
 from dsp.analytics import StandardPipeline
 from datetime import datetime
+import asyncio
 
 class EEGDataManager:
     def __init__(self, base_url=None, username=None, password=None, api_key=None):
         self.api_service = MyWavePlatformApi(base_url, username, password, api_key)
-        self.headers = self.api_service.login()
+
+    async def initialize(self):
+        self.headers = await self.api_service.login()
 
     def save_uploaded_file(self, uploaded_file):
         try:
@@ -35,7 +38,7 @@ class EEGDataManager:
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
 
-    def handle_uploaded_file(self, uploaded_file):
+    async def handle_uploaded_file(self, uploaded_file):
         saved_path = self.save_uploaded_file(uploaded_file)
         if saved_path:
             eeg_type = 0 if uploaded_file.name.lower().endswith(".dat") else 10 if uploaded_file.name.lower().endswith(".edf") else None
@@ -49,8 +52,8 @@ class EEGDataManager:
                     pipeline = StandardPipeline(mw_object)
                     pipeline.run()
 
-    def handle_downloaded_file(self, eeg_id):
-        downloaded_path, file_extension = self.api_service.download_eeg_file(eeg_id, self.headers)
+    async def handle_downloaded_file(self, eeg_id):
+        downloaded_path, file_extension = await self.api_service.download_eeg_file(eeg_id, self.headers)
         if downloaded_path:
             st.success(f"EEG Data for ID {eeg_id} downloaded successfully!")
             eeg_type = 0 if file_extension.lower() == ".dat" else 10 if file_extension.lower() == ".edf" else None
@@ -66,5 +69,15 @@ class EEGDataManager:
             except Exception as e:
                 st.error(f"Failed to delete the temporary file: {e}")
 
-    def get_heart_rate_variables(self, eeg_id):
-        return self.api_service.get_heart_rate_variables(eeg_id, self.headers)
+    async def get_heart_rate_variables(self, eeg_id):
+        return await self.api_service.get_heart_rate_variables(eeg_id, self.headers)
+
+    async def fetch_additional_data(self, eeg_id):
+        ahr, aea, autoreject = await asyncio.gather(
+            self.api_service.get_ahr_onsets(eeg_id, self.headers),
+            self.api_service.get_aea_onsets(eeg_id, self.headers),
+            self.api_service.get_autoreject_annots(eeg_id, self.headers)
+        )
+        st.session_state.ahr = ahr
+        st.session_state.aea = aea
+        st.session_state.autoreject = autoreject

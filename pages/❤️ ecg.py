@@ -160,6 +160,8 @@ st.set_page_config(page_title="ECG Visualization", layout="wide")
 st.title("ECG Visualization Dashboard")
 st.session_state["data"] = None
 
+st.json(st.session_state.ahr)
+
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
 

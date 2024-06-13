@@ -4,6 +4,7 @@ import toml
 from services.eeg_data_manager import EEGDataManager
 from services.auth import authenticate_user
 import traceback
+import asyncio
 
 st.session_state.heart_rate = None
 st.session_state.eqi = None
@@ -17,7 +18,7 @@ def get_version_from_pyproject():
         st.error(f"Error reading version from pyproject.toml: {e}")
         return "Unknown"
 
-def main():
+async def main():
     name, authentication_status, username, authenticator = authenticate_user()
 
     if authentication_status:
@@ -30,6 +31,7 @@ def main():
         api_key = os.getenv("API_KEY")
 
         eeg_manager = EEGDataManager(base_url, username, password, api_key)
+        await eeg_manager.initialize()
 
         st.title("EEG Analysis Dashboard")
 
@@ -38,11 +40,11 @@ def main():
 
         if uploaded_file is not None:
             try:
-                eeg_manager.handle_uploaded_file(uploaded_file)
+                await eeg_manager.handle_uploaded_file(uploaded_file)
                 st.switch_page("pages/🏄 epochs.py")
             except Exception as e:
                 tb_exception = traceback.TracebackException.from_exception(e)
-                st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
+                st.error(f"File upload or processing failed: {''.join(tb_exception.format())}")
 
         # Download EEG file by EEG ID
         st.write("Or")
@@ -51,11 +53,12 @@ def main():
         if st.button("Download EEG Data"):
             with st.spinner("Downloading EEG data..."):
                 try:
-                    eeg_manager.handle_downloaded_file(eeg_id)
+                    await eeg_manager.handle_downloaded_file(eeg_id)
+                    await eeg_manager.fetch_additional_data(eeg_id)
                     st.switch_page("pages/🏄 epochs.py")
                 except Exception as e:
                     tb_exception = traceback.TracebackException.from_exception(e)
-                    st.error(f"Authentication or data retrieval failed: {''.join(tb_exception.format())}")
+                    st.error(f"Data retrieval or processing failed: {''.join(tb_exception.format())}")
 
         # Footer section
         version = get_version_from_pyproject()
@@ -72,4 +75,4 @@ def main():
         st.warning("Please enter your username and password")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
