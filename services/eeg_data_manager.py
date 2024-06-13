@@ -1,12 +1,15 @@
+import asyncio
 import os
 import tempfile
+from datetime import datetime
 from pathlib import Path
+
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
-from services.mywaveplatform_api import MyWavePlatformApi
+
 from dsp.analytics import StandardPipeline
-from datetime import datetime
-import asyncio
+from services.mywaveplatform_api import MyWavePlatformApi
+
 
 class EEGDataManager:
     def __init__(self, base_url=None, username=None, password=None, api_key=None):

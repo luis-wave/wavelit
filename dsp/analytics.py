@@ -1,9 +1,8 @@
+import streamlit as st
 from mywaveanalytics.libraries import (ecg_statistics,
                                        eeg_computational_library, filters,
                                        mywaveanalytics, references)
-import streamlit as st
 from mywaveanalytics.pipelines import eqi_pipeline
-
 
 if 'eqi' not in st.session_state:
     st.session_state.eqi = None

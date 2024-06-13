@@ -1,13 +1,15 @@
-import streamlit as st
-import zipfile
+import base64
 import os
 import tempfile
-import pandas as pd
+import zipfile
+
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
-import base64
+import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
 from mywaveanalytics.pipelines import ngboost_protocol_pipeline
+
 
 # Function to process each EEG file
 def process_eeg_file(file_path, eeg_type):

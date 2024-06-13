@@ -1,13 +1,16 @@
+import asyncio
 import os
+import traceback
+
 import streamlit as st
 import toml
-from services.eeg_data_manager import EEGDataManager
+
 from services.auth import authenticate_user
-import traceback
-import asyncio
+from services.eeg_data_manager import EEGDataManager
 
 st.session_state.heart_rate = None
 st.session_state.eqi = None
+
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -18,12 +21,13 @@ def get_version_from_pyproject():
         st.error(f"Error reading version from pyproject.toml: {e}")
         return "Unknown"
 
+
 async def main():
     name, authentication_status, username, authenticator = authenticate_user()
 
     if authentication_status:
         authenticator.logout("Logout", "main")
-        st.write(f'Welcome *{name}*')
+        st.write(f"Welcome *{name}*")
 
         base_url = os.getenv("BASE_URL")
         username = os.getenv("USERNAME")
@@ -44,7 +48,9 @@ async def main():
                 st.switch_page("pages/🏄 epochs.py")
             except Exception as e:
                 tb_exception = traceback.TracebackException.from_exception(e)
-                st.error(f"File upload or processing failed: {''.join(tb_exception.format())}")
+                st.error(
+                    f"File upload or processing failed: {''.join(tb_exception.format())}"
+                )
 
         # Download EEG file by EEG ID
         st.write("Or")
@@ -58,7 +64,9 @@ async def main():
                     st.switch_page("pages/🏄 epochs.py")
                 except Exception as e:
                     tb_exception = traceback.TracebackException.from_exception(e)
-                    st.error(f"Data retrieval or processing failed: {''.join(tb_exception.format())}")
+                    st.error(
+                        f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
+                    )
 
         # Footer section
         version = get_version_from_pyproject()
@@ -73,6 +81,7 @@ async def main():
         st.error("Username/password is incorrect")
     elif authentication_status is None:
         st.warning("Please enter your username and password")
+
 
 if __name__ == "__main__":
     asyncio.run(main())

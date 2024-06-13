@@ -9,10 +9,12 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from pipeline import bipolar_transverse_montage
 
+
 def format_single(second):
     # Calculate minutes and seconds
     minutes, seconds = divmod(int(second), 60)
-    return f"{minutes:02}:{seconds:02}"
+    milliseconds = int((second - int(second)) * 1000)
+    return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
@@ -55,7 +57,7 @@ else:
 
             else:
                 # Append data for all lists even if they do not meet the threshold
-                onsets.append(index * epoch_length * 1000)
+                onsets.append(index * epoch_length)
                 confidences.append(probability)
                 is_seizure.append(False)
 
@@ -67,8 +69,8 @@ else:
         })
         df['montage'] = ref
 
-        df['aea_times'] = df['onsets'].apply(lambda x: format_single(x))
-
+        df['aea_times'] = df['onsets'].apply(format_single)
+        df['onsets'] = pd.to_datetime(df['onsets'], unit='s')
 
         return df
 
@@ -138,7 +140,7 @@ else:
                     # adding a Rectangle for seizure epoch
                     type="rect",
                     x0=onset,  # start time of seizure
-                    x1=onset + 2,  # end time of seizure (2 seconds after start)
+                    x1=onset + pd.Timedelta(seconds=2),  # end time of seizure (2 seconds after start)
                     y0=-150,  # start y (adjust according to your scale)
                     y1=offset * len(channels),  # end y
                     fillcolor="#FF7373",  # color of the shaded area
@@ -301,6 +303,11 @@ else:
                             min_value=0,
                             max_value=1,  # Assuming the probability is normalized between 0 and 1
                         ),
+                        "onsets": st.column_config.NumberColumn(
+                            "Onset (s)",
+                            help="The onset times in seconds",
+                            format="%d"
+                        )
                     },
                     hide_index=True,
             )

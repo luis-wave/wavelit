@@ -1,9 +1,12 @@
 import logging
+import textwrap
 
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objs as go
 import seaborn as sns
 import streamlit as st
 from matplotlib.collections import LineCollection
@@ -11,17 +14,13 @@ from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
 from mywaveanalytics.libraries import (eeg_computational_library, filters,
                                        references)
 from mywaveanalytics.utils import params
-from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
-                                          ELECTRODE_GROUPING, CHANNEL_ORDER_EEG)
+from mywaveanalytics.utils.params import (CHANNEL_ORDER_EEG,
+                                          DEFAULT_RESAMPLING_FREQUENCY,
+                                          ELECTRODE_GROUPING)
 from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
-import textwrap
-
 
 from graph_utils import preprocessing
-
-import plotly.graph_objs as go
-import plotly.express as px
 
 log = logging.getLogger(__name__)
 
@@ -145,7 +144,7 @@ class PersistPipeline:
         epochs = self.epochs[epoch_id]
         ref = self.ref
 
-        bads = self.data['bads'][epoch_id]
+        bads = self.data["bads"][epoch_id]
 
         event_times = self.epochs.events[:, 0] / self.sampling_rate
 
@@ -401,7 +400,7 @@ class PersistPipeline:
         psd_data = self.psds.mean(axis=1)  # Averaging across channels
         alpha_scores = self.data.index.values
 
-        excess_sync_score = self.data['sync_score'] > 150
+        excess_sync_score = self.data["sync_score"] > 150
 
         # Create a 3D plot
         fig = go.Figure()
@@ -422,10 +421,13 @@ class PersistPipeline:
 
         # Create the surface plot
         surface = go.Surface(
-            x=X, y=Y, z=Z,
+            x=X,
+            y=Y,
+            z=Z,
             surfacecolor=np.tile(alpha_scores, (len(filtered_freqs), 1)).T,
-            colorscale='ice',
-            cmin=0, cmax=np.max(alpha_scores)
+            colorscale="ice",
+            cmin=0,
+            cmax=np.max(alpha_scores),
         )
 
         fig.add_trace(surface)
@@ -433,19 +435,17 @@ class PersistPipeline:
         fig.update_layout(
             title="3D PSD Plot Across All Epochs",
             scene=dict(
-                xaxis_title='Frequency (Hz)',
-                yaxis_title='Epochs',
-                zaxis_title='PSD (uV^2/Hz)',
+                xaxis_title="Frequency (Hz)",
+                yaxis_title="Epochs",
+                zaxis_title="PSD (uV^2/Hz)",
                 xaxis=dict(range=[2.2, 20]),
-                zaxis=dict(range=[0, 100])
+                zaxis=dict(range=[0, 100]),
             ),
             width=1200,
-            height=1200
+            height=1200,
         )
 
         return fig
-
-
 
 
 def format_func(value, tick_number):
