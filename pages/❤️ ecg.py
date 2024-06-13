@@ -9,6 +9,11 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from pipeline import bipolar_transverse_montage
 
+def format_single(second):
+    # Calculate minutes and seconds
+    minutes, seconds = divmod(int(second), 60)
+    return f"{minutes:02}:{seconds:02}"
+
 def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     # Extract the probabilities array from the dictionary
     probabilities = predictions['predictions']
@@ -22,7 +27,7 @@ def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     # Iterate through the probabilities to find values above the threshold
     for index, probability in enumerate(probabilities):
         if probability > confidence_threshold:
-            onsets.append(r_peaks[index])
+            onsets.append(r_peaks[index] * 1000)
             confidences.append(probability)
             is_seizure.append(True)
 
@@ -39,6 +44,9 @@ def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
         'is_arrythmia': is_seizure
     })
 
+    df['aea_times'] = df['onsets'].apply(lambda x: format_single(x))
+
+
     return df
 
 
@@ -46,6 +54,7 @@ def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
 def mw_to_dataframe_resampled(mw_object, sample_rate=50):
     try:
         raw = mw_object.eeg
+        raw.pick_channels(['ECG'])
         raw = raw.resample(sample_rate)
         df = raw.to_data_frame()
         df['time'] = df.index / sample_rate
@@ -54,33 +63,14 @@ def mw_to_dataframe_resampled(mw_object, sample_rate=50):
         st.error(f"Failed to convert EEG data to DataFrame: {e}")
         return None
 
-# Apply different references based on user selection
-def apply_reference(mw_object, ref):
-    ref_func = {
-        "linked ears": None,
-        "centroid": references.centroid,
-        "bipolar transverse": bipolar_transverse_montage,
-        "bipolar longitudinal": references.bipolar_longitudinal_montage,
-        "temporal central parasagittal": references.temporal_central_parasagittal
-    }.get(ref, None)
 
-    if ref_func:
-        return ref_func(mw_object.copy())
-    else:
-        return mw_object.copy()
 
 # Plotly figure creation
-def create_plotly_figure(df, channels, offset_value, colors):
+def create_plotly_figure(df, offset_value):
     fig = go.Figure()
-    channels = channels[::-1]
 
-    eeg_order = [
-        'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
-        'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
-        'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
-    ]
-
-    df = df.drop(eeg_order, axis=1)
+    # Convert time from seconds to 'mm:ss' format
+    df['time'] = pd.to_datetime(df['time'], unit='s')
     fig.add_trace(
         go.Scattergl(
             x=df['time'],
@@ -127,7 +117,7 @@ def create_plotly_figure(df, channels, offset_value, colors):
         title=filename,
         xaxis_title="Time",
         yaxis_title="Electrocardiograph",
-        xaxis={"rangeslider": {"visible": True}, 'range': [0, 20]},
+        xaxis={"rangeslider": {"visible": True}, 'range': [df['time'].iloc[0], df['time'].iloc[0] + pd.Timedelta(seconds=20)], 'tickformat': '%M:%S.%L' },
         yaxis={
             "range": [-1 * offset_value, offset_value]
         },
@@ -160,7 +150,7 @@ st.set_page_config(page_title="ECG Visualization", layout="wide")
 st.title("ECG Visualization Dashboard")
 st.session_state["data"] = None
 
-st.json(st.session_state.ahr)
+# st.json(st.session_state.ahr)
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
@@ -177,7 +167,7 @@ else:
         heart_rate_std_dev = round(st.session_state.heart_rate_std_dev,1)
 
 
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
 
         if st.session_state.filename and ('/tmp/' not in st.session_state.filename) :
             #st.header(st.session_state.filename)
@@ -185,7 +175,9 @@ else:
         elif st.session_state.eeg_id:
             col1.metric("EEGId", st.session_state.eeg_id)
 
-        col2.metric("Recording Date", st.session_state.recording_date )
+        col2.metric("Recording Date", st.session_state.recording_date)
+
+        col3.metric("Abnormal ECG Events", len(st.session_state.ahr['onsets']))
 
         st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
@@ -193,48 +185,6 @@ else:
         if ('mw_object' in st.session_state) and ('heart_rate' in st.session_state) and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
-
-            # Reference selection
-            ref = 'centroid' #st.selectbox(
-            #     "Choose EEG Reference",
-            #     options=[
-            #         "linked ears",
-            #         "centroid",
-            #         "bipolar transverse",
-            #         "bipolar longitudinal",
-            #         "temporal central parasagittal"
-            #     ],
-            #     index=0  # Default to 'linked ears'
-            # )
-
-            # Apply the selected reference, but skip re-referencing if "linked ears" is selected
-            if ref != "linked ears":
-                mw_copy.eeg = apply_reference(mw_copy.eeg, ref)
-
-            # Assign ECG channel type if present
-            ecg_channels = ['ECG', 'ECG1', 'ECG2']
-            assign_ecg_channel_type(mw_copy.eeg, ecg_channels)
-
-            # Extract only EEG and ECG channels
-            channels = filter_eeg_ecg_channels(mw_copy.eeg)
-
-            # Define the specific ordering
-            eeg_order = [
-                'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
-                'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
-                'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
-            ]
-
-            # Apply specific ordering only if not a bipolar montage or TCP
-            if ref not in ["bipolar transverse", "bipolar longitudinal", "temporal central parasagittal"]:
-                channels = order_channels(channels, eeg_order)
-
-            # Channel multiselect widget
-            selected_channels = channels #st.multiselect(
-            #     "Select EEG and ECG Channels to Visualize",
-            #     channels,
-            #     default=channels
-            # )
 
             # Offset value slider
             offset_value = st.slider(
@@ -253,25 +203,15 @@ else:
                     ahr_df = filter_predictions(analysis_json)
                     st.session_state['data'] = ahr_df
 
-            # Color palette
-            flare_palette = sns.color_palette("flare", len(selected_channels))
-            colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in flare_palette]
-
             # Create DataFrame from MyWaveAnalytics object
             df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
-            if df is not None:
-                # Filter the DataFrame to include only selected channels
-                missing_channels = [channel for channel in selected_channels if channel not in df.columns]
-                if missing_channels:
-                    st.warning(f"Missing channels in the file: {missing_channels}")
-                    selected_channels = [channel for channel in selected_channels if channel in df.columns]
 
-                # Generate the Plotly figure
-                with st.spinner("Rendering..."):
-                    fig = create_plotly_figure(df, selected_channels, offset_value, colors)
+            # Generate the Plotly figure
+            with st.spinner("Rendering..."):
+                fig = create_plotly_figure(df, offset_value)
 
-                    # Display the Plotly figure
-                    st.plotly_chart(fig, use_container_width=True)
+                # Display the Plotly figure
+                st.plotly_chart(fig, use_container_width=True)
 
         else:
             st.error("No ECG data available. Please upload an EEG file on the main page.")

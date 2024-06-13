@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Loaded data from asynchronous calls to session state. All eegs called by eeg_ids will instantly have abnormal EEG data available for visualizations.
 - Installed aihttp, aidns libraries.
 
+### Changed
+- X-axis for EEG and ECG viewer now show time in 'mm:ss:sss' format instead of just seconds.
+
 
 
 ## [1.12.0] - 2023-06-10

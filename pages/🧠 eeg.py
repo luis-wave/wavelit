@@ -9,14 +9,19 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from pipeline import bipolar_transverse_montage
 
+def format_single(second):
+    # Calculate minutes and seconds
+    minutes, seconds = divmod(int(second), 60)
+    return f"{minutes:02}:{seconds:02}"
+
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
 st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
-st.json(st.session_state.aea)
+# st.json(st.session_state.aea)
 
-st.json(st.session_state.autoreject)
+#st.json(st.session_state.autoreject)
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
@@ -50,7 +55,7 @@ else:
 
             else:
                 # Append data for all lists even if they do not meet the threshold
-                onsets.append(index * epoch_length)
+                onsets.append(index * epoch_length * 1000)
                 confidences.append(probability)
                 is_seizure.append(False)
 
@@ -61,6 +66,8 @@ else:
             'is_seizure': is_seizure
         })
         df['montage'] = ref
+
+        df['aea_times'] = df['onsets'].apply(lambda x: format_single(x))
 
 
         return df
@@ -97,6 +104,8 @@ else:
     def create_plotly_figure(df, channels, offset_value, colors):
         fig = go.Figure()
         channels = channels[::-1]
+
+        df['time'] = pd.to_datetime(df['time'], unit='s')
 
         for i, channel in enumerate(channels):
             offset = i * offset_value
@@ -149,7 +158,7 @@ else:
             title=st.session_state.recording_date,
             xaxis_title="Time",
             yaxis_title="EEG Channels",
-            xaxis={"rangeslider": {"visible": True}, 'range': [0, 20]},
+            xaxis={"rangeslider": {"visible": True}, 'range': [df['time'].iloc[0], df['time'].iloc[0] + pd.Timedelta(seconds=20)], 'tickformat': '%M:%S.%L' },
             yaxis={
                 "tickvals": yticks,
                 "ticktext": ytick_labels,
