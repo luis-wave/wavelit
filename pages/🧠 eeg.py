@@ -294,8 +294,10 @@ else:
         if not st.session_state.data.empty:
             st.header("Edit AEA Predictions")
             with st.form("data_editor_form", border=False):
+                editable_df = st.session_state.data.copy()
+                editable_df['onsets'] = editable_df['onsets'].astype(int)
                 edited_df = st.data_editor(
-                    st.session_state.data,
+                    editable_df,
                     column_config={
                         "probability": st.column_config.ProgressColumn(
                             "Probability",
