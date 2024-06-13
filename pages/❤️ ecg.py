@@ -46,7 +46,6 @@ def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     })
 
     df['ahr_times'] = df['onsets'].apply(format_single)
-    df['onsets'] = pd.to_datetime(df['onsets'], unit='s')
 
     return df
 
@@ -100,8 +99,8 @@ def create_plotly_figure(df, offset_value):
             fig.add_shape(
                 # adding a Rectangle for seizure epoch
                 type="rect",
-                x0=onset,  # start time of seizure
-                x1=onset + pd.Timedelta(seconds=0.75),  # end time of seizure (2 seconds after start)
+                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
+                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of seizure (2 seconds after start)
                 y0=-offset_value,  # start y (adjust according to your scale)
                 y1=offset_value,  # end y
                 fillcolor="#FF7373",  # color of the shaded area
@@ -228,7 +227,6 @@ else:
                 st.header("Edit AEA Predictions")
                 with st.form("data_editor_form", border=False):
                     editable_df = st.session_state.data.copy()
-                    editable_df['onsets'] = editable_df['onsets'].astype(int)
                     edited_df = st.data_editor(
                         st.session_state.data,
                         column_config={
@@ -238,11 +236,6 @@ else:
                                 min_value=0,
                                 max_value=1,  # Assuming the probability is normalized between 0 and 1
                             ),
-                            "onsets": st.column_config.NumberColumn(
-                                "Onset (s)",
-                                help="The onset times in seconds",
-                                format="%d"
-                            )
                         },
                         hide_index=True,
                 )
