@@ -3,25 +3,20 @@ import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
-import pandas as pd
 
+import pandas as pd
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
-from mywaveanalytics.libraries.references import centroid, bipolar_longitudinal_montage, bipolar_transverse_montage
+from mywaveanalytics.libraries.references import (bipolar_longitudinal_montage,
+                                                  bipolar_transverse_montage,
+                                                  centroid)
 from mywaveanalytics.utils import params
 
-
+from data_models.abnormality_parsers import (serialize_aea_to_pandas,
+                                             serialize_ahr_to_pandas)
 from dsp.analytics import StandardPipeline
 from services.mywaveplatform_api import MyWavePlatformApi
-from utils.helpers import (assign_ecg_channel_type, filter_eeg_ecg_channels,
-                           format_single, order_channels)
-
-
-
-
-
-
-
+from utils.helpers import assign_ecg_channel_type, format_single
 
 
 class EEGDataManager:
@@ -90,7 +85,7 @@ class EEGDataManager:
             "bipolar_transverse": self.serialize_mw_to_df(bipolar_transverse_montage(mw_copy.eeg)),
             "bipolar_longitudinal": self.serialize_mw_to_df(bipolar_longitudinal_montage(mw_copy.eeg))
         }
-        st.session_state.ecg_graph = serialize_mw_to_df(mw_object.copy().eeg, ecg=True, eeg=False)
+        st.session_state.ecg_graph = self.serialize_mw_to_df(mw_object.copy().eeg, ecg=True, eeg=False)
 
     async def handle_uploaded_file(self, uploaded_file):
         saved_path = self.save_uploaded_file(uploaded_file)
@@ -132,8 +127,12 @@ class EEGDataManager:
             self.api_service.get_aea_onsets(eeg_id, self.headers),
             self.api_service.get_autoreject_annots(eeg_id, self.headers)
         )
-        st.session_state.ahr = ahr
-        st.session_state.aea = aea
+        st.session_state.ahr = serialize_ahr_to_pandas(ahr)
+        st.session_state.aea = {
+            "linked_ears": serialize_aea_to_pandas(aea["linked_ears"], ref="linked_ears"),
+            "centroid": serialize_aea_to_pandas(aea["centroid"], ref="centroid"),
+            "bipolar_longitudinal": serialize_aea_to_pandas(aea["bipolar_longitudinal"], ref="bipolar_longitudinal")
+        }
         st.session_state.autoreject = autoreject
 
 

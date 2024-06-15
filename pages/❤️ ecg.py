@@ -80,7 +80,7 @@ def create_plotly_figure(df, offset_value):
 
         # Use a form to contain the data editor and submit button
     if not st.session_state.data.empty:
-        seizure_epochs = st.session_state.data[st.session_state.data['is_arrythmia'] == True]['onsets']
+        seizure_epochs = st.session_state.data[st.session_state.data['is_arrhythmia'] == True]['onsets']
 
 
 
@@ -100,6 +100,22 @@ def create_plotly_figure(df, offset_value):
                 line_width=0,
             )
 
+    seizure_epochs = st.session_state.ahr[st.session_state.ahr['is_arrhythmia'] == True]['onsets']
+
+    if seizure_epochs.any().any():
+        for onset in seizure_epochs:
+            fig.add_shape(
+                # adding a Rectangle for seizure epoch
+                type="rect",
+                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
+                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of seizure (2 seconds after start)
+                y0=-offset_value,  # start y (adjust according to your scale)
+                y1=offset_value,  # end y
+                fillcolor="#FF7373",  # color of the shaded area
+                opacity=1,  # transparency
+                layer="below",  # draw below the data
+                line_width=0,
+            )
 
     filename = st.session_state.recording_date
 
@@ -141,7 +157,7 @@ else:
         heart_rate_std_dev = round(st.session_state.heart_rate_std_dev,1)
 
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
 
         if st.session_state.filename and ('/tmp/' not in st.session_state.filename) :
             #st.header(st.session_state.filename)
@@ -150,11 +166,6 @@ else:
             col1.metric("EEGId", st.session_state.eeg_id)
 
         col2.metric("Recording Date", st.session_state.recording_date)
-
-        if st.session_state.ahr:
-            col3.metric("Abnormal ECG Events", len(st.session_state.ahr['onsets']))
-        else:
-            col3.metric("Abnormal ECG Events", "N/A")
 
         st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
