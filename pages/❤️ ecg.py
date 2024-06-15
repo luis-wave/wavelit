@@ -178,7 +178,7 @@ else:
                     st.session_state['data'] = ahr_df
 
             # Create DataFrame from MyWaveAnalytics object
-            df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
+            df = st.session_state.ecg_graph #mw_to_dataframe_resampled(mw_copy, sample_rate=50)
 
             # Generate the Plotly figure
             with st.spinner("Rendering..."):

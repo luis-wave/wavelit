@@ -96,6 +96,7 @@ else:
             return mw_object.copy()
 
     # Plotly figure creation
+    @st.cache_data
     def create_plotly_figure(df, channels, offset_value):
         fig = go.Figure()
         channels = channels[::-1]
@@ -166,8 +167,8 @@ else:
 
     # Check if `mw_object` is available
     if 'mw_object' in st.session_state and st.session_state.mw_object:
-        mw_object = st.session_state.mw_object
-        mw_copy = mw_object.copy()
+        # mw_object = st.session_state.mw_object
+        # mw_copy = mw_object.copy()
 
         # Reference selection
         ref = st.selectbox(
@@ -175,41 +176,19 @@ else:
             options=[
                 "linked ears",
                 "centroid",
-                "bipolar transverse",
                 "bipolar longitudinal",
-                "temporal central parasagittal"
             ],
             index=0  # Default to 'linked ears'
         )
 
-        # Apply the selected reference, but skip re-referencing if "linked ears" is selected
-        if ref != "linked ears":
-            mw_copy.eeg = apply_reference(mw_copy.eeg, ref)
-
-        # Assign ECG channel type if present
-        ecg_channels = ['ECG', 'ECG1', 'ECG2']
-        assign_ecg_channel_type(mw_copy.eeg, ecg_channels)
-
-        # Extract only EEG and ECG channels
-        channels = filter_eeg_ecg_channels(mw_copy.eeg)
-
-        # Define the specific ordering
+        #Define the specific ordering
         eeg_order = [
             'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
             'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
             'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
         ]
 
-        # Apply specific ordering only if not a bipolar montage or TCP
-        if ref not in ["bipolar transverse", "bipolar longitudinal", "temporal central parasagittal"]:
-            channels = order_channels(channels, eeg_order)
 
-        # Channel multiselect widget
-        selected_channels = channels #st.multiselect(
-        #     "Select EEG and ECG Channels to Visualize",
-        #     channels,
-        #     default=channels
-        # )
 
         # Offset value slider
         offset_value = st.slider(
@@ -237,15 +216,24 @@ else:
                 aea_df = filter_predictions(analysis_json, ref=selected_reference)
                 st.session_state['data'] = aea_df
 
-        # Create DataFrame from MyWaveAnalytics object
-        df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
-        if df is not None:
-            # Filter the DataFrame to include only selected channels
-            missing_channels = [channel for channel in selected_channels if channel not in df.columns]
-            if missing_channels:
-                st.warning(f"Missing channels in the file: {missing_channels}")
-                selected_channels = [channel for channel in selected_channels if channel in df.columns]
+        if ref == "linked ears":
+            selected_reference = "linked_ears"
+        elif ref == 'bipolar longitudinal':
+            selected_reference = 'bipolar_longitudinal'
+        elif ref == "centroid":
+            selected_reference = "centroid"
+        else:
+            selected_reference = "linked_ears"
 
+        # Create DataFrame from MyWaveAnalytics object
+        df = st.session_state.eeg_graph[selected_reference]
+        if df is not None:
+            # # Filter the DataFrame to include only selected channels
+            # missing_channels = [channel for channel in selected_channels if channel not in df.columns]
+            # if missing_channels:
+            #     st.warning(f"Missing channels in the file: {missing_channels}")
+            #     selected_channels = [channel for channel in selected_channels if channel in df.columns]
+            selected_channels = eeg_order
             # Generate the Plotly figure
             with st.spinner("Rendering..."):
                 fig = create_plotly_figure(df, selected_channels, offset_value)

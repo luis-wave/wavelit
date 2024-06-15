@@ -2,9 +2,12 @@
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+from mywaveanalytics.utils.params import CHANNEL_ORDER_EEG
 
 
 # Plotly figure creation
+
+@st.cache_data
 def create_plotly_figure(df, channels, offset_value):
     fig = go.Figure()
     channels = channels[::-1]

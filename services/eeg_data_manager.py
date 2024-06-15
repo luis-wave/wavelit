@@ -3,12 +3,37 @@ import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
+import pandas as pd
 
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
+from mywaveanalytics.libraries.references import centroid, bipolar_longitudinal_montage
+from mywaveanalytics.utils import params
+
 
 from dsp.analytics import StandardPipeline
 from services.mywaveplatform_api import MyWavePlatformApi
+from utils.helpers import format_single
+
+
+
+
+# Function to convert a MyWaveAnalytics object to a DataFrame with resampling
+@st.cache_data
+def mw_to_dataframe_resampled(_mw_object, sample_rate=50, channels=params.CHANNEL_ORDER_EEG):
+    try:
+        raw = _mw_object.eeg
+        raw.pick_channels(channels)
+        raw = raw.resample(sample_rate)
+        df = raw.to_data_frame()
+        df['time'] = df.index / sample_rate
+        return df
+    except Exception as e:
+        st.error(f"Failed to convert EEG data to DataFrame: {e}")
+        return None
+
+
+
 
 
 class EEGDataManager:
@@ -43,11 +68,18 @@ class EEGDataManager:
             st.error(f"Loading failed for {path}: {e}")
             return None
 
-    def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
-        st.session_state.mw_object = mw_object
-        st.session_state.recording_date = datetime.strptime(mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
+    @st.cache_data
+    def save_eeg_data_to_session(_self, _mw_object, filename, eeg_id):
+        st.session_state.mw_object = _mw_object
+        st.session_state.recording_date = datetime.strptime(_mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
+        st.session_state.eeg_graph = {
+            "linked_ears": mw_to_dataframe_resampled(_mw_object.copy()),
+            "centroid": mw_to_dataframe_resampled(centroid(_mw_object.copy())),
+            "bipolar_longitudinal": mw_to_dataframe_resampled(bipolar_longitudinal_montage(_mw_object.copy()))
+        }
+        st.session_state.ecg_graph = mw_to_dataframe_resampled(_mw_object.copy(), channels=['ECG'])
 
     async def handle_uploaded_file(self, uploaded_file):
         saved_path = self.save_uploaded_file(uploaded_file)
@@ -92,3 +124,40 @@ class EEGDataManager:
         st.session_state.ahr = ahr
         st.session_state.aea = aea
         st.session_state.autoreject = autoreject
+
+
+
+
+
+def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
+    # Extract the probabilities array from the dictionary
+    probabilities = predictions['predictions']
+    r_peaks = predictions['r_peaks']
+
+    # Initialize lists to store the data
+    onsets = []
+    confidences = []
+    is_seizure = []
+
+    # Iterate through the probabilities to find values above the threshold
+    for index, probability in enumerate(probabilities):
+        if probability > confidence_threshold:
+            onsets.append(r_peaks[index])
+            confidences.append(probability)
+            is_seizure.append(True)
+        else:
+            # Append data for all lists even if they do not meet the threshold
+            onsets.append(index * epoch_length)
+            confidences.append(probability)
+            is_seizure.append(False)
+
+    # Create a DataFrame with the collected data
+    df = pd.DataFrame({
+        'onsets': onsets,
+        'probability': confidences,
+        'is_arrythmia': is_seizure
+    })
+
+    df['ahr_times'] = df['onsets'].apply(format_single)
+
+    return df
