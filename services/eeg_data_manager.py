@@ -7,30 +7,18 @@ import pandas as pd
 
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
-from mywaveanalytics.libraries.references import centroid, bipolar_longitudinal_montage
+from mywaveanalytics.libraries.references import centroid, bipolar_longitudinal_montage, bipolar_transverse_montage
 from mywaveanalytics.utils import params
 
 
 from dsp.analytics import StandardPipeline
 from services.mywaveplatform_api import MyWavePlatformApi
-from utils.helpers import format_single
+from utils.helpers import (assign_ecg_channel_type, filter_eeg_ecg_channels,
+                           format_single, order_channels)
 
 
 
 
-# Function to convert a MyWaveAnalytics object to a DataFrame with resampling
-@st.cache_data
-def mw_to_dataframe_resampled(_mw_object, sample_rate=50, channels=params.CHANNEL_ORDER_EEG):
-    try:
-        raw = _mw_object.eeg
-        raw.pick_channels(channels)
-        raw = raw.resample(sample_rate)
-        df = raw.to_data_frame()
-        df['time'] = df.index / sample_rate
-        return df
-    except Exception as e:
-        st.error(f"Failed to convert EEG data to DataFrame: {e}")
-        return None
 
 
 
@@ -68,18 +56,41 @@ class EEGDataManager:
             st.error(f"Loading failed for {path}: {e}")
             return None
 
-    @st.cache_data
-    def save_eeg_data_to_session(_self, _mw_object, filename, eeg_id):
-        st.session_state.mw_object = _mw_object
-        st.session_state.recording_date = datetime.strptime(_mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
+    # Function to convert a MyWaveAnalytics object to a DataFrame with resampling
+    def serialize_mw_to_df(self, mw_object, sample_rate=50, eeg=True, ecg=False):
+        try:
+            # Convert MyWaveObject MNE raw instance
+            raw = mw_object
+
+            # Explicitly set ECG channel to MNE 'ecg' channel type
+            assign_ecg_channel_type(raw)
+
+            # Select channels based on EEG or ECG type
+            channels = raw.pick_types(eeg=eeg, ecg=ecg).ch_names
+            raw.pick_channels(channels)
+
+            # Downsample signal for better render speeds, lower sampling rates may impact graph spectral integrity.
+            raw = raw.resample(sample_rate)
+            df = raw.to_data_frame()
+            df['time'] = df.index / sample_rate
+            return df
+        except Exception as e:
+            st.error(f"Failed to convert EEG data to DataFrame: {e}")
+            return None
+
+    def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
+        st.session_state.mw_object = mw_object
+        st.session_state.recording_date = datetime.strptime(mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
+        mw_copy = mw_object.copy()
         st.session_state.eeg_graph = {
-            "linked_ears": mw_to_dataframe_resampled(_mw_object.copy()),
-            "centroid": mw_to_dataframe_resampled(centroid(_mw_object.copy())),
-            "bipolar_longitudinal": mw_to_dataframe_resampled(bipolar_longitudinal_montage(_mw_object.copy()))
+            "linked_ears": self.serialize_mw_to_df(mw_copy.eeg),
+            "centroid": self.serialize_mw_to_df(centroid(mw_copy.eeg)),
+            "bipolar_transverse": self.serialize_mw_to_df(bipolar_transverse_montage(mw_copy.eeg)),
+            "bipolar_longitudinal": self.serialize_mw_to_df(bipolar_longitudinal_montage(mw_copy.eeg))
         }
-        st.session_state.ecg_graph = mw_to_dataframe_resampled(_mw_object.copy(), channels=['ECG'])
+        st.session_state.ecg_graph = serialize_mw_to_df(mw_object.copy().eeg, ecg=True, eeg=False)
 
     async def handle_uploaded_file(self, uploaded_file):
         saved_path = self.save_uploaded_file(uploaded_file)

@@ -151,7 +151,10 @@ else:
 
         col2.metric("Recording Date", st.session_state.recording_date)
 
-        col3.metric("Abnormal ECG Events", len(st.session_state.ahr['onsets']))
+        if st.session_state.ahr:
+            col3.metric("Abnormal ECG Events", len(st.session_state.ahr['onsets']))
+        else:
+            col3.metric("Abnormal ECG Events", "N/A")
 
         st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
@@ -178,7 +181,7 @@ else:
                     st.session_state['data'] = ahr_df
 
             # Create DataFrame from MyWaveAnalytics object
-            df = st.session_state.ecg_graph #mw_to_dataframe_resampled(mw_copy, sample_rate=50)
+            df = st.session_state.ecg_graph
 
             # Generate the Plotly figure
             with st.spinner("Rendering..."):

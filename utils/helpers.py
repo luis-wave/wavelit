@@ -16,7 +16,7 @@ def format_single(second):
     return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 # Function to assign ECG channel types if present
-def assign_ecg_channel_type(raw, ecg_channels):
+def assign_ecg_channel_type(raw, ecg_channels=['ECG', 'ECG1', 'ECG2']):
     existing_channels = raw.ch_names
     channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
     raw.set_channel_types(channel_types)

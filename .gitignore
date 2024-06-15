@@ -149,3 +149,4 @@ __pycache__
 config.yaml
 
 setup_github_auth.sh
+docker-compose.yml

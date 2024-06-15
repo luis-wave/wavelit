@@ -96,10 +96,10 @@ else:
             return mw_object.copy()
 
     # Plotly figure creation
-    @st.cache_data
-    def create_plotly_figure(df, channels, offset_value):
+    def create_plotly_figure(df, offset_value):
         fig = go.Figure()
-        channels = channels[::-1]
+
+        channels = df.columns.drop('time')
 
         df['time'] = pd.to_datetime(df['time'], unit='s')
 
@@ -181,14 +181,6 @@ else:
             index=0  # Default to 'linked ears'
         )
 
-        #Define the specific ordering
-        eeg_order = [
-            'Fz', 'Cz', 'Pz', 'Fp1', 'Fp2', 'F3', 'F4',
-            'F7', 'F8', 'C3', 'C4', 'T3', 'T4',
-            'T5', 'T6', 'P3', 'P4', 'O1', 'O2'
-        ]
-
-
 
         # Offset value slider
         offset_value = st.slider(
@@ -233,10 +225,9 @@ else:
             # if missing_channels:
             #     st.warning(f"Missing channels in the file: {missing_channels}")
             #     selected_channels = [channel for channel in selected_channels if channel in df.columns]
-            selected_channels = eeg_order
             # Generate the Plotly figure
             with st.spinner("Rendering..."):
-                fig = create_plotly_figure(df, selected_channels, offset_value)
+                fig = create_plotly_figure(df, offset_value)
 
                 # Display the Plotly figure
                 st.plotly_chart(fig, use_container_width=True)
