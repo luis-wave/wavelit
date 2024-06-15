@@ -14,6 +14,14 @@ from services.mywaveplatform_api import MyWavePlatformApi
 class EEGDataManager:
     def __init__(self, base_url=None, username=None, password=None, api_key=None):
         self.api_service = MyWavePlatformApi(base_url, username, password, api_key)
+        st.session_state.heart_rate = None
+        st.session_state.eqi = None
+        st.session_state.aea = None
+        st.session_state.ahr = None
+        st.session_state.autoreject = None
+        st.session_state.heart_rate = None
+        st.session_state.heart_rate_std_dev = None
+
 
     async def initialize(self):
         self.headers = await self.api_service.login()

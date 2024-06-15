@@ -4,7 +4,7 @@ import mne
 import numpy as np
 import streamlit as st
 
-from pipeline import PersistPipeline
+from dsp.analytics import PersistPipeline
 
 st.set_page_config(page_title="EEG Epoch Generator", layout="wide")
 

@@ -8,9 +8,6 @@ import toml
 from services.auth import authenticate_user
 from services.eeg_data_manager import EEGDataManager
 
-st.session_state.heart_rate = None
-st.session_state.eqi = None
-
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -54,6 +51,7 @@ async def main():
 
         # Download EEG file by EEG ID
         st.write("Or")
+
         eeg_id = st.text_input("Enter EEG ID")
 
         if st.button("Download EEG Data"):

@@ -1,27 +1,19 @@
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import seaborn as sns
 import streamlit as st
 from mywaveanalytics.libraries import references
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     SeizureDxPipeline
 
-from pipeline import bipolar_transverse_montage
-
-
-def format_single(second):
-    # Calculate minutes and seconds
-    minutes, seconds = divmod(int(second), 60)
-    milliseconds = int((second - int(second)) * 1000)
-    return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
+from utils.helpers import (assign_ecg_channel_type, filter_eeg_ecg_channels,
+                           format_single, order_channels)
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
 st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
-# st.json(st.session_state.aea)
+st.json(st.session_state.aea)
 
 #st.json(st.session_state.autoreject)
 
@@ -38,6 +30,8 @@ else:
         col1.metric("EEGId", st.session_state.eeg_id)
 
     col2.metric("Recording Date", st.session_state.recording_date )
+
+    #col3.metric("Abnormal EEG Events", len(st.session_state.aea['onsets']))
 
     def filter_predictions(predictions, confidence_threshold=0.75, epoch_length=2, ref = "N/A"):
         # Extract the probabilities array from the dictionary
@@ -91,7 +85,7 @@ else:
         ref_func = {
             "linked ears": None,
             "centroid": references.centroid,
-            "bipolar transverse": bipolar_transverse_montage,
+            "bipolar transverse": references.bipolar_transverse_montage,
             "bipolar longitudinal": references.bipolar_longitudinal_montage,
             "temporal central parasagittal": references.temporal_central_parasagittal
         }.get(ref, None)
@@ -102,7 +96,7 @@ else:
             return mw_object.copy()
 
     # Plotly figure creation
-    def create_plotly_figure(df, channels, offset_value, colors):
+    def create_plotly_figure(df, channels, offset_value):
         fig = go.Figure()
         channels = channels[::-1]
 
@@ -169,23 +163,6 @@ else:
             height=1000,  # Consistent height
         )
         return fig
-
-    # Function to assign ECG channel types if present
-    def assign_ecg_channel_type(raw, ecg_channels):
-        existing_channels = raw.ch_names
-        channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
-        raw.set_channel_types(channel_types)
-
-    # Function to filter EEG and ECG channels
-    def filter_eeg_ecg_channels(raw):
-        picks = raw.pick_types(eeg=True, ecg=True).ch_names
-        return picks
-
-    # Function to order channels
-    def order_channels(channels, ordered_list):
-        ordered_channels = [ch for ch in ordered_list if ch in channels]
-        remaining_channels = [ch for ch in channels if ch not in ordered_channels]
-        return ordered_channels + remaining_channels
 
     # Check if `mw_object` is available
     if 'mw_object' in st.session_state and st.session_state.mw_object:
@@ -260,10 +237,6 @@ else:
                 aea_df = filter_predictions(analysis_json, ref=selected_reference)
                 st.session_state['data'] = aea_df
 
-        # Color palette
-        flare_palette = sns.color_palette("flare", len(selected_channels))
-        colors = [f"rgb({int(r*255)}, {int(g*255)}, {int(b*255)})" for r, g, b in flare_palette]
-
         # Create DataFrame from MyWaveAnalytics object
         df = mw_to_dataframe_resampled(mw_copy, sample_rate=50)
         if df is not None:
@@ -275,7 +248,7 @@ else:
 
             # Generate the Plotly figure
             with st.spinner("Rendering..."):
-                fig = create_plotly_figure(df, selected_channels, offset_value, colors)
+                fig = create_plotly_figure(df, selected_channels, offset_value)
 
                 # Display the Plotly figure
                 st.plotly_chart(fig, use_container_width=True)

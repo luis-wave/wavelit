@@ -1,20 +1,11 @@
-import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import seaborn as sns
 import streamlit as st
-from mywaveanalytics.libraries import references
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     ArrhythmiaDxPipeline
 
-from pipeline import bipolar_transverse_montage
+from utils.helpers import format_single
 
-
-def format_single(second):
-    # Calculate minutes and seconds
-    minutes, seconds = divmod(int(second), 60)
-    milliseconds = int((second - int(second)) * 1000)
-    return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
     # Extract the probabilities array from the dictionary
@@ -124,23 +115,6 @@ def create_plotly_figure(df, offset_value):
         height=750,  # Consistent height
     )
     return fig
-
-# Function to assign ECG channel types if present
-def assign_ecg_channel_type(raw, ecg_channels):
-    existing_channels = raw.ch_names
-    channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
-    raw.set_channel_types(channel_types)
-
-# Function to filter EEG and ECG channels
-def filter_eeg_ecg_channels(raw):
-    picks = raw.pick_types(eeg=True, ecg=True).ch_names
-    return picks
-
-# Function to order channels
-def order_channels(channels, ordered_list):
-    ordered_channels = [ch for ch in ordered_list if ch in channels]
-    remaining_channels = [ch for ch in channels if ch not in ordered_channels]
-    return ordered_channels + remaining_channels
 
 
 
