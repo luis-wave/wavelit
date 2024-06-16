@@ -10,11 +10,8 @@ from graphs.eeg_viewer import draw_eeg_graph
 
 # Streamlit app setup
 st.set_page_config(page_title="EEG Visualization", layout="wide")
-st.session_state["data"] = None
 # Title
 st.title("EEG Visualization Dashboard")
-
-st.json(st.session_state.autoreject)
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
