@@ -13,7 +13,8 @@ from mywaveanalytics.libraries.references import (bipolar_longitudinal_montage,
 from mywaveanalytics.utils import params
 
 from data_models.abnormality_parsers import (serialize_aea_to_pandas,
-                                             serialize_ahr_to_pandas)
+                                             serialize_ahr_to_pandas,
+                                             serialize_autoreject_to_pandas)
 from dsp.analytics import StandardPipeline
 from services.mywaveplatform_api import MyWavePlatformApi
 from utils.helpers import assign_ecg_channel_type, format_single
@@ -133,41 +134,7 @@ class EEGDataManager:
             "centroid": serialize_aea_to_pandas(aea["centroid"], ref="centroid"),
             "bipolar_longitudinal": serialize_aea_to_pandas(aea["bipolar_longitudinal"], ref="bipolar_longitudinal")
         }
-        st.session_state.autoreject = autoreject
-
-
-
-
-
-def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
-    # Extract the probabilities array from the dictionary
-    probabilities = predictions['predictions']
-    r_peaks = predictions['r_peaks']
-
-    # Initialize lists to store the data
-    onsets = []
-    confidences = []
-    is_seizure = []
-
-    # Iterate through the probabilities to find values above the threshold
-    for index, probability in enumerate(probabilities):
-        if probability > confidence_threshold:
-            onsets.append(r_peaks[index])
-            confidences.append(probability)
-            is_seizure.append(True)
-        else:
-            # Append data for all lists even if they do not meet the threshold
-            onsets.append(index * epoch_length)
-            confidences.append(probability)
-            is_seizure.append(False)
-
-    # Create a DataFrame with the collected data
-    df = pd.DataFrame({
-        'onsets': onsets,
-        'probability': confidences,
-        'is_arrythmia': is_seizure
-    })
-
-    df['ahr_times'] = df['onsets'].apply(format_single)
-
-    return df
+        st.session_state.autoreject = {
+            "linked_ears": serialize_autoreject_to_pandas(autoreject["linked_ears"]),
+            "centroid": serialize_autoreject_to_pandas(autoreject["centroid"])
+        }

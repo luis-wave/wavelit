@@ -4,12 +4,12 @@ import plotly.graph_objects as go
 import streamlit as st
 from mywaveanalytics.utils.params import CHANNEL_ORDER_EEG
 
-# Plotly figure creation
 
-@st.cache_data
-def create_plotly_figure(df, channels, offset_value):
+# Plotly figure creation
+def draw_eeg_graph(df, offset_value, ref):
     fig = go.Figure()
-    channels = channels[::-1]
+
+    channels = df.columns.drop('time')
 
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
@@ -25,31 +25,45 @@ def create_plotly_figure(df, channels, offset_value):
             )
         )
 
-    seizure_epochs = pd.DataFrame()
-    # Adding shaded regions for seizure activity
-    # Initialize the DataFrame in the session state if it hasn't been initialized yet
-    if 'data' not in st.session_state or st.session_state['data'] is None:
-        st.session_state['data'] = pd.DataFrame()
+    # Use a form to contain the data editor and submit button
+    # Retrieve ahr from session state
+    aea = st.session_state.get('aea', None)
 
-        # Use a form to contain the data editor and submit button
-    if not st.session_state.data.empty:
-        seizure_epochs = st.session_state.data[st.session_state.data['is_seizure'] == True]['onsets']
+    if aea is not None:
+        if not aea[ref].empty:
+            abnormal_epochs = st.session_state.aea[ref][st.session_state.aea[ref]['is_seizure'] == True]['onsets']
+            for onset in abnormal_epochs:
+                fig.add_shape(
+                    # adding a Rectangle for seizure epoch
+                    type="rect",
+                    x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
+                    x1=pd.to_datetime(onset + 2, unit='s'),  # end time of seizure (2 seconds after start)
+                    y0=-150,  # start y (adjust according to your scale)
+                    y1=offset * len(channels),  # end y
+                    fillcolor="#FF7373",  # color of the shaded area
+                    opacity=1,  # transparency
+                    layer="below",  # draw below the data
+                    line_width=0,
+                )
 
+    autoreject = st.session_state.get('autoreject', None)
 
-    if seizure_epochs.any().any():
-        for onset in seizure_epochs:
-            fig.add_shape(
-                # adding a Rectangle for seizure epoch
-                type="rect",
-                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
-                x1=pd.to_datetime(onset + 2, unit='s'),  # end time of seizure (2 seconds after start)
-                y0=-150,  # start y (adjust according to your scale)
-                y1=offset * len(channels),  # end y
-                fillcolor="#FF7373",  # color of the shaded area
-                opacity=1,  # transparency
-                layer="below",  # draw below the data
-                line_width=0,
-            )
+    if autoreject is not None:
+        if not autoreject[ref].empty:
+            bad_epochs = st.session_state.autoreject[ref]['onsets']
+            for onset in bad_epochs:
+                fig.add_shape(
+                    # adding a Rectangle for seizure epoch
+                    type="rect",
+                    x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
+                    x1=pd.to_datetime(onset + 2.56, unit='s'),  # end time of seizure (2 seconds after start)
+                    y0=-150,  # start y (adjust according to your scale)
+                    y1=offset * len(channels),  # end y
+                    fillcolor="#5ad1ad",  # color of the shaded area
+                    opacity=1,  # transparency
+                    layer="below",  # draw below the data
+                    line_width=0,
+                )
 
     # Create custom y-axis tick labels and positions
     yticks = [i * offset_value for i in range(len(channels))]

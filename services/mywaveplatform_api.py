@@ -122,7 +122,7 @@ class MyWavePlatformApi:
                 async with session.get(f"{self.base_url}/abnormality/autoreject", headers=headers, json=request_data) as response:
                     response.raise_for_status()
 
-                    autoreject = (await response.json()).get("autoreject_bad_epochs", {})
+                    autoreject = await response.json()
                     return autoreject
         except aiohttp.ClientError as e:
             st.error(f"Error retrieving autoreject annotations: {e}")
