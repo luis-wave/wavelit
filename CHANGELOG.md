@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## TODO:
+
+- Take into account API calls that return a 404 errror.
+- Add more EEG viewers
+- Find a more creative way to show AEA/AHR/Autoreject timestamps
+- Connect the feedback back to S3.
+- clean up the code further
+- Add Pytest.
+
+
+## Unreleased
+### Added
+- Autoreject annotations in EEG viewer.
+- EEGid is now added as part of the feedback table for AEA/AHR annots.
+
+
+### Changed
+- EEGs downloaded by EEGId are preloaded with AEA/AHR/Autoreject annotations across viewers. No need to invoke Sagemaker endpoints.
+- Code has been refactored to increased modularity.
+
+
 
 ## [1.13.0] - 2023-06-10
 ### Added
