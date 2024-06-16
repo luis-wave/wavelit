@@ -68,33 +68,6 @@ else:
         return df
 
 
-    # Function to convert a MyWaveAnalytics object to a DataFrame with resampling
-    def mw_to_dataframe_resampled(mw_object, sample_rate=50):
-        try:
-            raw = mw_object.eeg
-            raw = raw.resample(sample_rate)
-            df = raw.to_data_frame()
-            df['time'] = df.index / sample_rate
-            return df
-        except Exception as e:
-            st.error(f"Failed to convert EEG data to DataFrame: {e}")
-            return None
-
-    # Apply different references based on user selection
-    def apply_reference(mw_object, ref):
-        ref_func = {
-            "linked ears": None,
-            "centroid": references.centroid,
-            "bipolar transverse": references.bipolar_transverse_montage,
-            "bipolar longitudinal": references.bipolar_longitudinal_montage,
-            "temporal central parasagittal": references.temporal_central_parasagittal
-        }.get(ref, None)
-
-        if ref_func:
-            return ref_func(mw_object.copy())
-        else:
-            return mw_object.copy()
-
     # Plotly figure creation
     def create_plotly_figure(df, offset_value):
         fig = go.Figure()

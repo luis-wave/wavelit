@@ -4,7 +4,7 @@ import streamlit as st
 
 
 # Plotly figure creation
-def create_plotly_figure(df, offset_value):
+def draw_ecg_figure(df, offset_value):
     fig = go.Figure()
 
     # Convert time from seconds to 'mm:ss' format
@@ -19,42 +19,33 @@ def create_plotly_figure(df, offset_value):
         )
     )
 
-    seizure_epochs = pd.DataFrame()
-    # Adding shaded regions for seizure activity
-    # Initialize the DataFrame in the session state if it hasn't been initialized yet
-    if 'data' not in st.session_state or st.session_state['data'] is None:
-        st.session_state['data'] = pd.DataFrame()
+    # Retrieve ahr from session state
+    ahr = st.session_state.get('ahr', None)
 
-        # Use a form to contain the data editor and submit button
-    if not st.session_state.data.empty:
-        seizure_epochs = st.session_state.data[st.session_state.data['is_arrythmia'] == True]['onsets']
+    if ahr is not None and not ahr.empty:
+        # Filter epochs where is_arrythmia is True
+        abnormal_epochs = ahr[ahr['is_arrhythmia'] == True]['onsets']
 
-
-
-
-    if seizure_epochs.any().any():
-        for onset in seizure_epochs:
+        # Add a shape for each abnormal epoch
+        for onset in abnormal_epochs:
             fig.add_shape(
-                # adding a Rectangle for seizure epoch
                 type="rect",
-                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
-                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of seizure (2 seconds after start)
-                y0=-offset_value,  # start y (adjust according to your scale)
-                y1=offset_value,  # end y
+                x0=pd.to_datetime(onset, unit='s'),  # start time of the abnormal epoch
+                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of the abnormal epoch
+                y0=-offset_value,  # start y-coordinate (adjust according to your scale)
+                y1=offset_value,  # end y-coordinate
                 fillcolor="#FF7373",  # color of the shaded area
                 opacity=1,  # transparency
                 layer="below",  # draw below the data
-                line_width=0,
+                line_width=0,  # no border line
             )
-
 
     filename = st.session_state.recording_date
 
-
     fig.update_layout(
         title=filename,
-        xaxis_title="Time",
-        yaxis_title="Electrocardiograph",
+        xaxis_title="Time (mm:ss:milliseconds)",
+        yaxis_title="Amplitude (µV)",
         xaxis={"rangeslider": {"visible": True}, 'range': [df['time'].iloc[0], df['time'].iloc[0] + pd.Timedelta(seconds=20)], 'tickformat': '%M:%S.%L' },
         yaxis={
             "range": [-1 * offset_value, offset_value]

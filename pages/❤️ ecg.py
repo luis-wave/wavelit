@@ -5,134 +5,8 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     ArrhythmiaDxPipeline
 
 from utils.helpers import format_single
-
-
-def filter_predictions(predictions, confidence_threshold=0.9, epoch_length=0.7):
-    # Extract the probabilities array from the dictionary
-    probabilities = predictions['predictions']
-    r_peaks = predictions['r_peaks']
-
-    # Initialize lists to store the data
-    onsets = []
-    confidences = []
-    is_seizure = []
-
-    # Iterate through the probabilities to find values above the threshold
-    for index, probability in enumerate(probabilities):
-        if probability > confidence_threshold:
-            onsets.append(r_peaks[index])
-            confidences.append(probability)
-            is_seizure.append(True)
-        else:
-            # Append data for all lists even if they do not meet the threshold
-            onsets.append(index * epoch_length)
-            confidences.append(probability)
-            is_seizure.append(False)
-
-    # Create a DataFrame with the collected data
-    df = pd.DataFrame({
-        'onsets': onsets,
-        'probability': confidences,
-        'is_arrythmia': is_seizure
-    })
-
-    df['ahr_times'] = df['onsets'].apply(format_single)
-
-    return df
-
-
-# Function to convert a MyWaveAnalytics object to a DataFrame with resampling
-def mw_to_dataframe_resampled(mw_object, sample_rate=50):
-    try:
-        raw = mw_object.eeg
-        raw.pick_channels(['ECG'])
-        raw = raw.resample(sample_rate)
-        df = raw.to_data_frame()
-        df['time'] = df.index / sample_rate
-        return df
-    except Exception as e:
-        st.error(f"Failed to convert EEG data to DataFrame: {e}")
-        return None
-
-
-
-# Plotly figure creation
-def create_plotly_figure(df, offset_value):
-    fig = go.Figure()
-
-    # Convert time from seconds to 'mm:ss' format
-    df['time'] = pd.to_datetime(df['time'], unit='s')
-    fig.add_trace(
-        go.Scattergl(
-            x=df['time'],
-            y=df['ECG'],
-            mode="lines",
-            name='ECG',
-            line=dict(color='#4E4E4E'),
-        )
-    )
-
-    seizure_epochs = pd.DataFrame()
-    # Adding shaded regions for seizure activity
-    # Initialize the DataFrame in the session state if it hasn't been initialized yet
-    if 'data' not in st.session_state or st.session_state['data'] is None:
-        st.session_state['data'] = pd.DataFrame()
-
-        # Use a form to contain the data editor and submit button
-    if not st.session_state.data.empty:
-        seizure_epochs = st.session_state.data[st.session_state.data['is_arrhythmia'] == True]['onsets']
-
-
-
-
-    if seizure_epochs.any().any():
-        for onset in seizure_epochs:
-            fig.add_shape(
-                # adding a Rectangle for seizure epoch
-                type="rect",
-                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
-                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of seizure (2 seconds after start)
-                y0=-offset_value,  # start y (adjust according to your scale)
-                y1=offset_value,  # end y
-                fillcolor="#FF7373",  # color of the shaded area
-                opacity=1,  # transparency
-                layer="below",  # draw below the data
-                line_width=0,
-            )
-
-    seizure_epochs = st.session_state.ahr[st.session_state.ahr['is_arrhythmia'] == True]['onsets']
-
-    if seizure_epochs.any().any():
-        for onset in seizure_epochs:
-            fig.add_shape(
-                # adding a Rectangle for seizure epoch
-                type="rect",
-                x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
-                x1=pd.to_datetime(onset + 0.75, unit='s'),  # end time of seizure (2 seconds after start)
-                y0=-offset_value,  # start y (adjust according to your scale)
-                y1=offset_value,  # end y
-                fillcolor="#FF7373",  # color of the shaded area
-                opacity=1,  # transparency
-                layer="below",  # draw below the data
-                line_width=0,
-            )
-
-    filename = st.session_state.recording_date
-
-
-    fig.update_layout(
-        title=filename,
-        xaxis_title="Time",
-        yaxis_title="Electrocardiograph",
-        xaxis={"rangeslider": {"visible": True}, 'range': [df['time'].iloc[0], df['time'].iloc[0] + pd.Timedelta(seconds=20)], 'tickformat': '%M:%S.%L' },
-        yaxis={
-            "range": [-1 * offset_value, offset_value]
-        },
-        height=750,  # Consistent height
-    )
-    return fig
-
-
+from data_models.abnormality_parsers import serialize_ahr_to_pandas
+from graphs.ecg_viewer import draw_ecg_figure
 
 # Streamlit app setup
 st.set_page_config(page_title="ECG Visualization", layout="wide")
@@ -188,15 +62,15 @@ else:
                     pipeline.run()
                     analysis_json = pipeline.analysis_json
 
-                    ahr_df = filter_predictions(analysis_json)
-                    st.session_state['data'] = ahr_df
+                    ahr_df = serialize_ahr_to_pandas(analysis_json)
+                    st.session_state['ahr'] = ahr_df
 
             # Create DataFrame from MyWaveAnalytics object
             df = st.session_state.ecg_graph
 
             # Generate the Plotly figure
             with st.spinner("Rendering..."):
-                fig = create_plotly_figure(df, offset_value)
+                fig = draw_ecg_figure(df, offset_value)
 
                 # Display the Plotly figure
                 st.plotly_chart(fig, use_container_width=True)
@@ -205,35 +79,32 @@ else:
             st.error("No ECG data available. Please upload an EEG file on the main page.")
 
 
-        # Initialize the DataFrame in the session state if it hasn't been initialized yet
-        if 'data' not in st.session_state or st.session_state['data'] is None:
-            st.session_state['data'] = pd.DataFrame()
+        # Retrieve ahr from session state
+        ahr = st.session_state.get('ahr', None)
 
-            # Use a form to contain the data editor and submit button
-        if not st.session_state.data.empty:
-            if not st.session_state.data.empty:
-                st.header("Edit AEA Predictions")
-                with st.form("data_editor_form", border=False):
-                    editable_df = st.session_state.data.copy()
-                    edited_df = st.data_editor(
-                        st.session_state.data,
-                        column_config={
-                            "probability": st.column_config.ProgressColumn(
-                                "Probability",
-                                help="The probability of a seizure occurrence (shown as a percentage)",
-                                min_value=0,
-                                max_value=1,  # Assuming the probability is normalized between 0 and 1
-                            ),
-                        },
-                        hide_index=True,
-                )
-                    # Submit button for the form
-                    submitted = st.form_submit_button("Save Changes")
+        if ahr is not None and not ahr.empty:
+            st.header("Edit AHR Predictions")
+            with st.form("data_editor_form", border=False):
+                editable_df = ahr.copy()
+                edited_df = st.data_editor(
+                    editable_df,
+                    column_config={
+                        "probability": st.column_config.ProgressColumn(
+                            "Probability",
+                            help="The probability of a seizure occurrence (shown as a percentage)",
+                            min_value=0,
+                            max_value=1,  # Assuming the probability is normalized between 0 and 1
+                        ),
+                    },
+                    hide_index=True,
+            )
+                # Submit button for the form
+                submitted = st.form_submit_button("Save Changes")
 
-                    if submitted:
-                        # Update the session state with the edited DataFrame
-                        st.session_state['data'] = edited_df
-                        st.success("Changes saved successfully!")
+                if submitted:
+                    # Update the session state with the edited DataFrame
+                    st.session_state['ahr'] = edited_df
+                    st.success("Changes saved successfully!")
 
-                        # Display the potentially updated DataFrame
-                        st.write("Updated Data:", st.session_state['data'])
+                    # Display the potentially updated DataFrame
+                    st.write("Updated Data:", st.session_state['ahr'])
