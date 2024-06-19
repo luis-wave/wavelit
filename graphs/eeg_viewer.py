@@ -2,18 +2,25 @@
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from mywaveanalytics.utils.params import CHANNEL_ORDER_EEG
+from mywaveanalytics.utils.params import CHANNEL_ORDER_PERSYST, CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+
+
 
 
 # Plotly figure creation
 def draw_eeg_graph(df, offset_value, ref):
     fig = go.Figure()
 
-    channels = df.columns.drop('time')
+    # Define the order of channels based on reference
+    if ref in ['linked_ears', 'centroid']:
+        ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
+    elif ref in ['bipolar_longitudinal']:
+        ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+
 
     df['time'] = pd.to_datetime(df['time'], unit='s')
 
-    for i, channel in enumerate(channels):
+    for i, channel in enumerate(ordered_channels):
         offset = i * offset_value
         fig.add_trace(
             go.Scattergl(
@@ -39,7 +46,7 @@ def draw_eeg_graph(df, offset_value, ref):
                     x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
                     x1=pd.to_datetime(onset + 2, unit='s'),  # end time of seizure (2 seconds after start)
                     y0=-150,  # start y (adjust according to your scale)
-                    y1=offset * len(channels),  # end y
+                    y1=offset * len(ordered_channels),  # end y
                     fillcolor="#FF7373",  # color of the shaded area
                     opacity=1,  # transparency
                     layer="below",  # draw below the data
@@ -58,16 +65,16 @@ def draw_eeg_graph(df, offset_value, ref):
                     x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
                     x1=pd.to_datetime(onset + 2.56, unit='s'),  # end time of seizure (2 seconds after start)
                     y0=-150,  # start y (adjust according to your scale)
-                    y1=offset * len(channels),  # end y
+                    y1=offset * len(ordered_channels),  # end y
                     fillcolor="#5ad1ad",  # color of the shaded area
-                    opacity=1,  # transparency
+                    opacity=0.5,  # transparency
                     layer="below",  # draw below the data
                     line_width=0,
                 )
 
     # Create custom y-axis tick labels and positions
-    yticks = [i * offset_value for i in range(len(channels))]
-    ytick_labels = channels
+    yticks = [i * offset_value for i in range(len(ordered_channels))]
+    ytick_labels = ordered_channels
 
     filename = st.session_state.get('fname', 'EEG Visualization')
 

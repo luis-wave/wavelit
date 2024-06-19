@@ -130,11 +130,11 @@ class EEGDataManager:
         )
         st.session_state.ahr = serialize_ahr_to_pandas(ahr)
         st.session_state.aea = {
-            "linked_ears": serialize_aea_to_pandas(aea["linked_ears"], ref="linked_ears"),
-            "centroid": serialize_aea_to_pandas(aea["centroid"], ref="centroid"),
-            "bipolar_longitudinal": serialize_aea_to_pandas(aea["bipolar_longitudinal"], ref="bipolar_longitudinal")
+            "linked_ears": serialize_aea_to_pandas(aea.get("linked_ears"), ref="linked_ears") if aea.get("linked_ears") is not None else pd.DataFrame(),
+            "centroid": serialize_aea_to_pandas(aea.get("centroid"), ref="centroid") if aea.get("centroid") is not None else pd.DataFrame(),
+            "bipolar_longitudinal": serialize_aea_to_pandas(aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal") if aea.get("bipolar_longitudinal") is not None else pd.DataFrame()
         }
         st.session_state.autoreject = {
-            "linked_ears": serialize_autoreject_to_pandas(autoreject["linked_ears"]),
-            "centroid": serialize_autoreject_to_pandas(autoreject["centroid"])
+            "linked_ears": serialize_autoreject_to_pandas(autoreject.get("linked_ears")) if autoreject.get("linked_ears") is not None else pd.DataFrame(),
+            "centroid": serialize_autoreject_to_pandas(autoreject.get("centroid")) if autoreject.get("centroid") is not None else pd.DataFrame()
         }

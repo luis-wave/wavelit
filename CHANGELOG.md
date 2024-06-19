@@ -9,12 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## TODO:
 
-- Take into account API calls that return a 404 errror.
 - Add more EEG viewers
 - Find a more creative way to show AEA/AHR/Autoreject timestamps
 - Connect the feedback back to S3.
 - clean up the code further
-- Add Pytest.
+- Correct EEG Channel Order
 
 
 ## Unreleased
