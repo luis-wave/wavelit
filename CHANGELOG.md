@@ -12,11 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add more EEG viewers
 - Find a more creative way to show AEA/AHR/Autoreject timestamps
 - Connect the feedback back to S3.
-- clean up the code further
-- Correct EEG Channel Order
 
 
-## Unreleased
+## [1.14.0] - 2023-06-22
 ### Added
 - Autoreject annotations in EEG viewer.
 - EEGid is now added as part of the feedback table for AEA/AHR annots.
@@ -25,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - EEGs downloaded by EEGId are preloaded with AEA/AHR/Autoreject annotations across viewers. No need to invoke Sagemaker endpoints.
 - Code has been refactored to increased modularity.
+- Correct EEG Channel Order for Linked Ears and centroid data.
 
 
 
