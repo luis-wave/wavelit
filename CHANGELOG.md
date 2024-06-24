@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Connect the feedback back to S3.
 
 
+## [1.14.1] - 2023-06-23
+### Fixed
+- EEG Viewer would not render if Autoreject checked for bipolar longitudinal key in autoreject field.
+
+
 ## [1.14.0] - 2023-06-22
 ### Added
 - Autoreject annotations in EEG viewer.

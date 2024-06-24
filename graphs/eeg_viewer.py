@@ -56,21 +56,22 @@ def draw_eeg_graph(df, offset_value, ref):
     autoreject = st.session_state.get('autoreject', None)
 
     if autoreject is not None:
-        if not autoreject[ref].empty:
-            bad_epochs = st.session_state.autoreject[ref]['onsets']
-            for onset in bad_epochs:
-                fig.add_shape(
-                    # adding a Rectangle for seizure epoch
-                    type="rect",
-                    x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
-                    x1=pd.to_datetime(onset + 2.56, unit='s'),  # end time of seizure (2 seconds after start)
-                    y0=-150,  # start y (adjust according to your scale)
-                    y1=offset * len(ordered_channels),  # end y
-                    fillcolor="#5ad1ad",  # color of the shaded area
-                    opacity=0.5,  # transparency
-                    layer="below",  # draw below the data
-                    line_width=0,
-                )
+        if ref != "bipolar_longitudinal":
+            if not autoreject[ref].empty:
+                bad_epochs = st.session_state.autoreject[ref]['onsets']
+                for onset in bad_epochs:
+                    fig.add_shape(
+                        # adding a Rectangle for seizure epoch
+                        type="rect",
+                        x0=pd.to_datetime(onset, unit='s'),  # start time of seizure
+                        x1=pd.to_datetime(onset + 2.56, unit='s'),  # end time of seizure (2 seconds after start)
+                        y0=-150,  # start y (adjust according to your scale)
+                        y1=offset * len(ordered_channels),  # end y
+                        fillcolor="#5ad1ad",  # color of the shaded area
+                        opacity=0.5,  # transparency
+                        layer="below",  # draw below the data
+                        line_width=0,
+                    )
 
     # Create custom y-axis tick labels and positions
     yticks = [i * offset_value for i in range(len(ordered_channels))]
