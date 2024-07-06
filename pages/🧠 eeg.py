@@ -17,6 +17,7 @@ if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
 else:
 
+
     col1, col2 = st.columns(2)
 
     if st.session_state.filename and ('/tmp/' not in st.session_state.filename) :
@@ -48,6 +49,75 @@ else:
             "bipolar longitudinal": "bipolar_longitudinal",
             "centroid": "centroid"
         }
+
+    for i, channel in enumerate(channels):
+        offset = i * offset_value
+        fig.add_trace(
+            go.Scattergl(
+                x=df['time'],
+                y=df[channel] + offset,  # Apply vertical offset
+                mode="lines",
+                name=channel,
+                line=dict(color="#4E4E4E"),
+            )
+        )
+
+    seizure_epochs = pd.DataFrame()
+    # Adding shaded regions for seizure activity
+    # Initialize the DataFrame in the session state if it hasn't been initialized yet
+    if 'data' not in st.session_state or st.session_state['data'] is None:
+        st.session_state['data'] = pd.DataFrame()
+
+        # Use a form to contain the data editor and submit button
+    if not st.session_state.data.empty:
+        seizure_epochs = st.session_state.data[st.session_state.data['is_seizure'] == True]['onsets']
+
+
+
+
+    if seizure_epochs.any().any():
+        for onset in seizure_epochs:
+            fig.add_shape(
+                # adding a Rectangle for seizure epoch
+                type="rect",
+                x0=onset,  # start time of seizure
+                x1=onset + 2,  # end time of seizure (2 seconds after start)
+                y0=-150,  # start y (adjust according to your scale)
+                y1=offset * len(channels),  # end y
+                fillcolor="#FF7373",  # color of the shaded area
+                opacity=1,  # transparency
+                layer="below",  # draw below the data
+                line_width=0,
+            )
+
+    # Create custom y-axis tick labels and positions
+    yticks = [i * offset_value for i in range(len(channels))]
+    ytick_labels = channels
+
+    filename = st.session_state.get('fname', 'EEG Visualization')
+
+
+    fig.update_layout(
+        title=filename,
+        xaxis_title="Time",
+        yaxis_title="EEG Channels",
+        xaxis={"rangeslider": {"visible": True}, 'range': [0, 20]},
+        yaxis={
+            "tickvals": yticks,
+            "ticktext": ytick_labels,
+            "tickmode": "array",
+            "range": [-100, max(yticks) + offset_value]
+        },
+        height=1000,  # Consistent height
+    )
+    return fig
+
+# Function to assign ECG channel types if present
+def assign_ecg_channel_type(raw, ecg_channels):
+    existing_channels = raw.ch_names
+    channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
+    raw.set_channel_types(channel_types)
+
 
         selected_reference = selected_references[ref]
 

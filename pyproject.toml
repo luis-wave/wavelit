@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "eeg-plot-streamlit-app"
 version = "1.14.1"
+
 description = "EEG plot generator"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>"]
 license = "Proprietary"

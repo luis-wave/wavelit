@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
 ## TODO:
 
 - Add more EEG viewers
@@ -77,12 +78,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Wavelet viewer renders spectrograph in 3d again.
 
 
-
 ## [1.9.0] - 2023-05-28
 ### Added
 - New users
 ### Changed
 - EEG viewer line colors.
+
 
 
 ## [1.8.0] - 2023-05-24
@@ -176,9 +177,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - MyWaveObject loads outside of the persist pipeline.
-
-
-
 
 
 
