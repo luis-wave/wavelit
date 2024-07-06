@@ -8,4 +8,9 @@
 !home.py
 !pyproject.toml
 !pages
+!dsp
 !config.yaml
+!services
+!utils
+!graphs
+!data_models

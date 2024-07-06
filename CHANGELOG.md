@@ -7,6 +7,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## TODO:
+
+- Add more EEG viewers
+- Find a more creative way to show AEA/AHR/Autoreject timestamps
+- Connect the feedback back to S3.
+
+
+## [1.14.1] - 2023-06-23
+### Fixed
+- EEG Viewer would not render if Autoreject checked for bipolar longitudinal key in autoreject field.
+
+
+## [1.14.0] - 2023-06-22
+### Added
+- Autoreject annotations in EEG viewer.
+- EEGid is now added as part of the feedback table for AEA/AHR annots.
+
+
+### Changed
+- EEGs downloaded by EEGId are preloaded with AEA/AHR/Autoreject annotations across viewers. No need to invoke Sagemaker endpoints.
+- Code has been refactored to increased modularity.
+- Correct EEG Channel Order for Linked Ears and centroid data.
+
+
+
+## [1.13.0] - 2023-06-10
+### Added
+- Asynchronous calls to AEA, AHR, Autoreject endpoints to MyWavePlatform.
+- Loaded data from asynchronous calls to session state. All eegs called by eeg_ids will instantly have abnormal EEG data available for visualizations.
+- Installed aihttp, aidns libraries.
+
+### Changed
+- X-axis for EEG and ECG viewer now show time in 'mm:ss:sss' format instead of just seconds.
+
+
+
+## [1.12.0] - 2023-06-10
+### Added
+- Bad lead removal across all epochs. Currently works for monopolar montages.
+- Epoch dataframe to review sync score, alpha score, and average psds.
+
+### Removed
+- Wavelet viewer
+
+
+
+## [1.11.0] - 2023-06-04
+### Added
+- Brought back NGBoost app with retrained model (bipolar transverse + 6-13 Hz frequency range).
+
+### Changed
+- NGBoost app now does batch processing with uploaded zip folders of eeg files.
+
+
+## [1.10.0] - 2023-05-30
+### Added
+- Interactive 3d plot of all Power Spectra across epochs.
+- Selective mode to generate a single plot.
+- EEG Data Manager
+- MyWavePlatform API support.
+- Wavelet viewer
+
+### Changed
+- Generate top 20 plots.
+- Logic to handle eeg uploads.
+- All headers now have either filename (uploaded eegs), eeg_ids (downloaded_eegs), and recording date.
+- Added an icon next to epochs.py.
+- Wavelet viewer renders spectrograph in 3d again.
+
+
 ## [1.9.0] - 2023-05-28
 ### Added
 - New users
@@ -106,9 +177,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - MyWaveObject loads outside of the persist pipeline.
-
-
-
 
 
 

@@ -1,19 +1,22 @@
-import base64
+import asyncio
 import os
-import tempfile
-from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+import traceback
 
-import requests
 import streamlit as st
-import streamlit_authenticator as stauth
 import toml
+
+
+from services.auth import authenticate_user
+from services.eeg_data_manager import EEGDataManager
+
+
 import yaml
 from mywaveanalytics.libraries import (ecg_statistics,
                                        eeg_computational_library, filters,
                                        mywaveanalytics, references)
 from yaml.loader import SafeLoader
 import time
+
 
 # Function to read version from pyproject.toml
 def get_version_from_pyproject():
@@ -24,6 +27,10 @@ def get_version_from_pyproject():
         st.error(f"Error reading version from pyproject.toml: {e}")
         return "Unknown"
 
+
+
+async def main():
+    name, authentication_status, username, authenticator = authenticate_user()
 
 # Function to calculate EQI
 def calculate_eqi(mw_object):
@@ -176,98 +183,64 @@ if st.session_state["authentication_status"]:
     # Upload EEG file
     uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
-    if uploaded_file is not None:
-        st.session_state.fname = uploaded_file.name
+    if authentication_status:
+        authenticator.logout("Logout", "main")
+        st.write(f"Welcome *{name}*")
 
-        # Save uploaded file to disk to make it accessible by file path
-        saved_path = save_uploaded_file(uploaded_file)
-        if saved_path:
-            # Determine EEG type based on file extension
-            eeg_type = (
-                0
-                if uploaded_file.name.lower().endswith(".dat")
-                else 10
-                if uploaded_file.name.lower().endswith(".edf")
-                else None
-            )
-            if eeg_type is None:
-                st.error("Unsupported file type.")
-            else:
-                mw_object = load_mw_object(saved_path, eeg_type)
-                st.success("EEG Data loaded successfully!")
+        base_url = os.getenv("BASE_URL")
+        username = os.getenv("USERNAME")
+        password = os.getenv("PASSWORD")
+        api_key = os.getenv("API_KEY")
 
-                with st.spinner("Processing..."):
-                    st.session_state.mw_object = mw_object.copy()
+        eeg_manager = EEGDataManager(base_url, username, password, api_key)
+        await eeg_manager.initialize()
 
-                    eqi = calculate_eqi(mw_object)
+        st.title("EEG Analysis Dashboard")
 
-                    # Save the relevant state
-                    st.session_state.eqi = eqi
+        # Upload EEG file
+        uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
-                    st.switch_page("pages/epochs.py")
-
-    # Download EEG file by EEG ID
-    st.write("Or")
-
-    eeg_id = st.text_input("Enter EEG ID")
-    base_url = os.getenv("BASE_URL")
-    username = os.getenv("USERNAME")
-    password = os.getenv("PASSWORD")
-    api_key = os.getenv("API_KEY")
-
-    if st.button("Download EEG Data"):
-        with st.spinner("Downloading EEG data..."):
+        if uploaded_file is not None:
             try:
-                # Authenticate and get headers with bearer token
-                auth_manager = AuthManager(base_url, username, password, api_key)
-                headers = auth_manager.login()
-
-                downloaded_path, file_extension = download_eeg_file(
-                    eeg_id, base_url, headers
-                )
-                if downloaded_path:
-                    st.success(f"EEG Data for ID {eeg_id} downloaded successfully!")
-
-                    # Determine EEG type based on file extension
-                    if file_extension.lower() == ".dat":
-                        eeg_type = 0
-                    elif file_extension.lower() == ".edf":
-                        eeg_type = 10
-                    else:
-                        st.error("Unsupported file type.")
-                        eeg_type = None
-
-                    if eeg_type is not None:
-                        mw_object = load_mw_object(downloaded_path, eeg_type)
-                        if mw_object:
-                            with st.spinner("Loading EEG data..."):
-                                st.session_state.mw_object = mw_object.copy()
-
-                                eqi = calculate_eqi(mw_object)
-
-                                # Save the relevant state
-                                st.session_state.eqi = eqi
-
-                                st.switch_page("pages/epochs.py")
-
-                        # Clean up downloaded file
-                        try:
-                            os.remove(downloaded_path)
-                        except Exception as e:
-                            st.error(f"Failed to delete the temporary file: {e}")
+                await eeg_manager.handle_uploaded_file(uploaded_file)
+                st.switch_page("pages/🏄 epochs.py")
             except Exception as e:
-                st.error(f"Authentication or data retrieval failed: {e}")
+                tb_exception = traceback.TracebackException.from_exception(e)
+                st.error(
+                    f"File upload or processing failed: {''.join(tb_exception.format())}"
+                )
 
-    # Footer section
-    version = get_version_from_pyproject()
-    footer_html = f"""
-        <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
-            <span>Version: {version}</span>
-        </div>
-    """
-    st.markdown(footer_html, unsafe_allow_html=True)
+        # Download EEG file by EEG ID
+        st.write("Or")
 
-elif st.session_state["authentication_status"] is False:
-    st.error("Username/password is incorrect")
-elif st.session_state["authentication_status"] is None:
-    st.warning("Please enter your username and password")
+        eeg_id = st.text_input("Enter EEG ID")
+
+        if st.button("Download EEG Data"):
+            with st.spinner("Downloading EEG data..."):
+                try:
+                    await eeg_manager.handle_downloaded_file(eeg_id)
+                    await eeg_manager.fetch_additional_data(eeg_id)
+                    st.switch_page("pages/🏄 epochs.py")
+                except Exception as e:
+                    tb_exception = traceback.TracebackException.from_exception(e)
+                    st.error(
+                        f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
+                    )
+
+        # Footer section
+        version = get_version_from_pyproject()
+        footer_html = f"""
+            <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
+                <span>Version: {version}</span>
+            </div>
+        """
+        st.markdown(footer_html, unsafe_allow_html=True)
+
+    elif authentication_status is False:
+        st.error("Username/password is incorrect")
+    elif authentication_status is None:
+        st.warning("Please enter your username and password")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
