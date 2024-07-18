@@ -8,8 +8,10 @@ from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
 from utils.helpers import format_single
 
-# Streamlit app setup
-st.set_page_config(page_title="ECG Visualization", layout="wide")
+from access_control import access_eeg_data
+
+await access_eeg_data()
+
 # Title
 st.title("ECG Visualization Dashboard")
 st.session_state["data"] = None
@@ -108,3 +110,12 @@ else:
 
                     # Display the potentially updated DataFrame
                     st.write("Updated Data:", st.session_state['ahr'])
+
+# # Footer section
+# version = get_version_from_pyproject()
+# footer_html = f"""
+#     <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
+#         <span>Version: {version}</span>
+#     </div>
+# """
+# st.markdown(footer_html, unsafe_allow_html=True)

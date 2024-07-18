@@ -1,12 +1,14 @@
 # epochs.py
 
-import mne
 import numpy as np
 import streamlit as st
+import asyncio
 
 from dsp.analytics import PersistPipeline
 
-st.set_page_config(page_title="EEG Epoch Generator", layout="wide")
+from access_control import access_eeg_data
+
+await access_eeg_data()
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")
@@ -116,3 +118,14 @@ else:
 
     else:
         st.error("No EEG data available. Please upload an EEG file on the main page.")
+
+
+# # Footer section
+# version = get_version_from_pyproject()
+# footer_html = f"""
+#     <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
+#         <span>Version: {version}</span>
+#     </div>
+# """
+# st.markdown(footer_html, unsafe_allow_html=True)
+

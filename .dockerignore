@@ -14,3 +14,6 @@
 !utils
 !graphs
 !data_models
+!sigma_dashboards
+!access_control.py
+!streamlit_apps
