@@ -1,4 +1,5 @@
-import pandas as pd
+
+
 import plotly.graph_objects as go
 import streamlit as st
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
@@ -6,11 +7,13 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
-from utils.helpers import format_single
 
-from access_control import access_eeg_data
+#st.set_page_config(page_title="ECG Visualization", layout="wide")
 
-await access_eeg_data()
+
+
+
+
 
 # Title
 st.title("ECG Visualization Dashboard")

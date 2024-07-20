@@ -8,15 +8,12 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
-from access_control import access_eeg_data
-import asyncio
 
+#st.set_page_config(page_title="EEG Visualization", layout="wide")
 
-await access_eeg_data()
 
 # Title
 st.title("EEG Visualization Dashboard")
-
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")

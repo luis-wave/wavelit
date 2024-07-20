@@ -1,14 +1,10 @@
-# epochs.py
 
 import numpy as np
 import streamlit as st
-import asyncio
 
 from dsp.analytics import PersistPipeline
 
-from access_control import access_eeg_data
-
-await access_eeg_data()
+#st.set_page_config(page_title="Epoch Visualizations", layout="wide")
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")

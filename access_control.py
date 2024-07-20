@@ -33,21 +33,17 @@ def authorize_user_access():
 
     return name
 
-async def access_eeg_data():
 
-        eeg_id = None
+async def access_eeg_data(eeg_id=None):
+    base_url = os.getenv("BASE_URL")
+    username = os.getenv("USERNAME")
+    password = os.getenv("PASSWORD")
+    api_key = os.getenv("API_KEY")
 
-        if st.query_params['eegId']:
-             eeg_id = st.query_params['eegId']
+    eeg_manager = EEGDataManager(base_url, username, password, api_key)
+    await eeg_manager.initialize()
 
-        base_url = os.getenv("BASE_URL")
-        username = os.getenv("USERNAME")
-        password = os.getenv("PASSWORD")
-        api_key = os.getenv("API_KEY")
-
-        eeg_manager = EEGDataManager(base_url, username, password, api_key)
-        await eeg_manager.initialize()
-
+    if not eeg_id:
         # Upload EEG file
         uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
 
@@ -59,29 +55,25 @@ async def access_eeg_data():
                 st.error(
                     f"File upload or processing failed: {''.join(tb_exception.format())}"
                 )
-
         # Download EEG file by EEG ID
         st.write("Or")
-
-        if not eeg_id:
-            eeg_id = st.text_input("Enter EEG ID")
-
-            if st.button("Download EEG Data"):
-                with st.spinner("Downloading EEG data..."):
-                    try:
-                        await eeg_manager.handle_downloaded_file(eeg_id)
-                        await eeg_manager.fetch_additional_data(eeg_id)
-                    except Exception as e:
-                        tb_exception = traceback.TracebackException.from_exception(e)
-                        st.error(
-                            f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
-                        )
-        else:
-            try:
-                await eeg_manager.handle_downloaded_file(eeg_id)
-                await eeg_manager.fetch_additional_data(eeg_id)
-            except Exception as e:
-                tb_exception = traceback.TracebackException.from_exception(e)
-                st.error(
-                    f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
-                )
+        eeg_id = st.text_input("Enter EEG ID")
+        if st.button("Download EEG Data"):
+            with st.spinner("Downloading EEG data..."):
+                try:
+                    await eeg_manager.handle_downloaded_file(eeg_id)
+                    await eeg_manager.fetch_additional_data(eeg_id)
+                except Exception as e:
+                    tb_exception = traceback.TracebackException.from_exception(e)
+                    st.error(
+                        f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
+                    )
+    else:
+        try:
+            await eeg_manager.handle_downloaded_file(eeg_id)
+            await eeg_manager.fetch_additional_data(eeg_id)
+        except Exception as e:
+            tb_exception = traceback.TracebackException.from_exception(e)
+            st.error(
+                f"Data retrieval or processing failed: {''.join(tb_exception.format())}"
+            )
