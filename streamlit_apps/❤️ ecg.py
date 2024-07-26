@@ -1,12 +1,18 @@
 
 
+import asyncio
+
 import plotly.graph_objects as go
 import streamlit as st
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     ArrhythmiaDxPipeline
 
+from access_control import access_eeg_data
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
+
+asyncio.run(access_eeg_data())
+
 
 #st.set_page_config(page_title="ECG Visualization", layout="wide")
 

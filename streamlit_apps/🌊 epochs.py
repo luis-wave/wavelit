@@ -1,8 +1,14 @@
 
+import asyncio
+
 import numpy as np
 import streamlit as st
 
+from access_control import access_eeg_data
 from dsp.analytics import PersistPipeline
+
+asyncio.run(access_eeg_data())
+
 
 #st.set_page_config(page_title="Epoch Visualizations", layout="wide")
 

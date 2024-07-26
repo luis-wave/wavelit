@@ -1,4 +1,6 @@
 
+import asyncio
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -6,6 +8,7 @@ from mywaveanalytics.libraries import references
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     SeizureDxPipeline
 
+from access_control import access_eeg_data
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
 
@@ -14,6 +17,8 @@ from graphs.eeg_viewer import draw_eeg_graph
 
 # Title
 st.title("EEG Visualization Dashboard")
+
+asyncio.run(access_eeg_data())
 
 if 'mw_object' not in st.session_state:
     st.error("Please load EEG data")

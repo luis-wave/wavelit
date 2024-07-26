@@ -27,10 +27,19 @@ if __name__ == "__main__":
             "streamlit_apps/❤️ ecg.py", title="ECG", icon="❤️", url_path="/ecg"
         )
 
+        epoch_page = st.Page(
+            "streamlit_apps/🌊 epochs.py", title="Epochs", icon="🌊", url_path="/epochs"
+        )
+
+        ngboost_page = st.Page(
+            "streamlit_apps/ngboost.py", title="NGBoost Protocol", icon="🔬", url_path="/ngboost"
+        )
+
         nav = st.navigation(
             {
-                "Sigma Dashboards": [protocol_page, report_page],
-                "Tools": [eeg_page, ecg_page],
+                "Sigma Dashboards": [report_page, protocol_page],
+                "Tools": [eeg_page, ecg_page, epoch_page],
+                "Research & Development": [ngboost_page]
             }
         )
 
