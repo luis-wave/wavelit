@@ -4,7 +4,7 @@ from mywaveanalytics.libraries import eeg_computational_library
 from mywaveanalytics.utils import params
 
 
-def find_leads_off(raw, abs_offset_threshold=20, picks=["eeg"]):
+def find_leads_off(raw, abs_offset_threshold=30, picks=["eeg"]):
     """Uses power spectrum analysis to detect which leads are bad (flat, artifact-heavy, high-frequency noise).
     Time series analysis of the EEG signal is used to determine poor connectivity.
 

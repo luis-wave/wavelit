@@ -1,8 +1,8 @@
+import asyncio
 import base64
 import os
 import tempfile
 import zipfile
-import asyncio
 
 import numpy as np
 import pandas as pd
@@ -10,7 +10,6 @@ import plotly.graph_objs as go
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics
 from mywaveanalytics.pipelines import ngboost_protocol_pipeline
-
 
 
 # Function to process each EEG file

@@ -32,14 +32,17 @@ if __name__ == "__main__":
         )
 
         ngboost_page = st.Page(
-            "streamlit_apps/ngboost.py", title="NGBoost Protocol", icon="🔬", url_path="/ngboost"
+            "streamlit_apps/ngboost.py",
+            title="NGBoost Protocol",
+            icon="🔬",
+            url_path="/ngboost",
         )
 
         nav = st.navigation(
             {
                 "Sigma Dashboards": [report_page, protocol_page],
                 "Tools": [eeg_page, ecg_page, epoch_page],
-                "Research & Development": [ngboost_page]
+                "Research & Development": [ngboost_page],
             }
         )
 

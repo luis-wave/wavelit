@@ -111,11 +111,15 @@ class PersistPipeline:
 
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
-            by=["n_bads", "graded_alpha", "sync_score"], ascending=[True, True, False]
+            by=["graded_alpha", "sync_score"], ascending=[True, False]
         )
 
     def generate_graphs(self):
-        for idx in self.data.index[:20]:
+        graph_df = self.data.copy()
+
+        graph_df = graph_df[graph_df["sync_score"] < 200]
+
+        for idx in graph_df.index[:20]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
@@ -342,12 +346,14 @@ class PersistPipeline:
 
         for i in range(n_rows):
             # Calculate FFT and plot using Welch's method
-            freqs, psd = self.freqs, self.psds[epoch_id][i]
+            freqs, psd = welch(data[i], fs=fs)
 
             # idx = np.where(freqs > 2.2)
 
             # freqs = freqs[idx]
             # psd = psd[:,idx]
+
+
 
             psd = smooth_psd(psd, window_len=2)
 

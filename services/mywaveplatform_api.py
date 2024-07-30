@@ -38,7 +38,6 @@ class MyWavePlatformApi:
                 f"{self.base_url}/user/login",
                 headers={**auth_header, "Content-Type": "application/json"},
             ) as response:
-                print(response.status)
                 if response.status == 200:
                     response_data = await response.json()
                     bearer_token = response_data["message"]["IdToken"]

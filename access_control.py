@@ -35,8 +35,10 @@ def authorize_user_access():
 
 
 async def access_eeg_data(eeg_id=None):
-
     base_url = os.getenv("BASE_URL")
+    username = os.getenv("CLINICAL_USERNAME")
+    password = os.getenv("CLINICAL_PASSWORD")
+    api_key = os.getenv("CLINICAL_API_KEY")
 
     if eeg_id:
         if eeg_id.startswith("EEG-"):

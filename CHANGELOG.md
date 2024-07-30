@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Sigma Dashboard for EEG Report and Protocol Review. Kudos to our Data Engineer.
 - EEGId can now be entered as a query parameter.
 - Protocol and Report dashboards have all of the visualizations for EEG, ECG, and epoch review.
+- Support for retrieving consumer EEG record data.
 
 ### Changed
 - Navigation bar is more streamlined.
