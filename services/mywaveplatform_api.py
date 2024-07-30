@@ -16,9 +16,10 @@ class MyWavePlatformApi:
 
     def __init__(self, base_url=None, username=None, password=None, api_key=None):
         self.base_url = base_url or os.getenv("BASE_URL")
-        self.username = username or os.getenv("USERNAME")
-        self.password = password or os.getenv("PASSWORD")
-        self.api_key = api_key or os.getenv("API_KEY")
+        self.username = username or os.getenv("CLINICAL_USERNAME")
+        self.password = password or os.getenv("CLINICAL_PASSWORD")
+        self.api_key = api_key or os.getenv("CLINICAL_API_KEY")
+
 
     def get_basic_auth_header(self):
         credentials = f"{self.username}:{self.password}"
@@ -37,6 +38,7 @@ class MyWavePlatformApi:
                 f"{self.base_url}/user/login",
                 headers={**auth_header, "Content-Type": "application/json"},
             ) as response:
+                print(response.status)
                 if response.status == 200:
                     response_data = await response.json()
                     bearer_token = response_data["message"]["IdToken"]
