@@ -26,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Navigation bar is more streamlined.
 - Login and authentication protects all pages across the streamlit app.
 
+### Fixed
+- Epoch sorting algorithm; relative power sum calculation.
+
 
 ## [1.14.1] - 2024-06-23
 ### Fixed

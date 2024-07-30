@@ -13,9 +13,12 @@ def get_power(psd, freqs, f_range=[8, 13]):
 
     fl, fh = f_range
     band_idx = np.where((freqs >= fl) & (freqs <= fh))[0]
+    total_band_idx = np.where((freqs >= 2.2) & (freqs <= 25))[0]
 
-    psd = psd * (10**12)
     band_power = simps(psd[:, band_idx], dx=freqs[1] - freqs[0])
-    total_power = simps(psd, dx=freqs[1] - freqs[0])
+    total_power = simps(psd[:, total_band_idx], dx=freqs[1] - freqs[0])
+
+    band_power = band_power[band_power!=0]
+    total_power = total_power[total_power!=0]
 
     return sum(band_power / total_power)

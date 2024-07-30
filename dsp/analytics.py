@@ -9,7 +9,7 @@ import streamlit as st
 from matplotlib.ticker import FuncFormatter
 from mywaveanalytics.libraries import ecg_statistics, filters, references
 from mywaveanalytics.pipelines import eqi_pipeline
-from mywaveanalytics.utils.params import DEFAULT_RESAMPLING_FREQUENCY
+from mywaveanalytics.utils.params import DEFAULT_RESAMPLING_FREQUENCY, ELECTRODE_GROUPING
 from scipy.signal import find_peaks, peak_prominences, welch
 
 from dsp.artifact_removal import find_leads_off
@@ -77,6 +77,7 @@ class PersistPipeline:
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
 
+
         # Flatten psds for DataFrame storage
         flattened_psds = self.psds.reshape(
             self.psds.shape[0], -1
@@ -111,7 +112,7 @@ class PersistPipeline:
 
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
-            by=["graded_alpha", "sync_score"], ascending=[True, False]
+            by=["alpha", "sync_score"], ascending=[False, False]
         )
 
     def generate_graphs(self):
