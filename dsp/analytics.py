@@ -16,7 +16,7 @@ from dsp.artifact_removal import find_leads_off
 from dsp.neurometrics import get_power
 from graphs.psd_epochs import psd_peaks_3d
 from utils.graph_utils import smooth_psd
-from utils.helpers import format_func, grade_alpha
+from utils.helpers import format_func, grade_alpha, grade_bads
 
 log = logging.getLogger(__name__)
 
@@ -110,9 +110,11 @@ class PersistPipeline:
 
         self.data["n_bads"] = self.data["bads"].apply(lambda x: len(x))
 
+        self.data["graded_bads"] = self.data["n_bads"].apply(lambda x: grade_bads(x))
+
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
-            by=["alpha", "sync_score"], ascending=[False, False]
+            by=["graded_bads", "alpha"], ascending=[True, False]
         )
 
     def generate_graphs(self):

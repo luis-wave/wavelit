@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Navigation bar is more streamlined.
 - Login and authentication protects all pages across the streamlit app.
+- Increased offset threshold (20 to 35) for lead off removal.
 
 ### Fixed
 - Epoch sorting algorithm; relative power sum calculation.

@@ -1,7 +1,7 @@
 import numpy as np
 import streamlit as st
 
-from dsp.analytics import PersistPipeline
+from dsp.analytics import PersistPipeline, StandardPipeline
 
 
 def eeg_epoch_visualization_dashboard():
@@ -34,17 +34,25 @@ def eeg_epoch_visualization_dashboard():
         if 'mw_object' in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object.copy()
 
+            eqi_pipeline = StandardPipeline(mw_object)
+            eqi_pipeline.calculate_eqi()
+
+
             eqi = st.session_state.get('eqi', None)
             ref = st.session_state.get('ref', 'le')
-            time_win = st.session_state.get('time_win', 20)
+
+            time_win = 20
 
             if eqi is not None:
-                if eqi < 60:
+                if eqi > 80:
                     time_win = 20
-                if eqi < 40:
+                if eqi > 60:
+                    time_win = 15
+                if eqi > 50:
                     time_win = 10
-                if eqi < 20:
+                if eqi < 50:
                     time_win = 5
+
 
             st.metric("EEG Quality Index", eqi)
 
