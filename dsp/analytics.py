@@ -9,7 +9,8 @@ import streamlit as st
 from matplotlib.ticker import FuncFormatter
 from mywaveanalytics.libraries import ecg_statistics, filters, references
 from mywaveanalytics.pipelines import eqi_pipeline
-from mywaveanalytics.utils.params import DEFAULT_RESAMPLING_FREQUENCY, ELECTRODE_GROUPING
+from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
+                                          ELECTRODE_GROUPING)
 from scipy.signal import find_peaks, peak_prominences, welch
 
 from dsp.artifact_removal import find_leads_off

@@ -1,6 +1,7 @@
 
 
 import asyncio
+
 import streamlit as st
 
 from access_control import access_eeg_data, get_version_from_pyproject
