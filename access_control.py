@@ -50,12 +50,29 @@ async def access_eeg_data(eeg_id=None):
             password = os.getenv("CONSUMER_PASSWORD")
             api_key = os.getenv("CONSUMER_API_KEY")
 
-    eeg_manager = EEGDataManager(base_url, username, password, api_key)
-    await eeg_manager.initialize()
+        eeg_manager = EEGDataManager(base_url, username, password, api_key)
+        await eeg_manager.initialize()
 
     if not eeg_id:
         # Upload EEG file
         uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+
+        # Download EEG file by EEG ID
+        st.write("Or")
+        eeg_id = st.text_input("Enter EEG ID")
+
+        if eeg_id.startswith("EEG-"):
+            username = os.getenv("CLINICAL_USERNAME")
+            password = os.getenv("CLINICAL_PASSWORD")
+            api_key = os.getenv("CLINICAL_API_KEY")
+        else:
+            username = os.getenv("CONSUMER_USERNAME")
+            password = os.getenv("CONSUMER_PASSWORD")
+            api_key = os.getenv("CONSUMER_API_KEY")
+
+        eeg_manager = EEGDataManager(base_url, username, password, api_key)
+        await eeg_manager.initialize()
+
 
         if uploaded_file is not None:
             try:
@@ -65,9 +82,7 @@ async def access_eeg_data(eeg_id=None):
                 st.error(
                     f"File upload or processing failed: {''.join(tb_exception.format())}"
                 )
-        # Download EEG file by EEG ID
-        st.write("Or")
-        eeg_id = st.text_input("Enter EEG ID")
+
         if st.button("Download EEG Data"):
             with st.spinner("Downloading EEG data..."):
                 try:
