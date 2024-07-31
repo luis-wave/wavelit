@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - EEGId can now be entered as a query parameter.
 - Protocol and Report dashboards have all of the visualizations for EEG, ECG, and epoch review.
 - Support for retrieving consumer EEG record data.
+- Direct urls to direct to AEA/AHR reviews in Streamlit app.
 
 ### Changed
 - Navigation bar is more streamlined.

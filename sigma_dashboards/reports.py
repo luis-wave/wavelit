@@ -19,6 +19,19 @@ if "eegId" in query_params:
 else:
     eeg_id = None
 
+if "ecg" in query_params:
+    show_ecg = True
+else:
+    show_ecg = False
+
+if "eeg" in query_params:
+    show_eeg = True
+else:
+    show_eeg = False
+
+
+
+
 if not eeg_id:
 
     # Title
@@ -43,11 +56,15 @@ if not eeg_id:
 else:
     asyncio.run(access_eeg_data(eeg_id))
 
-    eeg_visualization_dashboard()
+    if show_eeg:
+        eeg_visualization_dashboard()
 
-    ecg_visualization_dashboard()
-
-    eeg_epoch_visualization_dashboard()
+    elif show_ecg:
+        ecg_visualization_dashboard()
+    else:
+        eeg_visualization_dashboard()
+        ecg_visualization_dashboard()
+        eeg_epoch_visualization_dashboard()
 
 
 # Footer section
