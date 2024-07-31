@@ -12,6 +12,8 @@ if __name__ == "__main__":
 
     user = authorize_user_access()
 
+    st.session_state['user'] = user
+
     if user:
         # Streamlit app setup
 

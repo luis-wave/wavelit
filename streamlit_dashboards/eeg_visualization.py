@@ -86,6 +86,7 @@ def eeg_visualization_dashboard():
                     st.header("Edit AEA Predictions")
                     with st.form("data_editor_form", border=False):
                         editable_df = st.session_state.aea[selected_reference].copy()
+                        editable_df["reviewer"] = st.session_state["user"]
                         edited_df = st.data_editor(
                             editable_df,
                             column_config={
