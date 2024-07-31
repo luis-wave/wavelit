@@ -1,7 +1,8 @@
-import pandas as pd
-import plotly.graph_objects as go
+import time
+
+import boto3
 import streamlit as st
-from mywaveanalytics.libraries import references
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     SeizureDxPipeline
 
@@ -107,8 +108,37 @@ def eeg_visualization_dashboard():
                             st.session_state['data'] = edited_df
                             st.success("Changes saved successfully!")
 
-                            # Display the potentially updated DataFrame
-                            st.write("Updated Data:", st.session_state.aea[selected_reference])
+                            try:
+                                # Convert DataFrame to CSV and save it locally
+                                csv_file_name = f'{st.session_state.eeg_id}'
+                                edited_df.to_csv(csv_file_name, index=False)
+
+                                # S3 client setup
+                                s3 = boto3.client("s3")
+                                bucket_name = 'lake-superior-prod'
+                                file_path = f'eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv'
+
+                                # Adding metadata
+                                processed_date = time.time()
+                                _ = s3.upload_file(
+                                    csv_file_name,
+                                    bucket_name,
+                                    file_path,
+                                    ExtraArgs={
+                                        "Metadata": {
+                                            "processed_date": str(processed_date),
+                                            "file_name": csv_file_name,
+                                        }
+                                    },
+                                )
+                                print("File uploaded successfully")
+                            except NoCredentialsError:
+                                st.error("Error: Unable to locate credentials")
+                            except PartialCredentialsError:
+                                st.error("Error: Incomplete credentials provided")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
+
         else:
             st.error("No EEG data available. Please upload an EEG file on the main page.")
 

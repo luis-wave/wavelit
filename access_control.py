@@ -73,7 +73,6 @@ async def access_eeg_data(eeg_id=None):
         eeg_manager = EEGDataManager(base_url, username, password, api_key)
         await eeg_manager.initialize()
 
-
         if uploaded_file is not None:
             try:
                 await eeg_manager.handle_uploaded_file(uploaded_file)

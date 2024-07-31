@@ -8,12 +8,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
-## TODO:
-
-- Add more EEG viewers
-- Find a more creative way to show AEA/AHR/Autoreject timestamps
-- Connect the feedback back to S3.
-
 
 ## [2.0.0] - 2024-07-20
 ### Added
@@ -22,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Protocol and Report dashboards have all of the visualizations for EEG, ECG, and epoch review.
 - Support for retrieving consumer EEG record data.
 - Direct urls to direct to AEA/AHR reviews in Streamlit app.
+- Annotations are saved in an S3 bucket 'streamlit_validations'
 
 ### Changed
 - Navigation bar is more streamlined.
