@@ -38,9 +38,9 @@ if not eeg_id:
     st.title("EEG Reports Dashboard")
 
 
-    url = "https://app.sigmacomputing.com/embed/1-7katQ0rNGbMSHasd6Gzc25"
+    url = "https://app.sigmacomputing.com/embed/1-4j797MKZT5T7Xf8Wf5g8D5"
 
-    html=f'<iframe src="{url}" width="100%" height="900px"></iframe>'
+    html=f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
 
 
     components.html(html,height=1000,scrolling=False)
