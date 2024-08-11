@@ -91,30 +91,11 @@ def eeg_epoch_visualization_dashboard():
                 pipeline = run_persist_pipeline(mw_object)
                 if pipeline:
                     pipeline.run(ref=ref, time_win=time_win)
+                    with st.spinner("Drawing..."):
+                        pipeline.generate_graphs()
+                        pipeline.reset(mw_object)
 
-                    with st.spinner("Drawing all epochs..."):
-                        fig = pipeline.plot_3d_psd()
-                        st.plotly_chart(fig)
-                        pipeline.data['average_psds'] = pipeline.data['flattened_psds'].apply(lambda x: np.array(x).reshape(19,-1).mean(axis=0)[11:51])
-
-                        st.write("Epochs Metadata")
-                        st.dataframe(pipeline.data, use_container_width=True, column_order=['average_psds', 'sync_score', 'alpha', 'bads', 'n_bads'],
-                                     column_config={
-                                         "average_psds": st.column_config.AreaChartColumn(label="Average PSD (4-20 Hz)")
-                                     })
-
-                    epoch_num = int(st.number_input("Enter epoch number"))
-                    if st.button("Generate epoch graph"):
-                        with st.spinner("Drawing..."):
-                            pipeline.combined_plot(epoch_num)
-                            pipeline.reset(mw_object)
-
-                    if st.button("Generate top 20 epoch graphs"):
-                        with st.spinner("Drawing..."):
-                            pipeline.generate_graphs()
-                            pipeline.reset(mw_object)
-
-                    pipeline.reset(mw_object)
+                pipeline.reset(mw_object)
 
         else:
             st.error("No EEG data available. Please upload an EEG file on the main page.")
