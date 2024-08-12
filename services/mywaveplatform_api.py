@@ -20,7 +20,6 @@ class MyWavePlatformApi:
         self.password = password or os.getenv("CLINICAL_PASSWORD")
         self.api_key = api_key or os.getenv("CLINICAL_API_KEY")
 
-
     def get_basic_auth_header(self):
         credentials = f"{self.username}:{self.password}"
         encoded_credentials = base64.b64encode(credentials.encode()).decode()
@@ -52,7 +51,9 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/eeg", headers=headers, json=request_data) as response:
+                async with session.get(
+                    f"{self.base_url}/eeg", headers=headers, json=request_data
+                ) as response:
                     response.raise_for_status()
 
                     download_url = (await response.json()).get("download_url")
@@ -64,7 +65,9 @@ class MyWavePlatformApi:
                             file_name = os.path.basename(parsed_url.path)
                             file_extension = Path(file_name).suffix
 
-                            with tempfile.NamedTemporaryFile(delete=False, suffix=file_extension) as tmp_file:
+                            with tempfile.NamedTemporaryFile(
+                                delete=False, suffix=file_extension
+                            ) as tmp_file:
                                 tmp_file.write(await file_response.read())
                                 return tmp_file.name, file_extension
                     else:
@@ -78,7 +81,11 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/eeg/hr_variables", headers=headers, json=request_data) as response:
+                async with session.get(
+                    f"{self.base_url}/eeg/hr_variables",
+                    headers=headers,
+                    json=request_data,
+                ) as response:
                     response.raise_for_status()
 
                     ecg_statistics = (await response.json()).get("ecg_statistics", {})
@@ -94,7 +101,11 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/abnormality/aea", headers=headers, json=request_data) as response:
+                async with session.get(
+                    f"{self.base_url}/abnormality/aea",
+                    headers=headers,
+                    json=request_data,
+                ) as response:
                     response.raise_for_status()
 
                     aea = await response.json()
@@ -107,7 +118,11 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/abnormality/ahr", headers=headers, json=request_data) as response:
+                async with session.get(
+                    f"{self.base_url}/abnormality/ahr",
+                    headers=headers,
+                    json=request_data,
+                ) as response:
                     response.raise_for_status()
 
                     ahr = await response.json()
@@ -120,7 +135,11 @@ class MyWavePlatformApi:
         try:
             request_data = {"eeg_id": eeg_id}
             async with aiohttp.ClientSession() as session:
-                async with session.get(f"{self.base_url}/abnormality/autoreject", headers=headers, json=request_data) as response:
+                async with session.get(
+                    f"{self.base_url}/abnormality/autoreject",
+                    headers=headers,
+                    json=request_data,
+                ) as response:
                     response.raise_for_status()
 
                     autoreject = await response.json()
@@ -129,13 +148,14 @@ class MyWavePlatformApi:
             st.error(f"Error retrieving autoreject annotations: {e}")
             return None
 
+
 async def fetch_all_data(api, eeg_id, headers):
     tasks = [
         api.download_eeg_file(eeg_id, headers),
         api.get_heart_rate_variables(eeg_id, headers),
         api.get_aea_onsets(eeg_id, headers),
         api.get_ahr_onsets(eeg_id, headers),
-        api.get_autoreject_annots(eeg_id, headers)
+        api.get_autoreject_annots(eeg_id, headers),
     ]
     results = await asyncio.gather(*tasks)
     return results

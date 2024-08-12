@@ -22,7 +22,6 @@ from utils.helpers import format_func, grade_alpha, grade_bads
 log = logging.getLogger(__name__)
 
 
-
 class StandardPipeline:
     def __init__(self, mw_object):
         self.mw_object = mw_object.copy()
@@ -39,7 +38,7 @@ class StandardPipeline:
             pipeline = eqi_pipeline.QAPipeline(self.mw_object)
             pipeline.run()
             analysis = pipeline.analysis_json
-            st.session_state.eqi = analysis['eqi_score']
+            st.session_state.eqi = analysis["eqi_score"]
         except Exception as e:
             st.error(f"EEG quality assessment failed for the following reason: {e}")
 
@@ -53,6 +52,7 @@ class StandardPipeline:
             st.session_state.heart_rate_std_dev = heart_rate_std_dev
         except Exception as e:
             st.error(f"Heart rate calculation failed for the following reason: {e}")
+
 
 class PersistPipeline:
     def __init__(self, mw_object):
@@ -77,7 +77,6 @@ class PersistPipeline:
         self.ref = ref
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
-
 
         # Flatten psds for DataFrame storage
         flattened_psds = self.psds.reshape(
@@ -357,8 +356,6 @@ class PersistPipeline:
             # freqs = freqs[idx]
             # psd = psd[:,idx]
 
-
-
             psd = smooth_psd(psd, window_len=2)
 
             # Select the range of frequencies of interest
@@ -389,7 +386,7 @@ class PersistPipeline:
                 ax_fft.text(
                     1.00,
                     0.95,
-                    "\u03BCV\u00B2/Hz",
+                    "\u03bcV\u00b2/Hz",
                     verticalalignment="top",
                     horizontalalignment="left",
                     transform=ax_fft.transAxes,

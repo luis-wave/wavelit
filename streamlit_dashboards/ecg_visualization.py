@@ -12,24 +12,26 @@ from graphs.ecg_viewer import draw_ecg_figure
 
 def ecg_visualization_dashboard():
     # Set page configuration
-    #st.set_page_config(page_title="ECG Visualization", layout="wide")
+    # st.set_page_config(page_title="ECG Visualization", layout="wide")
 
     # Title
     st.title("ECG Visualization Dashboard")
     st.session_state["data"] = None
 
-    if 'mw_object' not in st.session_state:
+    if "mw_object" not in st.session_state:
         st.error("Please load EEG data")
     else:
         if st.session_state.heart_rate is None:
-            st.error("No ECG data available. Please upload an EEG file with ECG data on the main page.")
+            st.error(
+                "No ECG data available. Please upload an EEG file with ECG data on the main page."
+            )
         else:
             heart_rate_bpm = round(st.session_state.heart_rate, 1)
             heart_rate_std_dev = round(st.session_state.heart_rate_std_dev, 1)
 
             col1, col2 = st.columns(2)
 
-            if st.session_state.filename and ('/tmp/' not in st.session_state.filename):
+            if st.session_state.filename and ("/tmp/" not in st.session_state.filename):
                 col1.metric("Filename", st.session_state.filename)
             elif st.session_state.eeg_id:
                 col1.metric("EEGId", st.session_state.eeg_id)
@@ -39,14 +41,21 @@ def ecg_visualization_dashboard():
             st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
             # Check if `mw_object` is available
-            if ('mw_object' in st.session_state) and ('heart_rate' in st.session_state) and st.session_state.mw_object:
+            if (
+                ("mw_object" in st.session_state)
+                and ("heart_rate" in st.session_state)
+                and st.session_state.mw_object
+            ):
                 mw_object = st.session_state.mw_object
                 mw_copy = mw_object.copy()
 
                 # Offset value slider
                 offset_value = st.slider(
                     "Vertical Offset Between Channels",
-                    min_value=0, max_value=5000, value=2000, step=5
+                    min_value=0,
+                    max_value=5000,
+                    value=2000,
+                    step=5,
                 )
 
                 if st.button("AHR Detection"):
@@ -58,7 +67,7 @@ def ecg_visualization_dashboard():
                         analysis_json = pipeline.analysis_json
 
                         ahr_df = serialize_ahr_to_pandas(analysis_json)
-                        st.session_state['ahr'] = ahr_df
+                        st.session_state["ahr"] = ahr_df
 
                 # Create DataFrame from MyWaveAnalytics object
                 df = st.session_state.ecg_graph
@@ -70,10 +79,12 @@ def ecg_visualization_dashboard():
                     # Display the Plotly figure
                     st.plotly_chart(fig, use_container_width=True)
             else:
-                st.error("No ECG data available. Please upload an EEG file on the main page.")
+                st.error(
+                    "No ECG data available. Please upload an EEG file on the main page."
+                )
 
             # Retrieve ahr from session state
-            ahr = st.session_state.get('ahr', None)
+            ahr = st.session_state.get("ahr", None)
 
             if ahr is not None and not ahr.empty:
                 st.header("Edit AHR Predictions")
@@ -97,18 +108,18 @@ def ecg_visualization_dashboard():
 
                     if submitted:
                         # Update the session state with the edited DataFrame
-                        st.session_state['ahr'] = edited_df
+                        st.session_state["ahr"] = edited_df
                         st.success("Changes saved successfully!")
 
                         try:
                             # Convert DataFrame to CSV and save it locally
-                            csv_file_name = f'{st.session_state.eeg_id}.csv'
+                            csv_file_name = f"{st.session_state.eeg_id}.csv"
                             edited_df.to_csv(csv_file_name, index=False)
 
                             # S3 client setup
                             s3 = boto3.client("s3")
-                            bucket_name = 'lake-superior-prod'
-                            file_path = f'eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}'
+                            bucket_name = "lake-superior-prod"
+                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
 
                             # Adding metadata
                             processed_date = time.time()
@@ -130,6 +141,7 @@ def ecg_visualization_dashboard():
                             st.error("Error: Incomplete credentials provided")
                         except Exception as e:
                             st.error(f"Error: {e}")
+
 
 # To run the function as a Streamlit app
 if __name__ == "__main__":

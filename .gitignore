@@ -150,3 +150,6 @@ config.yaml
 
 setup_github_auth.sh
 docker-compose.yml
+
+.ruff_cache
+.ruff_cache/

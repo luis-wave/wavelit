@@ -32,7 +32,9 @@ def find_leads_off(raw, abs_offset_threshold=35, picks=["eeg"]):
 
     poor_connections = np.where(offsets > abs_offset_threshold)[0]
 
-    nan_results = np.where(np.isnan(offsets))[
+    nan_results = np.where(
+        np.isnan(offsets)
+    )[
         0
     ]  # Leads should not be removed if polyfit fails, leads with high sync alpha and high offtsets are being thrown out. See koenig 3-26-2015
 

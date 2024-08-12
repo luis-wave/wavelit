@@ -9,7 +9,7 @@ from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_visualization_dashboard)
 
 # Streamlit app setup
-#st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
+# st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
 
 # Check if query parameters exist and set eeg_id if available
 query_params = st.query_params.to_dict()
@@ -30,20 +30,15 @@ else:
     show_eeg = False
 
 
-
-
 if not eeg_id:
-
     # Title
     st.title("EEG Reports Dashboard")
 
-
     url = "https://app.sigmacomputing.com/embed/1-4j797MKZT5T7Xf8Wf5g8D5"
 
-    html=f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
+    html = f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
 
-
-    components.html(html,height=1000,scrolling=False)
+    components.html(html, height=1000, scrolling=False)
 
     asyncio.run(access_eeg_data(eeg_id))
 
