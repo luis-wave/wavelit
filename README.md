@@ -1,4 +1,4 @@
-[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+![Python Version](https://img.shields.io/badge/python-%3E%3D3.10%2C%3C3.13-green)
 
 
 # Wavelit
