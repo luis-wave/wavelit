@@ -9,14 +9,15 @@ import streamlit as st
 from matplotlib.ticker import FuncFormatter
 from mywaveanalytics.libraries import ecg_statistics, filters, references
 from mywaveanalytics.pipelines import eqi_pipeline
-from mywaveanalytics.utils.params import DEFAULT_RESAMPLING_FREQUENCY
+from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
+                                          ELECTRODE_GROUPING)
 from scipy.signal import find_peaks, peak_prominences, welch
 
 from dsp.artifact_removal import find_leads_off
 from dsp.neurometrics import get_power
 from graphs.psd_epochs import psd_peaks_3d
 from utils.graph_utils import smooth_psd
-from utils.helpers import format_func, grade_alpha
+from utils.helpers import format_func, grade_alpha, grade_bads
 
 log = logging.getLogger(__name__)
 
@@ -77,6 +78,7 @@ class PersistPipeline:
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
 
+
         # Flatten psds for DataFrame storage
         flattened_psds = self.psds.reshape(
             self.psds.shape[0], -1
@@ -109,13 +111,19 @@ class PersistPipeline:
 
         self.data["n_bads"] = self.data["bads"].apply(lambda x: len(x))
 
+        self.data["graded_bads"] = self.data["n_bads"].apply(lambda x: grade_bads(x))
+
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
-            by=["n_bads", "graded_alpha", "sync_score"], ascending=[True, True, False]
+            by=["graded_bads", "alpha"], ascending=[True, False]
         )
 
     def generate_graphs(self):
-        for idx in self.data.index[:20]:
+        graph_df = self.data.copy()
+
+        graph_df = graph_df[graph_df["sync_score"] < 200]
+
+        for idx in graph_df.index[:20]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
@@ -342,12 +350,14 @@ class PersistPipeline:
 
         for i in range(n_rows):
             # Calculate FFT and plot using Welch's method
-            freqs, psd = self.freqs, self.psds[epoch_id][i]
+            freqs, psd = welch(data[i], fs=fs)
 
             # idx = np.where(freqs > 2.2)
 
             # freqs = freqs[idx]
             # psd = psd[:,idx]
+
+
 
             psd = smooth_psd(psd, window_len=2)
 

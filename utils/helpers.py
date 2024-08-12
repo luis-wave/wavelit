@@ -45,10 +45,10 @@ def grade_alpha(score, all_scores):
     - grade (str): The letter grade.
     """
 
-    A_threshold = np.percentile(all_scores, 85)
-    B_threshold = np.percentile(all_scores, 70)
-    C_threshold = np.percentile(all_scores, 60)
-    D_threshold = np.percentile(all_scores, 50)
+    A_threshold = np.percentile(all_scores, 99)
+    B_threshold = np.percentile(all_scores, 95)
+    C_threshold = np.percentile(all_scores, 80)
+    D_threshold = np.percentile(all_scores, 60)
     E_threshold = np.percentile(all_scores, 40)
 
     if score >= A_threshold:
@@ -65,3 +65,24 @@ def grade_alpha(score, all_scores):
         grade = "F"
 
     return grade
+
+
+def grade_bads(bad_count):
+    """
+    Assigns a grade based on the number of bad items.
+
+    :param bad_count: (int) The number of bad items.
+    :return: (str) The grade corresponding to the number of bad items.
+    """
+    if bad_count < 1:
+        return 'A'
+    elif bad_count > 15:
+        return 'F'
+    elif bad_count > 12:
+        return 'D'
+    elif bad_count > 9:
+        return 'C'
+    elif bad_count > 3:
+        return 'B'
+    else:
+        return 'A'
