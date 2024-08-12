@@ -31,13 +31,14 @@ class EEGDataManager:
         st.session_state.heart_rate = None
         st.session_state.heart_rate_std_dev = None
 
-
     async def initialize(self):
         self.headers = await self.api_service.login()
 
     def save_uploaded_file(self, uploaded_file):
         try:
-            with tempfile.NamedTemporaryFile(delete=False, suffix=Path(uploaded_file.name).suffix) as tmp_file:
+            with tempfile.NamedTemporaryFile(
+                delete=False, suffix=Path(uploaded_file.name).suffix
+            ) as tmp_file:
                 tmp_file.write(uploaded_file.getvalue())
                 return tmp_file.name
         except Exception as e:
@@ -68,7 +69,7 @@ class EEGDataManager:
             # Downsample signal for better render speeds, lower sampling rates may impact graph spectral integrity.
             raw = raw.resample(sample_rate)
             df = raw.to_data_frame()
-            df['time'] = df.index / sample_rate
+            df["time"] = df.index / sample_rate
             return df
         except Exception as e:
             st.error(f"Failed to convert EEG data to DataFrame: {e}")
@@ -76,22 +77,36 @@ class EEGDataManager:
 
     def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
         st.session_state.mw_object = mw_object
-        st.session_state.recording_date = datetime.strptime(mw_object.recording_date, "%Y-%m-%d").strftime("%b %d, %Y")
+        st.session_state.recording_date = datetime.strptime(
+            mw_object.recording_date, "%Y-%m-%d"
+        ).strftime("%b %d, %Y")
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
         mw_copy = mw_object.copy()
         st.session_state.eeg_graph = {
             "linked_ears": self.serialize_mw_to_df(mw_copy.eeg),
             "centroid": self.serialize_mw_to_df(centroid(mw_copy.eeg)),
-            "bipolar_transverse": self.serialize_mw_to_df(bipolar_transverse_montage(mw_copy.eeg)),
-            "bipolar_longitudinal": self.serialize_mw_to_df(bipolar_longitudinal_montage(mw_copy.eeg))
+            "bipolar_transverse": self.serialize_mw_to_df(
+                bipolar_transverse_montage(mw_copy.eeg)
+            ),
+            "bipolar_longitudinal": self.serialize_mw_to_df(
+                bipolar_longitudinal_montage(mw_copy.eeg)
+            ),
         }
-        st.session_state.ecg_graph = self.serialize_mw_to_df(mw_object.copy().eeg, ecg=True, eeg=False)
+        st.session_state.ecg_graph = self.serialize_mw_to_df(
+            mw_object.copy().eeg, ecg=True, eeg=False
+        )
 
     async def handle_uploaded_file(self, uploaded_file):
         saved_path = self.save_uploaded_file(uploaded_file)
         if saved_path:
-            eeg_type = 0 if uploaded_file.name.lower().endswith(".dat") else 10 if uploaded_file.name.lower().endswith(".edf") else None
+            eeg_type = (
+                0
+                if uploaded_file.name.lower().endswith(".dat")
+                else 10
+                if uploaded_file.name.lower().endswith(".edf")
+                else None
+            )
             if eeg_type is None:
                 st.error("Unsupported file type.")
             else:
@@ -103,10 +118,18 @@ class EEGDataManager:
                     pipeline.run()
 
     async def handle_downloaded_file(self, eeg_id):
-        downloaded_path, file_extension = await self.api_service.download_eeg_file(eeg_id, self.headers)
+        downloaded_path, file_extension = await self.api_service.download_eeg_file(
+            eeg_id, self.headers
+        )
         if downloaded_path:
             st.success(f"EEG Data for ID {eeg_id} downloaded successfully!")
-            eeg_type = 0 if file_extension.lower() == ".dat" else 10 if file_extension.lower() == ".edf" else None
+            eeg_type = (
+                0
+                if file_extension.lower() == ".dat"
+                else 10
+                if file_extension.lower() == ".edf"
+                else None
+            )
             if eeg_type is not None:
                 mw_object = self.load_mw_object(downloaded_path, eeg_type)
                 if mw_object:
@@ -126,15 +149,29 @@ class EEGDataManager:
         ahr, aea, autoreject = await asyncio.gather(
             self.api_service.get_ahr_onsets(eeg_id, self.headers),
             self.api_service.get_aea_onsets(eeg_id, self.headers),
-            self.api_service.get_autoreject_annots(eeg_id, self.headers)
+            self.api_service.get_autoreject_annots(eeg_id, self.headers),
         )
         st.session_state.ahr = serialize_ahr_to_pandas(ahr)
         st.session_state.aea = {
-            "linked_ears": serialize_aea_to_pandas(aea.get("linked_ears"), ref="linked_ears") if aea.get("linked_ears") is not None else pd.DataFrame(),
-            "centroid": serialize_aea_to_pandas(aea.get("centroid"), ref="centroid") if aea.get("centroid") is not None else pd.DataFrame(),
-            "bipolar_longitudinal": serialize_aea_to_pandas(aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal") if aea.get("bipolar_longitudinal") is not None else pd.DataFrame()
+            "linked_ears": serialize_aea_to_pandas(
+                aea.get("linked_ears"), ref="linked_ears"
+            )
+            if aea.get("linked_ears") is not None
+            else pd.DataFrame(),
+            "centroid": serialize_aea_to_pandas(aea.get("centroid"), ref="centroid")
+            if aea.get("centroid") is not None
+            else pd.DataFrame(),
+            "bipolar_longitudinal": serialize_aea_to_pandas(
+                aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal"
+            )
+            if aea.get("bipolar_longitudinal") is not None
+            else pd.DataFrame(),
         }
         st.session_state.autoreject = {
-            "linked_ears": serialize_autoreject_to_pandas(autoreject.get("linked_ears")) if autoreject.get("linked_ears") is not None else pd.DataFrame(),
-            "centroid": serialize_autoreject_to_pandas(autoreject.get("centroid")) if autoreject.get("centroid") is not None else pd.DataFrame()
+            "linked_ears": serialize_autoreject_to_pandas(autoreject.get("linked_ears"))
+            if autoreject.get("linked_ears") is not None
+            else pd.DataFrame(),
+            "centroid": serialize_autoreject_to_pandas(autoreject.get("centroid"))
+            if autoreject.get("centroid") is not None
+            else pd.DataFrame(),
         }

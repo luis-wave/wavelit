@@ -1,6 +1,7 @@
 """
 A collection of helper function that can be used across the system.
 """
+
 import numpy as np
 
 
@@ -9,22 +10,26 @@ def format_func(value, tick_number):
     mins, secs = divmod(int(value), 60)
     return f"{mins:02}:{secs:02}"
 
+
 def format_single(second):
     # Calculate minutes, seconds, and milliseconds
     minutes, seconds = divmod(int(second), 60)
     milliseconds = int((second - int(second)) * 1000)
     return f"{minutes:02}:{seconds:02}.{milliseconds:03}"
 
+
 # Function to assign ECG channel types if present
-def assign_ecg_channel_type(raw, ecg_channels=['ECG', 'ECG1', 'ECG2']):
+def assign_ecg_channel_type(raw, ecg_channels=["ECG", "ECG1", "ECG2"]):
     existing_channels = raw.ch_names
-    channel_types = {ch: 'ecg' for ch in ecg_channels if ch in existing_channels}
+    channel_types = {ch: "ecg" for ch in ecg_channels if ch in existing_channels}
     raw.set_channel_types(channel_types)
+
 
 # Function to filter EEG and ECG channels
 def filter_eeg_ecg_channels(raw):
     picks = raw.pick_types(eeg=True, ecg=True).ch_names
     return picks
+
 
 # Function to order channels
 def order_channels(channels, ordered_list):
@@ -75,14 +80,14 @@ def grade_bads(bad_count):
     :return: (str) The grade corresponding to the number of bad items.
     """
     if bad_count < 1:
-        return 'A'
+        return "A"
     elif bad_count > 15:
-        return 'F'
+        return "F"
     elif bad_count > 12:
-        return 'D'
+        return "D"
     elif bad_count > 9:
-        return 'C'
+        return "C"
     elif bad_count > 3:
-        return 'B'
+        return "B"
     else:
-        return 'A'
+        return "A"

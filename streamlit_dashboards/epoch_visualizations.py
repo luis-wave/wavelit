@@ -8,14 +8,14 @@ def eeg_epoch_visualization_dashboard():
     # Set page configuration
     # st.set_page_config(page_title="Epoch Visualizations", layout="wide")
 
-    if 'mw_object' not in st.session_state:
+    if "mw_object" not in st.session_state:
         st.error("Please load EEG data")
     else:
         st.title("EEG Epoch Generator")
 
         col1, col2 = st.columns(2)
 
-        if st.session_state.filename and ('/tmp/' not in st.session_state.filename):
+        if st.session_state.filename and ("/tmp/" not in st.session_state.filename):
             col1.metric("Filename", st.session_state.filename)
         elif st.session_state.eeg_id:
             col1.metric("EEGId", st.session_state.eeg_id)
@@ -31,15 +31,14 @@ def eeg_epoch_visualization_dashboard():
                 st.error(f"Epoch analysis failed: {e}")
 
         # Check if `mw_object` is available
-        if 'mw_object' in st.session_state and st.session_state.mw_object:
+        if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object.copy()
 
             eqi_pipeline = StandardPipeline(mw_object)
             eqi_pipeline.calculate_eqi()
 
-
-            eqi = st.session_state.get('eqi', None)
-            ref = st.session_state.get('ref', 'le')
+            eqi = st.session_state.get("eqi", None)
+            ref = st.session_state.get("ref", "le")
 
             time_win = 20
 
@@ -53,7 +52,6 @@ def eeg_epoch_visualization_dashboard():
                 if eqi < 50:
                     time_win = 5
 
-
             st.metric("EEG Quality Index", eqi)
 
             selected_ref_index = 0 if eqi is not None and eqi > 60 else 1
@@ -61,13 +59,11 @@ def eeg_epoch_visualization_dashboard():
                 "linked ears",
                 "centroid",
                 "bipolar transverse",
-                "bipolar longitudinal"
+                "bipolar longitudinal",
             ]
 
             ref = st.selectbox(
-                "Choose EEG reference",
-                options=ref_options,
-                index=selected_ref_index
+                "Choose EEG reference", options=ref_options, index=selected_ref_index
             )
 
             reference_map = {
@@ -84,7 +80,7 @@ def eeg_epoch_visualization_dashboard():
                 min_value=3,
                 max_value=30,
                 value=time_win,
-                step=5
+                step=5,
             )
 
             with st.spinner("Running pipeline..."):
@@ -98,7 +94,10 @@ def eeg_epoch_visualization_dashboard():
                 pipeline.reset(mw_object)
 
         else:
-            st.error("No EEG data available. Please upload an EEG file on the main page.")
+            st.error(
+                "No EEG data available. Please upload an EEG file on the main page."
+            )
+
 
 # To run the function as a Streamlit app
 if __name__ == "__main__":

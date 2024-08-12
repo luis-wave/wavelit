@@ -9,7 +9,7 @@ from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_visualization_dashboard)
 
 # Streamlit app setup
-#st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
+# st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
 
 
 # Title
@@ -17,12 +17,10 @@ st.title("Report Log Dashboard")
 
 url = "https://app.sigmacomputing.com/embed/1-QcWTFngW18VskMHuiDbeA"
 
-html=f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
+html = f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
 
 
-components.html(html,height=1000,scrolling=False)
-
-
+components.html(html, height=1000, scrolling=False)
 
 
 # Footer section

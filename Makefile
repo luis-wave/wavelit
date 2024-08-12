@@ -1,6 +1,9 @@
 format:
-	black *.py
+	ruff format
 	isort .
+
+lint:
+	ruff check .
 
 local_app:
 	python -m streamlit run home.py
