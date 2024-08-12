@@ -1,4 +1,5 @@
 ![Python Version](https://img.shields.io/badge/python-%3E%3D3.10%2C%3C3.13-green)
+[![Lint with Ruff](https://github.com/luis-wave/wavelit/actions/workflows/ruff-linter.yml/badge.svg)](https://github.com/luis-wave/wavelit/actions/workflows/ruff-linter.yml)
 
 
 # Wavelit
