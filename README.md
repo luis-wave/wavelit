@@ -1,3 +1,6 @@
+![Python Version](https://img.shields.io/badge/python-%3E%3D3.10%2C%3C3.13-green)
+
+
 # Wavelit
 
 Wavelit is a Streamlit application designed to streamline and enhance the workflow of the lab. Wavelit offers an integrated platform that hosts a variety of web applications, each tailored to improve the efficiency and effectiveness of EEG-related tasks.
