@@ -1,25 +1,58 @@
 import logging
+import textwrap
 
 import matplotlib.pyplot as plt
 import mne
 import numpy as np
 import pandas as pd
-import seaborn as sns
 import streamlit as st
-from matplotlib.collections import LineCollection
-from matplotlib.ticker import AutoLocator, FuncFormatter, MultipleLocator
-from mywaveanalytics.libraries import (eeg_computational_library, filters,
-                                       references)
-from mywaveanalytics.utils import params
+from matplotlib.ticker import FuncFormatter
+from mywaveanalytics.libraries import ecg_statistics, filters, references
+from mywaveanalytics.pipelines import eqi_pipeline
 from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
                                           ELECTRODE_GROUPING)
-from scipy.integrate import simps
 from scipy.signal import find_peaks, peak_prominences, welch
 
-from graph_utils import preprocessing
+from dsp.artifact_removal import find_leads_off
+from dsp.neurometrics import get_power
+from graphs.psd_epochs import psd_peaks_3d
+from utils.graph_utils import smooth_psd
+from utils.helpers import format_func, grade_alpha, grade_bads
 
 log = logging.getLogger(__name__)
 
+
+
+class StandardPipeline:
+    def __init__(self, mw_object):
+        self.mw_object = mw_object.copy()
+
+    def run(self):
+        with st.spinner("Calculate EEG Quality Index (EQI)..."):
+            self.calculate_eqi()
+        with st.spinner("Calculate heart rate measures..."):
+            self.calculate_heart_rate()
+
+    def calculate_eqi(self):
+        try:
+            # Calculate EEG quality index
+            pipeline = eqi_pipeline.QAPipeline(self.mw_object)
+            pipeline.run()
+            analysis = pipeline.analysis_json
+            st.session_state.eqi = analysis['eqi_score']
+        except Exception as e:
+            st.error(f"EEG quality assessment failed for the following reason: {e}")
+
+    def calculate_heart_rate(self):
+        try:
+            # Filter ECG signal before deriving heart rate measures
+            ecg_events_loc = filters.ecgfilter(self.mw_object)
+            # Find heart rate and its standard deviation
+            heart_rate_bpm, heart_rate_std_dev = ecg_statistics.ecg_bpm(ecg_events_loc)
+            st.session_state.heart_rate = heart_rate_bpm
+            st.session_state.heart_rate_std_dev = heart_rate_std_dev
+        except Exception as e:
+            st.error(f"Heart rate calculation failed for the following reason: {e}")
 
 class PersistPipeline:
     def __init__(self, mw_object):
@@ -29,14 +62,22 @@ class PersistPipeline:
         self.epochs = None
         self.freqs = None
         self.psds = None
+        self.data = None
 
     def reset(self, mw_object):
         self.mw_object = mw_object.copy()
+        self.ref = None
+        self.sampling_rate = mw_object.eeg.info["sfreq"]
+        self.epochs = None
+        self.freqs = None
+        self.psds = None
+        self.data = None
 
     def run(self, time_win=10, ref="le"):
         self.ref = ref
         self.epochs = self.preprocess_data(time_win=time_win, ref=ref)
         self.freqs, self.psds = self.calculate_psds()
+
 
         # Flatten psds for DataFrame storage
         flattened_psds = self.psds.reshape(
@@ -64,17 +105,25 @@ class PersistPipeline:
             lambda x: grade_alpha(x, self.data["alpha"].values)
         )
 
-        self.data["n_bads"] = [
-            len(find_leads_off(self.epochs[i])) for i in range(len(self.epochs))
+        self.data["bads"] = [
+            find_leads_off(self.epochs[i]) for i in range(len(self.epochs))
         ]
+
+        self.data["n_bads"] = self.data["bads"].apply(lambda x: len(x))
+
+        self.data["graded_bads"] = self.data["n_bads"].apply(lambda x: grade_bads(x))
 
         # Sort the DataFrame by score in descending order
         self.data = self.data.sort_values(
-            by=["n_bads", "graded_alpha", "sync_score"], ascending=[True, True, False]
+            by=["graded_bads", "alpha"], ascending=[True, False]
         )
 
     def generate_graphs(self):
-        for idx in self.data.index[:10]:
+        graph_df = self.data.copy()
+
+        graph_df = graph_df[graph_df["sync_score"] < 200]
+
+        for idx in graph_df.index[:20]:
             self.combined_plot(epoch_id=idx)
 
     def preprocess_data(self, time_win=20, ref=None):
@@ -131,6 +180,8 @@ class PersistPipeline:
         epochs = self.epochs[epoch_id]
         ref = self.ref
 
+        bads = self.data["bads"][epoch_id]
+
         event_times = self.epochs.events[:, 0] / self.sampling_rate
 
         # Align channel order to what the lab is used to if applicable
@@ -159,6 +210,10 @@ class PersistPipeline:
         if ref == "cz":
             epochs = epochs.drop_channels(["Cz"])
             new_order.remove("Cz")
+
+        if bads:
+            epochs = epochs.drop_channels(bads)
+            new_order = [item for item in new_order if item not in bads]
 
         # Calculate FFT and plot using Welch's method
         data = epochs.get_data(picks="eeg", units="uV")[0]
@@ -209,6 +264,13 @@ class PersistPipeline:
         channels = [i + channel_suffix_map[ref] for i in channels]
 
         plot_title = f"{rec_date} {suffix_map[ref]}"
+
+        if bads:
+            plot_title = plot_title + f" ({', '.join(bads)} removed)"
+
+            # Wrap title if it's too long
+            wrapper = textwrap.TextWrapper(width=60)  # Adjust 'width' to your needs
+            plot_title = "\n".join(wrapper.wrap(plot_title))
 
         fig.text(
             0.14,
@@ -288,12 +350,14 @@ class PersistPipeline:
 
         for i in range(n_rows):
             # Calculate FFT and plot using Welch's method
-            freqs, psd = self.freqs, self.psds[epoch_id][i]
+            freqs, psd = welch(data[i], fs=fs)
 
             # idx = np.where(freqs > 2.2)
 
             # freqs = freqs[idx]
             # psd = psd[:,idx]
+
+
 
             psd = smooth_psd(psd, window_len=2)
 
@@ -366,247 +430,22 @@ class PersistPipeline:
         # plt.savefig(save)
         st.pyplot(fig)
 
+    def plot_3d_psd(self):
+        # Prepare data for 3D plot
+        freqs = self.freqs
+        epochs = range(self.psds.shape[0])
 
-def format_func(value, tick_number):
-    # convert second to minute and second, return as string 'mm:ss'
-    mins, secs = divmod(int(value), 60)
-    return f"{mins:02}:{secs:02}"
+        psd_data = self.psds.mean(axis=1)  # Averaging across channels
+        alpha_scores = self.data.index.values
 
+        excess_sync_score = self.data["sync_score"] > 150
 
-def smooth_psd(psd, window_len=10):
-    """Smooth the PSD data using a moving average.
+        # Filter frequencies between 4 Hz and 20 Hz
+        freq_mask = (freqs >= 2.2) & (freqs <= 20)
+        filtered_freqs = freqs[freq_mask]
+        filtered_psd_data = psd_data[:, freq_mask]
 
-    Parameters
-    ----------
-    psd : 1-D array
-        Power spectral density data.
-    window_len : int, optional
-        The length of the smoothing window.
+        # Set indices of filtered_psd_data where sync_score is over 150 to 0
+        filtered_psd_data[excess_sync_score, :] = 0
 
-    Returns
-    -------
-    smoothed_psd : 1-D array
-        Smoothed PSD data.
-    """
-    window = np.ones(int(window_len)) / float(window_len)
-    smoothed_psd = np.convolve(psd, window, "same")
-
-    return smoothed_psd
-
-
-def get_power(psd, freqs, f_range=[8, 13]):
-    """Calculate the ratio between a frequency range and total (0-100 Hz)
-    area under the curve.
-
-    :param psd: (numpy.ndarray) power spectral densities.
-    :param freqs: (numpy.ndarray) frequencies
-    :return: delta relative power, expressed as a ratio.
-    """
-
-    fl, fh = f_range
-    band_idx = np.where((freqs >= fl) & (freqs <= fh))[0]
-
-    psd = psd * (10**12)
-    band_power = simps(psd[:, band_idx], dx=freqs[1] - freqs[0])
-    total_power = simps(psd, dx=freqs[1] - freqs[0])
-
-    return sum(band_power / total_power)
-
-
-def find_leads_off(raw, abs_offset_threshold=20, picks=["eeg"]):
-    """Uses power spectrum analysis to detect which leads are bad (flat, artifact-heavy, high-frequency noise).
-    Time series analysis of the EEG signal is used to determine poor connectivity.
-
-    :param offset_threshold:
-    :param raw:
-    :return:
-    """
-
-    psds, freqs = mne.time_frequency.psd_welch(
-        raw, picks=picks, n_overlap=params.N_OVERLAP
-    )
-
-    # An epoch object returns psds in three dimensions, this line ensures psds has the same shape if it was derived from a raw object.
-    if len(psds.shape) == 3:
-        psds = psds[0]
-
-    # Use variance to determine and isolate bad channels.
-
-    _, high_variance = variance_outliers(raw)
-
-    # Fit a line to FFT. use the offset and the slope of the line to determine bad leads
-    offsets, slopes = eeg_computational_library.get_offsets_slopes(
-        psds, freqs, span=None
-    )
-
-    poor_connections = np.where(offsets > abs_offset_threshold)[0]
-
-    nan_results = np.where(np.isnan(offsets))[
-        0
-    ]  # Leads should not be removed if polyfit fails, leads with high sync alpha and high offtsets are being thrown out. See koenig 3-26-2015
-
-    flat_channels = np.where(np.absolute(offsets) < 0.01)[0]
-
-    high_frequency_noise = np.where(slopes > 0)[0]
-
-    results = {}
-    ch_names = np.asarray(params.CHANNEL_ORDER)
-    ch_names = np.delete(ch_names, -3, axis=0)  # remove ECG channel
-    if (
-        poor_connections.size != 0
-        or nan_results.size != 0
-        or flat_channels.size != 0
-        or high_frequency_noise.size != 0
-        or high_variance.size != 0
-    ):
-        leads_off_indices = np.unique(
-            np.concatenate(
-                (
-                    poor_connections,
-                    flat_channels,
-                    nan_results,
-                    high_frequency_noise,
-                    high_variance,
-                )
-            )
-        )
-
-        leads_off = [ch_names[i] for i in leads_off_indices if i not in nan_results]
-
-    else:
-        leads_off_indices = np.empty((0,))
-    if leads_off_indices.size == 0:
-        return []
-    leads_off = [ch_names[i] for i in leads_off_indices if i not in nan_results]
-    return leads_off
-
-
-def variance_outliers(raw):
-    """Calculate variance for each EEG signal. Threshold was set to 3000,
-    based on empirical obervation from testing across Wave Neuro and NYU datasets.
-
-    params:
-        raw (mne): raw mne object.
-
-    returns:
-        array: index positions of high variance outliers.
-    """
-    eeg = raw.get_data(picks="eeg", units="uV")
-    variance = np.var(eeg, axis=2)
-    threshold = 3000
-    idx = np.where(variance > threshold)[1]
-
-    return variance.tolist(), idx
-
-
-def grade_alpha(score, all_scores):
-    """
-    Assign a letter grade based on where the score ranks within all_scores using percentiles.
-
-    Args:
-    - score (float): The score for which you want to determine the grade.
-    - all_scores (list of float): List of all scores to determine the percentiles.
-
-    Returns:
-    - grade (str): The letter grade.
-    """
-
-    A_threshold = np.percentile(all_scores, 85)
-    B_threshold = np.percentile(all_scores, 70)
-    C_threshold = np.percentile(all_scores, 60)
-    D_threshold = np.percentile(all_scores, 50)
-    E_threshold = np.percentile(all_scores, 40)
-
-    if score >= A_threshold:
-        grade = "A"
-    elif score >= B_threshold:
-        grade = "B"
-    elif score >= C_threshold:
-        grade = "C"
-    elif score >= D_threshold:
-        grade = "D"
-    elif score >= E_threshold:
-        grade = "E"
-    else:
-        grade = "F"
-
-    return grade
-
-
-def bipolar_transverse_montage(raw):
-    """Set the EEG reference to Bipolar Transverse Montage (BLM).
-
-    params:
-        raw (mne object): Original raw instance.
-    returns
-        raw (mne object): Re-referenced raw instance.
-    """
-    # Define anodes and cathodes for a longitudinal montage
-    anode = [
-        "F7",
-        "Fp1",
-        "Fp2",
-        "F7",
-        "F3",
-        "Fz",
-        "F4",
-        "T3",
-        "C3",
-        "Cz",
-        "C4",
-        "T5",
-        "P3",
-        "Pz",
-        "P4",
-        "T5",
-        "O1",
-        "O2",
-    ]
-    cathode = [
-        "Fp1",
-        "Fp2",
-        "F8",
-        "F3",
-        "Fz",
-        "F4",
-        "F8",
-        "C3",
-        "Cz",
-        "C4",
-        "T4",
-        "P3",
-        "Pz",
-        "P4",
-        "T6",
-        "O1",
-        "O2",
-        "T6",
-    ]
-
-    # Set bipolar reference
-    btm_raw = mne.set_bipolar_reference(raw, anode, cathode)
-    btm_raw = btm_raw.pick_channels(CHANNEL_ORDER_BIPOLAR_TRANSVERSE)
-
-    return btm_raw
-
-
-CHANNEL_ORDER_BIPOLAR_TRANSVERSE = (
-    "F7-Fp1",
-    "Fp1-Fp2",
-    "Fp2-F8",
-    "F7-F3",
-    "F3-Fz",
-    "Fz-F4",
-    "F4-F8",
-    "T3-C3",
-    "C3-Cz",
-    "Cz-C4",
-    "C4-T4",
-    "T5-P3",
-    "P3-Pz",
-    "Pz-P4",
-    "P4-T6",
-    "T5-O1",
-    "O1-O2",
-    "O2-T6",
-)
+        return psd_peaks_3d(filtered_freqs, filtered_psd_data, epochs, alpha_scores)

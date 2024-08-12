@@ -27,3 +27,24 @@ def rolling_window(d):
 def apply_cutoff(d, freqs, lf_cutoff=2.2):
     mask = (freqs >= lf_cutoff) & (freqs <= 25)
     return d[mask], freqs[mask]
+
+
+def smooth_psd(psd, window_len=10):
+    """Smooth the PSD data using a moving average.
+
+    Parameters
+    ----------
+    psd : 1-D array
+        Power spectral density data.
+    window_len : int, optional
+        The length of the smoothing window.
+
+    Returns
+    -------
+    smoothed_psd : 1-D array
+        Smoothed PSD data.
+    """
+    window = np.ones(int(window_len)) / float(window_len)
+    smoothed_psd = np.convolve(psd, window, "same")
+
+    return smoothed_psd
