@@ -83,13 +83,15 @@ def eeg_epoch_visualization_dashboard():
                 step=5,
             )
 
-            with st.spinner("Running pipeline..."):
-                pipeline = run_persist_pipeline(mw_object)
-                if pipeline:
-                    pipeline.run(ref=ref, time_win=time_win)
-                    with st.spinner("Drawing..."):
-                        pipeline.generate_graphs()
-                        pipeline.reset(mw_object)
+
+            if st.button("Draw epochs..."):
+                with st.spinner("Running pipeline..."):
+                    pipeline = run_persist_pipeline(mw_object)
+                    if pipeline:
+                        pipeline.run(ref=ref, time_win=time_win)
+                        with st.spinner("Drawing..."):
+                            pipeline.generate_graphs()
+                            pipeline.reset(mw_object)
 
                 pipeline.reset(mw_object)
 
