@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -7,11 +8,8 @@ from access_control import access_eeg_data, get_version_from_pyproject
 from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_epoch_visualization_dashboard,
                                   eeg_visualization_dashboard)
-import os
 
-
-SIGMA_REPORT_LOGS_URL = os.getenv('SIGMA_REPORT_LOGS_URL')
-
+SIGMA_REPORT_LOGS_URL = os.getenv("SIGMA_REPORT_LOGS_URL")
 # Title
 st.title("Report Log Dashboard")
 

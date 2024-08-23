@@ -83,7 +83,6 @@ def eeg_epoch_visualization_dashboard():
                 step=5,
             )
 
-
             if st.button("Generate top 20 epoch graphs"):
                 with st.spinner("Running pipeline..."):
                     pipeline = run_persist_pipeline(mw_object)
