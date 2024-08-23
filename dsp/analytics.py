@@ -214,6 +214,8 @@ class PersistPipeline:
             epochs = epochs.drop_channels(bads)
             new_order = [item for item in new_order if item not in bads]
 
+        epochs = epochs.reorder_channels(new_order)
+
         # Calculate FFT and plot using Welch's method
         data = epochs.get_data(picks="eeg", units="uV")[0]
         fs = self.sampling_rate
@@ -255,7 +257,6 @@ class PersistPipeline:
             "btm": "",
             "blm": "",
         }
-
         channels = epochs.pick_types(eeg=True).ch_names
         if ref not in ("tcp", "blm", "btm"):
             epochs = epochs.reorder_channels(new_order)

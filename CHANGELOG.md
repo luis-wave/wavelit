@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.0.2] - 2024-08-22
+### Fixed
+- Fixed channel order in epoch plots.
+
+
 ## [2.0.1] - 2024-08-14
 ### Fixed
 - EQI time window set logic
