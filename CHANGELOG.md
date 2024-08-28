@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.0.4] - 2024-08-27
+### Fixed
+- Optimal time window for NGBoost model was 5.12s not 2.56s
+
+
 
 ## [2.0.3] - 2024-08-23
 ### Fixed
