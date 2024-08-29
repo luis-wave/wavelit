@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [2.1.0] - 2024-08-29
+### Added
+- Added a buildspec.yml for automated deployment via CI/CD pipeline.
+
+
+
 ## [2.0.4] - 2024-08-27
 ### Fixed
 - Optimal time window for NGBoost model was 5.12s not 2.56s
