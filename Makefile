@@ -9,7 +9,7 @@ local_app:
 	python -m streamlit run home.py
 
 app:
-	docker run -p 8501:8501 streamlit-epoch
+	docker run -p 8501:8501 streamlit-epoch-dev
 
 
 sigma:
