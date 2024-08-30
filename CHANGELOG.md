@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added a buildspec.yml for automated deployment via CI/CD pipeline.
 
+### Changed
+- Config.yml now included in Dockerbuild.
+
 
 
 ## [2.0.4] - 2024-08-27
