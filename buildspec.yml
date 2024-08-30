@@ -26,9 +26,9 @@ phases:
   post_build:
     commands:
       - echo Tagging the Docker image...
-      - docker tag streamlit-epoch-dev 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev
+      - docker tag streamlit-epoch-dev 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev:latest
       - echo Pushing the Docker image to ECR...
-      - docker push 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev
+      - docker push 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev:latest
       - echo Docker push completed.
 
 artifacts:
