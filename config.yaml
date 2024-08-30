@@ -1,0 +1,54 @@
+credentials:
+  usernames:
+    luiscam:
+      email: lcamargo@waveneuro.com
+      name: Luis Camargo
+      password: $2b$12$7DKVVLidvWx2m179Eea98.RfcInbP6dFRayVUn5tcjEkvueSyAyI2
+    aring:
+      email: alex@waveneuro.com
+      name: Alex Ring
+      password: $2b$12$qiQk.vjIql3NPzN66dHEq.k63JmoNioebMkpbgkbJscWd.pUPypdW
+    sllaga:
+      email: stephanie@waveneuro.com
+      name: Stephanie Llaga
+      password: $2b$12$tk.L.ZeTw1D2yQ.7g36Yj.uYW1SzBRRBmAg.ZATA58ibrhSrFYbFW
+    ppolk:
+      email: patrick@waveneuro.com
+      name: Patrick Polk
+      password: $2b$12$1Ka6UhF6KA8B/Q0difn3HufvYn0l1RE6oSBYEN.LPN/j9MY0iDMJO
+    jchong:
+      email: joseph@waveneuro.com
+      name: Joseph Chong
+      password: $2b$12$6KU9dOLQcVTju4pwej/Hp.cLGni16oO4f2bI8/oErWz5CLR6jq7lC
+    nyu:
+      email: nicole@waveneuro.com
+      name: Nicole Yu
+      password: $2b$12$XWir/Spi.9ELDYlnJ92fNeV0RjSGfnnORaBXq1Db45NYKojhOibLW
+    ble:
+      email: ble@waveneuro.com
+      name: Binh Le
+      password: $2b$12$EiWUNwezz2UBzDTu3KCa9uUDbXhyXHfqlESlGKMDQMaoxYv5Rnm7S
+    rmendoza:
+      email: rmendoza@waveneuro.com
+      name: Rey Mendoza
+      password: $2b$12$hUdQ97E92aRGqF.nCavUg.vl2I5ufDDErghJgQcjxuDeRLtI0wkDS
+    jkumar:
+      email: jay@waveneuro.com
+      name: Jay Kumar
+      password: $2b$12$p9aOPRJnAJLqBEdszmwQ2uNmksVQvvaFCosSwz25bqoGWJNIocaTi
+    jijeong:
+      email: jijeong@waveneuro.com
+      name: Jijeong Kim
+      password: $2b$12$de/PzEyp2wa9ne8mqaLTseA2hrNhZ7FwSN4uxHullzbiyyXi8k.dy
+    lprichep:
+      email: leslie@waveneuro.com
+      name: Leslie Prichep
+      password: $2b$12$GDOu67T9GVJWgudwYcOwc.4qTB/1s7cljM3jHCczI00vtd63FcoPS
+    pspechler:
+      email: phil@waveneuro.com
+      name: Phil Spechler
+      password: $2b$12$iV5343gif3N7TtPWCDnmfOGn7h.IOUWM7PdiIhQeCIvR95q7sBK1.
+cookie:
+  expiry_days: 1
+  key: some_signature_key
+  name: labAccess
