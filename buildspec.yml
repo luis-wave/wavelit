@@ -3,42 +3,33 @@ version: 0.2
 phases:
   pre_build:
     commands:
-      - echo Logging into ECR...
-      - aws --version
-      - AWS_ACCOUNT_ID=$(echo $CODEBUILD_BUILD_ARN | cut -f5 -d ':')
-      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
-      - REPOSITORY_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/streamlit_epoch_generator-dev
-      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
-      - IMAGE_TAG=${COMMIT_HASH:=latest}
-      - export DOCKER_BUILDKIT=1
-      - export COMPOSE_DOCKER_CLI_BUILD=1
+      - echo Logging in to Amazon ECR...
+      - aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 753527542304.dkr.ecr.us-west-2.amazonaws.com
+      - echo Docker login completed.
   build:
     commands:
-      - echo Build started on `date`
-      - echo Building Docker image...
-      - |
-        docker build -t $REPOSITORY_URI:latest \
-          --build-arg GITHUB_USER=$GITHUB_USER \
-          --build-arg GITHUB_TOKEN=$GITHUB_TOKEN \
-          --build-arg BASE_URL=$BASE_URL \
-          --build-arg CLINICAL_USERNAME=$CLINICAL_USERNAME \
-          --build-arg CLINICAL_PASSWORD=$CLINICAL_PASSWORD \
-          --build-arg CLINICAL_API_KEY=$CLINICAL_API_KEY \
-          --build-arg CONSUMER_USERNAME=$CONSUMER_USERNAME \
-          --build-arg CONSUMER_PASSWORD=$CONSUMER_PASSWORD \
-          --build-arg CONSUMER_API_KEY=$CONSUMER_API_KEY \
-          --build-arg SIGMA_PROTOCOLS_URL=$SIGMA_PROTOCOLS_URL \
-          --build-arg SIGMA_REPORT_URL=$SIGMA_REPORT_URL \
-          --build-arg SIGMA_REPORT_LOGS_URL=$SIGMA_REPORT_LOGS_URL \
-          .
-
-      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+      - echo Building the Docker image with environment variables from CodePipeline...
+      - docker build --build-arg GITHUB_USER=$GITHUB_USER \
+                    --build-arg GITHUB_TOKEN=$GITHUB_TOKEN \
+                    --build-arg BASE_URL=$BASE_URL \
+                    --build-arg CLINICAL_USERNAME=$CLINICAL_USERNAME \
+                    --build-arg CLINICAL_PASSWORD=$CLINICAL_PASSWORD \
+                    --build-arg CLINICAL_API_KEY=$CLINICAL_API_KEY \
+                    --build-arg CONSUMER_USERNAME=$CONSUMER_USERNAME \
+                    --build-arg CONSUMER_PASSWORD=$CONSUMER_PASSWORD \
+                    --build-arg CONSUMER_API_KEY=$CONSUMER_API_KEY \
+                    --build-arg SIGMA_PROTOCOLS_URL=$SIGMA_PROTOCOLS_URL \
+                    --build-arg SIGMA_REPORT_URL=$SIGMA_REPORT_URL \
+                    --build-arg SIGMA_REPORT_LOGS_URL=$SIGMA_REPORT_LOGS_URL \
+                    -t streamlit-epoch-dev .
+      - echo Docker build completed.
   post_build:
     commands:
-      - echo Build completed on `date`
-      - echo Pushing the Docker images...
-      - docker push $REPOSITORY_URI:latest
-      - docker push $REPOSITORY_URI:$IMAGE_TAG
+      - echo Tagging the Docker image...
+      - docker tag streamlit-epoch-dev 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev
+      - echo Pushing the Docker image to ECR...
+      - docker push 753527542304.dkr.ecr.us-west-2.amazonaws.com/streamlit_epoch_generator-dev
+      - echo Docker push completed.
 
 artifacts:
   files:
