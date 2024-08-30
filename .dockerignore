@@ -9,7 +9,6 @@
 !pyproject.toml
 !pages
 !dsp
-!config.yaml
 !services
 !utils
 !graphs
