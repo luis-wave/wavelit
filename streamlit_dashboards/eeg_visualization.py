@@ -33,24 +33,30 @@ def eeg_visualization_dashboard():
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
 
-            # Reference selection
-            ref = st.selectbox(
-                "Choose EEG Reference",
-                options=[
-                    "linked ears",
-                    "centroid",
-                    "bipolar longitudinal",
-                ],
-                index=0,  # Default to 'linked ears'
-            )
 
-            selected_references = {
-                "linked ears": "linked_ears",
-                "bipolar longitudinal": "bipolar_longitudinal",
-                "centroid": "centroid",
-            }
+            # Override selected reference if necessary. For hyperlinks
+            query_params = st.query_params.to_dict()
+            if "ref" in query_params:
+                selected_reference = query_params["ref"]
+            else:
+                # Reference selection
+                ref = st.selectbox(
+                    "Choose EEG Reference",
+                    options=[
+                        "linked ears",
+                        "centroid",
+                        "bipolar longitudinal",
+                    ],
+                    index=0,  # Default to 'linked ears'
+                )
 
-            selected_reference = selected_references[ref]
+                selected_references = {
+                    "linked ears": "linked_ears",
+                    "bipolar longitudinal": "bipolar_longitudinal",
+                    "centroid": "centroid",
+                }
+
+                selected_reference = selected_references[ref]
 
             # Offset value slider
             offset_value = st.slider(
