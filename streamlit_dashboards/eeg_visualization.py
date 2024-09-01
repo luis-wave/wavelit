@@ -12,7 +12,6 @@ from graphs.eeg_viewer import draw_eeg_graph
 
 def eeg_visualization_dashboard():
     # Set page configuration
-    # st.set_page_config(page_title="EEG Visualization", layout="wide")
 
     # Title
     st.title("EEG Visualization Dashboard")
