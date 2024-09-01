@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2024-08-31
+### Added
+- EDF file from simulated oscillations.
+- Simulated EEG file and streamlit app for faster development on the EEG Viewer.
+
+### Changed
+- Moved typeforms surveys lower in the navigation bar.
+- Formatted files with Ruff.
+
+
 ## [2.2.0] - 2024-08-30
 ### Added
 - Typeform survey page

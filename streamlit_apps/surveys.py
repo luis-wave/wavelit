@@ -1,7 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
-from access_control import get_version_from_pyproject
 
+from access_control import get_version_from_pyproject
 
 st.title("Typeform Surveys")
 
