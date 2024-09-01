@@ -8,6 +8,9 @@ lint:
 local_app:
 	python -m streamlit run home.py
 
+dojo:
+	python -m streamlit run simulation.py
+
 app:
 	docker run -p 8501:8501 streamlit-epoch
 

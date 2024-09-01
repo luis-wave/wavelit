@@ -45,11 +45,11 @@ def eeg_epoch_visualization_dashboard():
             if eqi is not None:
                 if eqi > 80:
                     time_win = 20
-                if eqi > 60:
+                elif eqi > 60:
                     time_win = 15
-                if eqi > 50:
+                elif eqi > 50:
                     time_win = 10
-                if eqi < 50:
+                elif eqi < 50:
                     time_win = 5
 
             st.metric("EEG Quality Index", eqi)
@@ -83,8 +83,7 @@ def eeg_epoch_visualization_dashboard():
                 step=5,
             )
 
-
-            if st.button("Draw epochs..."):
+            if st.button("Generate top 20 epoch graphs"):
                 with st.spinner("Running pipeline..."):
                     pipeline = run_persist_pipeline(mw_object)
                     if pipeline:

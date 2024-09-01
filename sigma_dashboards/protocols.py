@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8,8 +9,7 @@ from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_epoch_visualization_dashboard,
                                   eeg_visualization_dashboard)
 
-# Streamlit app setup
-# st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
+SIGMA_PROTOCOLS_URL = os.getenv("SIGMA_PROTOCOLS_URL")
 
 # Check if query parameters exist and set eeg_id if available
 query_params = st.query_params.to_dict()
@@ -23,9 +23,7 @@ if not eeg_id:
     # Title
     st.title("Protocol Review Dashboard")
 
-    url = "https://app.sigmacomputing.com/embed/1-2vDtCN0xnyVyJxdLNNdsyT"
-
-    html = f'<iframe src="{url}" width="100%" height="900px"></iframe>'
+    html = f'<iframe src="{SIGMA_PROTOCOLS_URL}" width="100%" height="900px"></iframe>'
 
     components.html(html, height=1000, scrolling=False)
 

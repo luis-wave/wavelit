@@ -1,4 +1,5 @@
 import asyncio
+import os
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -8,16 +9,12 @@ from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_epoch_visualization_dashboard,
                                   eeg_visualization_dashboard)
 
-# Streamlit app setup
-# st.set_page_config(page_title="Neuroref Report Dashboard", layout="wide")
-
-
+SIGMA_REPORT_LOGS_URL = os.getenv("SIGMA_REPORT_LOGS_URL")
 # Title
 st.title("Report Log Dashboard")
 
-url = "https://app.sigmacomputing.com/embed/1-QcWTFngW18VskMHuiDbeA"
 
-html = f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
+html = f'<iframe src="{SIGMA_REPORT_LOGS_URL}" frameborder="0" width="100%" height="900px"></iframe>'
 
 
 components.html(html, height=1000, scrolling=False)

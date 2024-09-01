@@ -17,7 +17,7 @@ def process_eeg_file(file_path, eeg_type):
     try:
         mw_object = mywaveanalytics.MyWaveAnalytics(file_path, None, None, eeg_type)
         pipeline = ngboost_protocol_pipeline.NGBoostProtocolPipeline(mw_object)
-        pipeline.run()
+        pipeline.run(time_window=5.12)
         pipeline.analysis_json["file"] = file_path.split("/")[-1]
         return pipeline.analysis_json
     except Exception as e:

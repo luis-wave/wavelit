@@ -1,0 +1,23 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - aws --version
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin 753527542304.dkr.ecr.us-west-2.amazonaws.com
+      - REPOSITORY_URI=$REPOSITORY_URI
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-7)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest --build-arg GITHUB_USER=$GITHUB_USER --build-arg GITHUB_TOKEN=$GITHUB_TOKEN --build-arg BASE_URL=$BASE_URL --build-arg CLINICAL_USERNAME=$CLINICAL_USERNAME --build-arg CLINICAL_PASSWORD=$CLINICAL_PASSWORD --build-arg CLINICAL_API_KEY=$CLINICAL_API_KEY --build-arg CONSUMER_USERNAME=$CONSUMER_USERNAME --build-arg CONSUMER_PASSWORD=$CONSUMER_PASSWORD --build-arg CONSUMER_API_KEY=$CONSUMER_API_KEY --build-arg SIGMA_PROTOCOLS_URL=$SIGMA_PROTOCOLS_URL --build-arg SIGMA_REPORT_URL=$SIGMA_REPORT_URL --build-arg SIGMA_REPORT_LOGS_URL=$SIGMA_REPORT_LOGS_URL .
+      - echo Tagging the Docker image...
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+  post_build:
+      commands:
+        - echo Build completed on `date`
+        - echo Pushing the Docker images...
+        - docker push $REPOSITORY_URI:latest
+        - docker push $REPOSITORY_URI:$IMAGE_TAG

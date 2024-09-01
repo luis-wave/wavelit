@@ -44,11 +44,19 @@ if __name__ == "__main__":
             url_path="/ngboost",
         )
 
+        surveys_page = st.Page(
+            "streamlit_apps/surveys.py",
+            title="Typeform",
+            icon="📨",
+            url_path="/typeform",
+        )
+
         nav = st.navigation(
             {
                 "Sigma Dashboards": [report_page, protocol_page, report_log_page],
                 "Tools": [eeg_page, ecg_page, epoch_page],
                 "Research & Development": [ngboost_page],
+                "Surveys": [surveys_page],
             }
         )
 

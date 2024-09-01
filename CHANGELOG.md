@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.3.0] - 2024-08-31
+### Added
+- EDF file from simulated oscillations.
+- Simulated EEG file and streamlit app for faster development on the EEG Viewer.
+
+### Changed
+- Moved typeforms surveys lower in the navigation bar.
+- Formatted files with Ruff.
+
+
+## [2.2.0] - 2024-08-30
+### Added
+- Typeform survey page
+
+## [2.1.0] - 2024-08-29
+### Added
+- Added a buildspec.yml for automated deployment via CI/CD pipeline.
+
+### Changed
+- Config.yml now included in Dockerbuild.
+
+
+
+## [2.0.4] - 2024-08-27
+### Fixed
+- Optimal time window for NGBoost model was 5.12s not 2.56s
+
+
+
+## [2.0.3] - 2024-08-23
+### Fixed
+- Missing nvironment variables arguments in Dockerfile.
+
+
+## [2.0.2] - 2024-08-22
+### Fixed
+- Fixed channel order in epoch plots.
+
+
+## [2.0.1] - 2024-08-14
+### Fixed
+- EQI time window set logic
 
 
 ## [2.0.0] - 2024-07-20
