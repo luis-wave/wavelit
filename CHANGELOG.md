@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.4.0] - 2024-09-01
+### Added
+- Query parameter for EEG reference.
+
 ## [2.3.0] - 2024-08-31
 ### Added
 - EDF file from simulated oscillations.
