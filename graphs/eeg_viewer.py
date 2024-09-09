@@ -6,7 +6,7 @@ from mywaveanalytics.utils.params import (CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
 
 
 # Plotly figure creation
-def draw_eeg_graph(df, offset_value, ref):
+def draw_eeg_graph(df, ref, offset_value=1.0):
     fig = go.Figure()
 
     # Define the order of channels based on reference
@@ -17,15 +17,19 @@ def draw_eeg_graph(df, offset_value, ref):
 
     df["time"] = pd.to_datetime(df["time"], unit="s")
 
+        # Add traces to fig
     for i, channel in enumerate(ordered_channels):
         offset = i * offset_value
         fig.add_trace(
             go.Scattergl(
-                x=df["time"],
-                y=df[channel] + offset,  # Apply vertical offset
-                mode="lines",
+                x=df['time'],
+                y=df[channel] + offset,
+                mode='lines',
                 name=channel,
-                line=dict(color="#4E4E4E"),
+                line=dict(
+                    color="black",
+                    width=0.8,
+                ),
             )
         )
 
@@ -98,8 +102,14 @@ def draw_eeg_graph(df, offset_value, ref):
             "tickvals": yticks,
             "ticktext": ytick_labels,
             "tickmode": "array",
-            "range": [-100, max(yticks) + offset_value],
+            "range": [(-1.5), (max(yticks) + offset_value+0.5)],
         },
-        height=1000,  # Consistent height
+        legend=dict(
+            traceorder="reversed",
+            # itemsizing='constant'
+            ),
+        height=700,
+        # width=1600,
+        margin=dict(t=20,l=0,r=0,b=5),
     )
     return fig
