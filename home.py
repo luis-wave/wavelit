@@ -57,7 +57,7 @@ if __name__ == "__main__":
 
         nav = st.navigation(
             {
-                "Sigma Dashboards": [report_page, protocol_page, report_log_page],
+                "Sigma Dashboards": [report_page, protocol_page, report_log_page, admin_page],
                 "Tools": [eeg_page, ecg_page, epoch_page],
                 "Research & Development": [ngboost_page],
                 "Surveys": [surveys_page],
