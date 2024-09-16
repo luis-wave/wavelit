@@ -17,7 +17,7 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
 
     df["time"] = pd.to_datetime(df["time"], unit="s")
 
-        # Add traces to fig
+    # Add traces to fig
     for i, channel in enumerate(ordered_channels):
         offset = i * offset_value
         fig.add_trace(
