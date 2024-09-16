@@ -27,7 +27,7 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
                 mode='lines',
                 name=channel,
                 line=dict(
-                    color="black",
+                    color="#4E4E4E",
                     width=0.8,
                 ),
             )
@@ -108,8 +108,7 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
             traceorder="reversed",
             # itemsizing='constant'
             ),
-        height=700,
-        # width=1600,
+        height=740,
         margin=dict(t=20,l=0,r=0,b=5),
     )
     return fig

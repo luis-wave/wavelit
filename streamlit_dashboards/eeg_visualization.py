@@ -13,8 +13,6 @@ import dsp.graph_preprocessing as waev
 
 
 def eeg_visualization_dashboard():
-    # Set page configuration
-
     # Title
     st.title("EEG Visualization Dashboard")
 
@@ -34,7 +32,6 @@ def eeg_visualization_dashboard():
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
-
 
             # Override selected reference if necessary. For hyperlinks
             query_params = st.query_params.to_dict()
