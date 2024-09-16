@@ -24,7 +24,11 @@ if __name__ == "__main__":
         report_log_page = st.Page(
             "sigma_dashboards/report-logs.py", title="Report Logs"
         )
-
+        
+        admin_page = st.Page(
+            "sigma_dashboards/wavelit-admin.py", title="Wavelit Admin"
+        )
+        
         eeg_page = st.Page(
             "streamlit_apps/🧠 eeg.py", title="EEG", icon="🧠", url_path="/eeg"
         )
