@@ -8,7 +8,7 @@ lint:
 local_app:
 	python -m streamlit run home.py
 
-dojo:
+simulation:
 	python -m streamlit run simulation.py
 
 app:
