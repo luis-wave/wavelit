@@ -22,6 +22,7 @@ aiodns = "^3.2.0"
 python-dotenv = "^1.0.1"
 pydantic = "^2.9.1"
 pydantic-settings = "^2.5.2"
+bs4 = "^0.0.2"
 
 
 

@@ -51,10 +51,17 @@ if __name__ == "__main__":
             url_path="/typeform",
         )
 
+        reports_page = st.Page(
+            "streamlit_apps/reports.py",
+            title="MeRT 2 Reports",
+            icon="📨",
+            url_path="/mert_reports",
+        )
+
         nav = st.navigation(
             {
                 "Sigma Dashboards": [report_page, protocol_page, report_log_page],
-                "Tools": [eeg_page, ecg_page, epoch_page],
+                "Tools": [eeg_page, ecg_page, epoch_page, reports_page],
                 "Research & Development": [ngboost_page],
                 "Surveys": [surveys_page],
             }

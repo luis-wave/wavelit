@@ -6,9 +6,7 @@ from typing import Optional
 
 from pydantic import BaseModel
 
-from . import login as cybermed
-from . import macroservice_calls as macro
-from .settings import settings
+# from . import settings
 
 
 class BaseProtocol(BaseModel, extra="allow"):
@@ -47,8 +45,12 @@ def is_eeg_to_reject(eeg_info: dict):
         return False
     is_rejected = (
         eeg_info.get("eegInfo", {}).get("analysisMeta", {}).get("rejectionDatetime", "")
-        or eeg_info.get("eegInfo", {}).get("analysisMeta", {}).get("rejectionReason", "")
-        or eeg_info.get("eegInfo", {}).get("analysisMeta", {}).get("rejectionReviewerStaffId", "")
+        or eeg_info.get("eegInfo", {})
+        .get("analysisMeta", {})
+        .get("rejectionReason", "")
+        or eeg_info.get("eegInfo", {})
+        .get("analysisMeta", {})
+        .get("rejectionReviewerStaffId", "")
     )
     if is_rejected:
         print("eeg was rejected")
@@ -75,8 +77,18 @@ def build_payload(eeg_id, patient_id, base_protocol: BaseProtocol):
         "rejectedBy": "MyWavePlatform, AutoRejectProtocol",
         "protocol": {
             "acknowledgeState": {
-                "clinician": {"approved": False, "datetime": "", "firstName": "", "lastName": ""},
-                "physician": {"approved": False, "datetime": "", "firstName": "", "lastName": ""},
+                "clinician": {
+                    "approved": False,
+                    "datetime": "",
+                    "firstName": "",
+                    "lastName": "",
+                },
+                "physician": {
+                    "approved": False,
+                    "datetime": "",
+                    "firstName": "",
+                    "lastName": "",
+                },
             },
             "approvedByName": "",
             "approvedDate": "",
@@ -110,25 +122,30 @@ def build_payload(eeg_id, patient_id, base_protocol: BaseProtocol):
     }
 
 
+# def process_eeg_info(token: str, eeg_info: dict):
+#     if not is_eeg_to_reject(eeg_info):
+#         return
+#     usergroup, patient_id, eeg_id = extract_ids_from_eeg_info(eeg_info)
+#     eeg = macro.get_eeg(
+#         token=token, usergroup=usergroup, patient_id=patient_id, eeg_id=eeg_id
+#     )
+#     time.sleep(settings.delay)
+#     base_protocol = extract_base_protocol(eeg)
+#     payload = build_payload(
+#         eeg_id=eeg_id, patient_id=patient_id, base_protocol=base_protocol
+#     )
+#     macro.reject(token, payload)
+#     print(
+#         f"{datetime.datetime.utcnow().isoformat()} | CLI-{usergroup} | {patient_id} | {eeg_id}"
+#     )
 
-def process_eeg_info(token: str, eeg_info: dict):
-    if not is_eeg_to_reject(eeg_info):
-        return
-    usergroup, patient_id, eeg_id = extract_ids_from_eeg_info(eeg_info)
-    eeg = macro.get_eeg(token=token, usergroup=usergroup, patient_id=patient_id, eeg_id=eeg_id)
-    time.sleep(settings.delay)
-    base_protocol = extract_base_protocol(eeg)
-    payload = build_payload(eeg_id=eeg_id, patient_id=patient_id, base_protocol=base_protocol)
-    macro.reject(token, payload)
-    print(f"{datetime.datetime.utcnow().isoformat()} | CLI-{usergroup} | {patient_id} | {eeg_id}")
 
-
-def run(eeg_info):
-    print(f"Auto-approve initiated for: CLI-{settings.target_clinic_id}")
-    token = cybermed.get_token()
-    try:
-        process_eeg_info(token, eeg_info)
-    except Exception:
-        print(traceback.format_exc())
-        time.sleep(settings.delay)
-    print("Done")
+# def run(eeg_info):
+#     print(f"Auto-approve initiated for: CLI-{settings.target_clinic_id}")
+#     token = cybermed.get_token()
+#     try:
+#         process_eeg_info(token, eeg_info)
+#     except Exception:
+#         print(traceback.format_exc())
+#         time.sleep(settings.delay)
+#     print("Done")

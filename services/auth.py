@@ -22,4 +22,10 @@ def authenticate_user():
     # Get the username, authentication status, and name
     name, authentication_status, username = authenticator.login()
 
+    user_config = config["credentials"]["usernames"][username]
+
+    st.session_state["name"] = name
+    st.session_state["id"] = user_config["id"]
+    st.session_state["m2_username"] = user_config["m2_username"]
+
     return name, authentication_status, username, authenticator

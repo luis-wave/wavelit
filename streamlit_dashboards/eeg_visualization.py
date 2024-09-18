@@ -33,7 +33,6 @@ def eeg_visualization_dashboard():
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
 
-
             # Override selected reference if necessary. For hyperlinks
             query_params = st.query_params.to_dict()
             if "ref" in query_params:
