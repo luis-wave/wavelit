@@ -26,7 +26,8 @@ if __name__ == "__main__":
         )
 
         admin_page = st.Page(
-            "sigma_dashboards/wavelit-admin.py", title="Wavelit Admin"
+            "sigma_dashboards/wavelit_admin.py", title="Wavelit Admin"
+
         )
 
         eeg_page = st.Page(
