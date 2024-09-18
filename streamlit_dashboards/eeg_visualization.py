@@ -9,10 +9,10 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
 
+import dsp.graph_preprocessing as waev
+
 
 def eeg_visualization_dashboard():
-    # Set page configuration
-
     # Title
     st.title("EEG Visualization Dashboard")
 
@@ -32,7 +32,6 @@ def eeg_visualization_dashboard():
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
-
 
             # Override selected reference if necessary. For hyperlinks
             query_params = st.query_params.to_dict()
@@ -58,15 +57,6 @@ def eeg_visualization_dashboard():
 
                 selected_reference = selected_references[ref]
 
-            # Offset value slider
-            offset_value = st.slider(
-                "Vertical Offset Between Channels",
-                min_value=5,
-                max_value=700,
-                value=100,
-                step=5,
-            )
-
             if st.button("AEA Detection"):
                 with st.spinner("Running..."):
                     mw_object = st.session_state.mw_object
@@ -83,10 +73,13 @@ def eeg_visualization_dashboard():
 
             # Create DataFrame from MyWaveAnalytics object
             df = st.session_state.eeg_graph[selected_reference]
+
             if df is not None:
                 # Generate the Plotly figure
+                with st.spinner("Scaling..."):
+                    df = waev.scale_dataframe(df)
                 with st.spinner("Rendering..."):
-                    fig = draw_eeg_graph(df, offset_value, selected_reference)
+                    fig = draw_eeg_graph(df, selected_reference)
 
                     # Display the Plotly figure
                     st.plotly_chart(fig, use_container_width=True)
