@@ -2,9 +2,8 @@ import streamlit as st
 import pandas as pd
 import time
 import boto3
-import streamlit as st
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
-import s3fs
+
 
 def convertLabel(df, type, home):
     if home == 'sigma':
@@ -34,9 +33,9 @@ report_file_path = f"silver/wavelit_admin_dev/{report_file_name}"
 protocol_file_path = f"silver/wavelit_admin_dev/{protocol_file_name}"
 report_obj = s3.get_object(Bucket=bucket_name, Key=report_file_path)
 protocol_obj = s3.get_object(Bucket=bucket_name, Key=protocol_file_path)
-
 report_df = convertLabel(pd.read_csv(report_obj['Body']), 'report', 'wavelit')
 protocol_df = convertLabel(pd.read_csv(protocol_obj['Body']), 'protocol', 'wavelit')
+
 edited_report = st.data_editor(data = report_df, disabled = ('RowNumber', 'Teammate'), hide_index = True)
 edited_protocol = st.data_editor(data = protocol_df, disabled = ('RowNumber', 'Teammate'), hide_index = True)
 
