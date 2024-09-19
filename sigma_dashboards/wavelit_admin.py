@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import time
 import boto3
-import streamlit as st
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
 
@@ -25,28 +24,28 @@ def convertLabel(df, type, home):
 
 st.title('Wavelit Admin')
 
-report_path = 's3://lake-superior-dev/silver/wavelit_admin_dev/teammate_report_availability.csv'
-protocol_path = 's3://lake-superior-dev/silver/wavelit_admin_dev/teammate_protocol_availability.csv'
-report_df = convertLabel(pd.read_csv(report_path), 'report', 'wavelit')
-protocol_df = convertLabel(pd.read_csv(protocol_path), 'protocol', 'wavelit')
+# S3 client setup
+s3 = boto3.client("s3")
+bucket_name = "lake-superior-dev"
+report_file_name = f"teammate_report_availability.csv"
+protocol_file_name = f"teammate_protocol_availability.csv"
+report_file_path = f"silver/wavelit_admin_dev/{report_file_name}"
+protocol_file_path = f"silver/wavelit_admin_dev/{protocol_file_name}"
+report_obj = s3.get_object(Bucket=bucket_name, Key=report_file_path)
+protocol_obj = s3.get_object(Bucket=bucket_name, Key=protocol_file_path)
+report_df = convertLabel(pd.read_csv(report_obj['Body']), 'report', 'wavelit')
+protocol_df = convertLabel(pd.read_csv(protocol_obj['Body']), 'protocol', 'wavelit')
+
 edited_report = st.data_editor(data = report_df, disabled = ('RowNumber', 'Teammate'), hide_index = True)
 edited_protocol = st.data_editor(data = protocol_df, disabled = ('RowNumber', 'Teammate'), hide_index = True)
 
 if st.button("Update"):
     try:
         # Convert DataFrame to CSV and save it locally
-        report_file_name = f"teammate_report_availability.csv"
-        protocol_file_name = f"teammate_protocol_availability.csv"
         edited_report = convertLabel(edited_report, 'report', 'sigma')
         edited_protocol = convertLabel(edited_protocol, 'protocol', 'sigma')
         edited_report.to_csv(report_file_name, index=False)
         edited_protocol.to_csv(protocol_file_name, index=False)
-
-        # S3 client setup
-        s3 = boto3.client("s3")
-        bucket_name = "lake-superior-dev"
-        report_file_path = f"silver/wavelit_admin_dev/{report_file_name}"
-        protocol_file_path = f"silver/wavelit_admin_dev/{protocol_file_name}"
 
         # Adding metadata
         processed_date = time.time()
