@@ -72,9 +72,10 @@ def scale_dataframe(df):
     # scale the EEG columns
     df_eeg = df[eeg_columns]
 
-    # new norm: scale to -1, 1 and then adjust it to a percentage of
+    # new norm: scale to -1, 1 and then adjust it to a percentage of so clean waveforms
+    #   arent reaching the bound (on average)
     bound = (median_max + abs(median_min)) / 2
-    scaled_eeg = (df_eeg / bound) * 0.1
+    scaled_eeg = (df_eeg / bound) * 0.25
 
     try: 
         # scale ECG column(s) separately
