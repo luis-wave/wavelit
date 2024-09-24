@@ -77,7 +77,7 @@ async def load_data():
     #     )
 
     neuroref_linked_ear_report_ids = list(st.session_state.eeg_reports['neuroRefReports'].keys())
-    #neuroref_centroid_report_ids = list(st.session_state.eeg_reports['neuroRefReports'].keys())
+    neuroref_centroid_report_ids = list(st.session_state.eeg_reports['neurorefcz'].keys())
 
 
     if neuroref_linked_ear_report_ids:
@@ -87,15 +87,14 @@ async def load_data():
             neuro_le_reports.append(response)
         st.session_state.downloaded_neuroref_report = neuro_le_reports
 
-    # if neuroref_centroid_report_ids:
-    #     neuro_cz_reports = []
+    if neuroref_centroid_report_ids:
+        neuro_cz_reports = []
 
-    #     for report_id in neuroref_centroid_report_ids:
-    #         if "downloaded_neuroref_cz_report" not in st.session_state:
-    #             response  = await api.download_neuroref_cz_report(report_id=report_id)
-    #             neuro_cz_reports.append(response)
+        for report_id in neuroref_centroid_report_ids:
+            response  = await api.download_neuroref_cz_report(report_id=report_id)
+            neuro_cz_reports.append(response)
 
-    #         st.session_state.downloaded_neuroref_cz_report = neuro_cz_reports
+        st.session_state.downloaded_neuroref_cz_report = neuro_cz_reports
 
 
 
@@ -176,31 +175,37 @@ with col2:
     eeg_history_df = parse_eeg_data_extended(eeg_history)
     eeg_history_df['include?'] = True
 
-    st.header("EEG History")
-    with st.form("data_editor_form", border=False):
-        edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-        # Submit button for the form
-        submitted = st.form_submit_button("Update Report")
-        if submitted:
-            st.json(edited_eeg_history_df.to_json())
+    with st.popover("Generate report"):
+        st.header("EEG History")
+        with st.form("data_editor_form", border=False):
+            edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
+            # Submit button for the form
+            submitted = st.form_submit_button("Update Report")
+    if submitted:
+        st.subheader("Reports")
+        approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
+        asyncio.run(update_data(approved_eegs['EEGId'].values.tolist()))
+        if "downloaded_neuroref_report" in st.session_state:
+            for idx, report in enumerate(st.session_state.downloaded_neuroref_report):
+                with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
+                    pdf_viewer(report, height=700, key = f'linked_ears {idx}')
 
-            approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
-            asyncio.run(update_data(approved_eegs['EEGId'].values.tolist()))
-            pdf_viewer(st.session_state.downloaded_neuroref_report , height=700)
-        else:
-            if "downloaded_neuroref_report" in st.session_state:
-                for idx, report in enumerate(st.session_state.downloaded_neuroref_report):
-                    with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
-                        pdf_viewer(report, height=700, key = f'linked_ears {idx}')
+        if "downloaded_neuroref_cz_report" in st.session_state:
+            for report in st.session_state.downloaded_neuroref_cz_report:
+                with st.expander(label=f"Neurosynchrony - Cetroid {idx}"):
+                    pdf_viewer(report, height=700, key = f'centroid {idx}')
+    else:
+        st.subheader("Reports")
+        if "downloaded_neuroref_report" in st.session_state:
+            for idx, report in enumerate(st.session_state.downloaded_neuroref_report):
+                with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
+                    pdf_viewer(report, height=700, key = f'linked_ears {idx}')
 
-            if "downloaded_neuroref_cz_report" in st.session_state:
-                for report in st.session_state.downloaded_neuroref_cz_report:
-                    with st.expander(label=f"Neurosynchrony - Cetroid {idx}", key = uuid.uuid4()):
-                        pdf_viewer(report, height=700, key = f'centroid {idx}')
+        if "downloaded_neuroref_cz_report" in st.session_state:
+            for report in st.session_state.downloaded_neuroref_cz_report:
+                with st.expander(label=f"Neurosynchrony - Cetroid {idx}"):
+                    pdf_viewer(report, height=700, key = f'centroid {idx}')
 
-    subcol1, subcol2 = st.columns(2)
-
-    with subcol1:
-        st.button("Accept", type="primary")
-    with subcol2:
-        st.button("Reject")
+    st.subheader("Documents")
+    st.subheader("Artifact Distortions")
+    st.subheader("Irregularities")
