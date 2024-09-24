@@ -317,6 +317,17 @@ class MeRTApi:
             },
         )
 
+    async def delete_hr_report(self, heart_rate_bpm: int, st_dev_bpm:int) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/delete_hr_report",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id
+            },
+        )
+
     async def delete_neuroref_report(self, report_id: str) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
