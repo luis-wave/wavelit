@@ -193,10 +193,10 @@ with col2:
                     with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
                         pdf_viewer(report, height=700, key = f'linked_ears {idx}')
 
-            # if "downloaded_neuroref_cz_report" not in st.session_state:
-            #     for report in st.session_state.downloaded_neuroref_cz_report:
-            #         with st.expander(label="Neurosynchrony - Cetroid", key = uuid.uuid4()):
-            #             pdf_viewer(report, height=700)
+            if "downloaded_neuroref_cz_report" in st.session_state:
+                for report in st.session_state.downloaded_neuroref_cz_report:
+                    with st.expander(label=f"Neurosynchrony - Cetroid {idx}", key = uuid.uuid4()):
+                        pdf_viewer(report, height=700, key = f'centroid {idx}')
 
     subcol1, subcol2 = st.columns(2)
 

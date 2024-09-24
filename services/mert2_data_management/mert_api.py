@@ -316,3 +316,27 @@ class MeRTApi:
                 "stdevBpm": st_dev_bpm
             },
         )
+
+    async def delete_neuroref_report(self, report_id: str) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/delete_neuroref_report",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "reportId": report_id
+            },
+        )
+
+    async def delete_neuroref_cz_report(self, report_id: str) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/delete_neuroref_cz_report",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "reportId": report_id
+            },
+        )
