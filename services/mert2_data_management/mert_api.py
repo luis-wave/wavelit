@@ -303,3 +303,16 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
             },
         )
+
+    async def save_hr_report(self, heart_rate_bpm: int, st_dev_bpm:int) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/save_hr_report",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "heartrateBpm": heart_rate_bpm,
+                "stdevBpm": st_dev_bpm
+            },
+        )
