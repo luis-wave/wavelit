@@ -52,7 +52,7 @@ if __name__ == "__main__":
         )
 
         reports_page = st.Page(
-            "streamlit_apps/reports.py",
+            "streamlit_apps/neurosynchrony.py",
             title="MeRT 2 Reports",
             icon="📨",
             url_path="/mert_reports",

@@ -3191,6 +3191,23 @@ PyYAML = ">=5.3.1"
 streamlit = ">=1.25.0"
 
 [[package]]
+name = "streamlit-pdf-viewer"
+version = "0.0.18"
+description = "Streamlit component for PDF visualisation and manipulation"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "streamlit_pdf_viewer-0.0.18-py3-none-any.whl", hash = "sha256:ee5bfb9037a69ed08c7ad22e5d58cb5f3cb6ec3c8c1491e1f78977bdb1fd0aad"},
+    {file = "streamlit_pdf_viewer-0.0.18.tar.gz", hash = "sha256:d49846c41c6224f25d2f74ecee172f3c0a8b0239950b3704de265712c2334112"},
+]
+
+[package.dependencies]
+streamlit = ">=0.63"
+
+[package.extras]
+devel = ["wheel"]
+
+[[package]]
 name = "tenacity"
 version = "8.3.0"
 description = "Retry code until it succeeds"
@@ -3583,4 +3600,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<3.13"
-content-hash = "ae463c21de778f7e83f2b93704b22895d65717f3ae9a28dd285596ccb97b040d"
+content-hash = "1c4fc41052b10780373b6a7a4f6462e5e088b2e2ac5f9f4d57c695a363e5e9ec"
