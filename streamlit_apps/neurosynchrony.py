@@ -1,144 +1,27 @@
 import asyncio
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
-from services.mert2_data_management.mert_api import MeRTApi
-import pandas as pd
-import uuid
+from services.mert2_data_management.mert_data_manager import MeRTDataManager
 
-def parse_eeg_data_extended(data):
-    rows = []
-    for key, content in data.items():
-        recording_date = content.get('baseProtocol', {}).get('recordingDate', None)
-        frequency = content.get('baseProtocol', {}).get('frequency', None)
-        rows.append({
-            'EEGId': key,
-            'RecordingDate': recording_date,
-            "BaseProtocol": frequency
-        })
+# Initialize MeRTDataManager
+data_manager = MeRTDataManager(
+    patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
+    eeg_id="EEG-3ed32f89-0d11-40c2-909d-12cdfacd9cab",
+    clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
+)
 
-    # Create the DataFrame
-    df = pd.DataFrame(rows)
-
-    # Convert 'RecordingDate' to datetime for proper sorting
-    df['RecordingDate'] = pd.to_datetime(df['RecordingDate'], errors='coerce')
-
-    # Sort the DataFrame by 'RecordingDate' in descending order
-    df = df.sort_values(by='RecordingDate', ascending=False)
-
-    return df
-
-# Asynchronous function to fetch all the required data and store it in session state
-async def load_data():
-    api = MeRTApi(
-        patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
-        eeg_id="EEG-3ed32f89-0d11-40c2-909d-12cdfacd9cab",
-        clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
-    )
-
-    await api._login()
-
-    if "eeg_info" not in st.session_state:
-        st.session_state.eeg_info = await api.get_user()
-
-    if "user_profile" not in st.session_state:
-        st.session_state.user_profile = await api.get_user_profile(
-            user_id="STF-e465eb68-ba87-11eb-8611-06b700432873",
-            user_group_id="a9cf82fc-7c4d-11eb-b3ca-0a508de74e57",
-        )
-
-    if "patient_data" not in st.session_state:
-        st.session_state.patient_data = await api.fetch_patient_by_id()
-
-    if "fetch_all_eeg_data" not in st.session_state:
-        st.session_state.fetch_all_eeg_data = await api.fetch_all_eeg_info_by_patient_id()
-
-
-    if "clinic_info" not in st.session_state:
-        st.session_state.clinic_info = await api.fetch_clinic_info()
-
-    if "eeg_history" not in st.session_state:
-        st.session_state.eeg_history = await api.fetch_all_eeg_info_by_patient_id()
-
-    if "treatment_count" not in st.session_state:
-        st.session_state.treatment_count = await api.get_completed_treatment_count_by_patient_id()
-
-    if "eeg_reports" not in st.session_state:
-        st.session_state.eeg_reports = await api.get_eeg_report()
-
-
-    # if "neuroref_report" not in st.session_state:
-    #     st.session_state.neuroref_report = await api.get_neuroref_report(
-    #         eeg_ids=parse_eeg_data_extended(st.session_state.fetch_all_eeg_data)['EEGId'].values.tolist()
-    #     )
-
-    # if "neuroref_cz_report" not in st.session_state:
-    #     st.session_state.neuroref_cz_report = await api.get_neuroref_cz_report(
-    #         eeg_ids=parse_eeg_data_extended(st.session_state.fetch_all_eeg_data)['EEGId'].values.tolist()
-    #     )
-
-    neuroref_linked_ear_report_ids = list(st.session_state.eeg_reports['neuroRefReports'].keys())
-    neuroref_centroid_report_ids = list(st.session_state.eeg_reports['neurorefcz'].keys())
-
-
-    if neuroref_linked_ear_report_ids:
-        neuro_le_reports = []
-        for report_id in neuroref_linked_ear_report_ids:
-            response = await api.download_neuroref_report(report_id=report_id)
-            neuro_le_reports.append(response)
-        st.session_state.downloaded_neuroref_report = neuro_le_reports
-
-    if neuroref_centroid_report_ids:
-        neuro_cz_reports = []
-
-        for report_id in neuroref_centroid_report_ids:
-            response  = await api.download_neuroref_cz_report(report_id=report_id)
-            neuro_cz_reports.append(response)
-
-        st.session_state.downloaded_neuroref_cz_report = neuro_cz_reports
-
-
-
-async def update_data(eeg_ids):
-    api = MeRTApi(
-        patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
-        eeg_id="EEG-3ed32f89-0d11-40c2-909d-12cdfacd9cab",
-        clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
-    )
-
-    await api._login()
-
-    st.session_state.neuroref_report = await api.get_neuroref_report(
-        eeg_ids=eeg_ids
-    )
-
-    st.session_state.downloaded_neuroref_report  = await api.download_neuroref_report(report_id=st.session_state.neuroref_report["reportId"])
-
-    st.session_state.neuroref_cz_report = await api.get_neuroref_cz_report(
-        eeg_ids=eeg_ids
-    )
-
-    st.session_state.downloaded_neuroref_cz_report  = await api.download_neuroref_cz_report(report_id=st.session_state.neuroref_cz_report["reportId"])
-
-
-
-
-
-
-
-# Call async function to load data into session state
-asyncio.run(load_data())
-
-# Extract data from session state to display in the Streamlit UI
-patient_data = st.session_state.patient_data
-clinic_info = st.session_state.clinic_info
+# Load all data into session state
+asyncio.run(data_manager.load_all_data())
 
 # Start rendering the UI
 st.title("NeuroSynchrony Review")
 
-eeg_id = "EEG-133abaab-eef5-4e5e-8aa7-c86ac2b54dda"
 col1, col2 = st.columns(2)
 
 with col1:
+    patient_data = st.session_state.patient_data
+    clinic_info = st.session_state.clinic_info
+
     first_name = patient_data["profileInfo"]["name"]["first"]
     last_name = patient_data["profileInfo"]["name"]["last"]
     middle_name = patient_data["profileInfo"]["name"]["middle"]
@@ -163,7 +46,7 @@ with col1:
     st.divider()
 
     # Clinic info
-    st.subheader(st.session_state.clinic_info["name"])
+    st.subheader(clinic_info["name"])
     st.markdown(f"ClinicId: **{clinic_info['clinicId']}**")
     st.markdown(f"Phone number: **{clinic_info['phone']}**")
     st.markdown(f"City: **{clinic_info['address']['city']}**")
@@ -171,41 +54,96 @@ with col1:
     st.markdown(f"Country: **{clinic_info['address']['country']}**")
 
 with col2:
-    eeg_history = st.session_state.eeg_history
-    eeg_history_df = parse_eeg_data_extended(eeg_history)
-    eeg_history_df['include?'] = True
+    eeg_history_df = st.session_state.eeg_history
 
     with st.popover("Generate report"):
         st.header("EEG History")
         with st.form("data_editor_form", border=False):
             edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-            # Submit button for the form
             submitted = st.form_submit_button("Update Report")
-    if submitted:
-        st.subheader("Reports")
-        approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
-        asyncio.run(update_data(approved_eegs['EEGId'].values.tolist()))
-        if "downloaded_neuroref_report" in st.session_state:
-            for idx, report in enumerate(st.session_state.downloaded_neuroref_report):
-                with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
-                    pdf_viewer(report, height=700, key = f'linked_ears {idx}')
+        if submitted:
+            st.subheader("Reports")
+            approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
+            asyncio.run(data_manager.update_neuroref_reports(approved_eegs['EEGId'].values.tolist()))
+            st.rerun()
 
-        if "downloaded_neuroref_cz_report" in st.session_state:
-            for report in st.session_state.downloaded_neuroref_cz_report:
-                with st.expander(label=f"Neurosynchrony - Cetroid {idx}"):
-                    pdf_viewer(report, height=700, key = f'centroid {idx}')
-    else:
-        st.subheader("Reports")
-        if "downloaded_neuroref_report" in st.session_state:
-            for idx, report in enumerate(st.session_state.downloaded_neuroref_report):
-                with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
-                    pdf_viewer(report, height=700, key = f'linked_ears {idx}')
+    st.subheader("Reports")
+    if "downloaded_neuroref_report" in st.session_state:
+        for idx, report_data in enumerate(st.session_state.downloaded_neuroref_report):
+            report, report_id = report_data
+            with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
+                pdf_viewer(report, height=700, key=f'linked_ears {idx}')
+                delete_button = st.button(label="Delete Report", key=f'linked_ears {idx} button')
 
-        if "downloaded_neuroref_cz_report" in st.session_state:
-            for report in st.session_state.downloaded_neuroref_cz_report:
-                with st.expander(label=f"Neurosynchrony - Cetroid {idx}"):
-                    pdf_viewer(report, height=700, key = f'centroid {idx}')
+                if delete_button:
+                    asyncio.run(data_manager.delete_neuroref_report(report_id=report_id))
+                    st.rerun()
+
+    if "downloaded_neuroref_cz_report" in st.session_state:
+        for idx, report_data in enumerate(st.session_state.downloaded_neuroref_cz_report):
+            report, report_id = report_data
+            with st.expander(label=f"Neurosynchrony - Centroid {idx}"):
+                pdf_viewer(report, height=700, key=f'centroid {idx}')
+                delete_button = st.button(label="Delete Report", key=f'centroid {idx} button')
+
+                if delete_button:
+                    asyncio.run(data_manager.delete_neuroref_cz_report(report_id=report_id))
+                    st.rerun()
 
     st.subheader("Documents")
+    with st.popover("Add documents", use_container_width=True):
+        uploaded_zip = st.file_uploader("Upload a Persyst report", type="pdf")
+
     st.subheader("Artifact Distortions")
-    st.subheader("Irregularities")
+    with st.popover("Add artifacts", use_container_width=True):
+        with st.form("add_artifact_form", border=False):
+            options = st.multiselect(
+                "Add artifact distortion",
+                [
+                    "Electrocardiographic interference (ECG)",
+                    "Excessive muscle tension (EMG)",
+                    "Eye wandering",
+                    "Eyeblink artifact (EOG)",
+                    "Forehead tension",
+                    "Improper ear clip (A1/A2) set-up",
+                    "Jaw tension",
+                    "Lead wandering",
+                    "Movement",
+                    "Neck tension",
+                    "Possible drowsiness",
+                    "Powerline interference",
+                    "Other"
+                ],
+            )
+            other_input = None
+            if "Other" in options:
+                other_input = st.text_input("Please specify other artifact:")
+
+            submit_button = st.form_submit_button(label="Submit")
+
+            if submit_button:
+                artifacts = options + ([other_input] if other_input else [])
+                asyncio.run(data_manager.save_artifact_distortions(artifacts))
+                st.success("Artifacts saved successfully!")
+
+    st.subheader("Add Irregularity")
+    with st.popover("Add irregularities", use_container_width=True):
+        with st.form("add_irregularity_form", border=False):
+            options = st.multiselect(
+                "Select irregularity",
+                [
+                    "Irregular EEG Activity",
+                    "Irregular Heart Rhythm",
+                    "Other"
+                ]
+            )
+            other_input = None
+            if "Other" in options:
+                other_input = st.text_input("Please specify other irregularity:")
+
+            submit_button = st.form_submit_button(label="Submit")
+
+            if submit_button:
+                irregularities = options + ([other_input] if other_input else [])
+                asyncio.run(data_manager.save_artifact_distortions(irregularities))
+                st.success("Irregularities saved successfully!")
