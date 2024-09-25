@@ -3,6 +3,154 @@ import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 from services.mert2_data_management.mert_data_manager import MeRTDataManager
 
+import logging
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+logger = logging.getLogger(__name__)
+
+
+# Render helper functions
+def render_artifact_distortions(data_manager):
+    st.subheader("Artifact Distortions")
+
+    # Check if eeg_reports exists in session state and has artifacts
+    if 'eeg_reports' in st.session_state and 'artifacts' in st.session_state.eeg_reports:
+        artifacts = st.session_state.eeg_reports['artifacts']
+        if artifacts:
+            st.write("Existing Artifacts:")
+            artifact_list = [artifact['name'] for artifact in artifacts.values()]
+            for artifact in artifact_list:
+                st.write(f"- {artifact.capitalize().replace('_', ' ')}")
+        else:
+            st.write("No existing artifacts found.")
+    else:
+        st.write("No artifact data available.")
+
+    with st.popover("Add artifacts", use_container_width=True):
+        with st.form("add_artifact_form", border=False):
+            options = st.multiselect(
+                "Add artifact distortion",
+                [
+                    "Electrocardiographic interference (ECG)",
+                    "Excessive muscle tension (EMG)",
+                    "Eye wandering",
+                    "Eyeblink artifact (EOG)",
+                    "Forehead tension",
+                    "Improper ear clip (A1/A2) set-up",
+                    "Jaw tension",
+                    "Lead wandering",
+                    "Movement",
+                    "Neck tension",
+                    "Possible drowsiness",
+                    "Powerline interference",
+                    "Other"
+                ],
+            )
+            other_input = None
+            if "Other" in options:
+                other_input = st.text_input("Please specify other artifact:")
+
+            submit_button = st.form_submit_button(label="Submit")
+
+            if submit_button:
+                artifacts = options + ([other_input] if other_input else [])
+                asyncio.run(data_manager.save_artifact_distortions(artifacts))
+                st.success("Artifacts saved successfully!")
+                st.rerun()  # Rerun the app to refresh the artifact list
+
+
+def render_abnormalities(data_manager):
+    st.subheader("Abnormalities")
+
+    # Check if eeg_reports exists in session state and has abnormalities
+    if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
+        abnormalities = st.session_state.eeg_reports['abnormalities']
+        if abnormalities:
+            st.write("Existing Abnormalities:")
+            for abnormality in abnormalities.values():
+                name = abnormality['name'].upper()
+                status = "Approved" if abnormality['isApproved'] else "Not Approved"
+                st.write(f"- {name}: {status}")
+        else:
+            st.write("No existing abnormalities found.")
+    else:
+        st.write("No abnormality data available.")
+
+    with st.popover("Add irregularities", use_container_width=True):
+        with st.form("add_irregularity_form", border=False):
+            options = st.multiselect(
+                "Select irregularity",
+                [
+                    "Irregular EEG Activity (AEA)",
+                    "Irregular Heart Rhythm (AHR)",
+                    "Other"
+                ]
+            )
+            other_input = None
+            if "Other" in options:
+                other_input = st.text_input("Please specify other irregularity:")
+
+            submit_button = st.form_submit_button(label="Submit")
+
+            if submit_button:
+                irregularities = options + ([other_input] if other_input else [])
+                asyncio.run(data_manager.save_abnormalities(irregularities))
+                st.success("Irregularities saved successfully!")
+                st.rerun()  # Rerun the app to refresh the abnormalities list
+
+
+def render_documents(data_manager):
+    st.subheader("Documents")
+
+    # Display existing documents
+    if 'eeg_reports' in st.session_state and 'documents' in st.session_state.eeg_reports:
+        documents = st.session_state.eeg_reports['documents']
+        if documents:
+            st.write("Existing Documents:")
+            for doc_id, doc_info in documents.items():
+                st.write(f"- {doc_info['filename']} (Size: {doc_info['size']} bytes)")
+
+                # Add a download button for each document
+                if st.button(f"Download {doc_info['filename']}", key=f"download_{doc_id}"):
+                    try:
+                        # Assuming you have a method to download the document in your data_manager
+                        document_content = asyncio.run(data_manager.download_document(doc_id))
+                        st.download_button(
+                            label=f"Click to download {doc_info['filename']}",
+                            data=document_content,
+                            file_name=doc_info['filename'],
+                            mime="application/pdf"
+                        )
+                    except Exception as e:
+                        logger.error(f"Error downloading document {doc_id}: {str(e)}")
+                        st.error(f"Failed to download {doc_info['filename']}. Please try again.")
+        else:
+            st.write("No existing documents found.")
+    else:
+        st.write("No document data available.")
+
+    # Upload new documents
+    with st.popover("Add documents", use_container_width=True):
+        uploaded_file = st.file_uploader("Upload a Persyst report", type="pdf")
+
+        if uploaded_file is not None:
+            if st.button("Submit Document"):
+                try:
+                    document_id = asyncio.run(data_manager.save_document(uploaded_file))
+                    st.success(f"Document uploaded successfully! Document ID: {document_id}")
+
+                    # Refresh the EEG reports to include the new document
+                    asyncio.run(data_manager.load_eeg_reports())
+                    st.rerun()
+                except Exception as e:
+                    logger.error(f"Error uploading document: {str(e)}")
+                    st.error("Failed to upload document. Please try again.")
+
+
+
+
+
 # Initialize MeRTDataManager
 data_manager = MeRTDataManager(
     patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
@@ -71,79 +219,19 @@ with col2:
     if "downloaded_neuroref_report" in st.session_state:
         for idx, report_data in enumerate(st.session_state.downloaded_neuroref_report):
             report, report_id = report_data
-            with st.expander(label=f"Neurosynchrony - Linked Ears {idx}"):
+            with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}"):
                 pdf_viewer(report, height=700, key=f'linked_ears {idx}')
-                delete_button = st.button(label="Delete Report", key=f'linked_ears {idx} button')
 
-                if delete_button:
-                    asyncio.run(data_manager.delete_neuroref_report(report_id=report_id))
-                    st.rerun()
 
     if "downloaded_neuroref_cz_report" in st.session_state:
         for idx, report_data in enumerate(st.session_state.downloaded_neuroref_cz_report):
             report, report_id = report_data
-            with st.expander(label=f"Neurosynchrony - Centroid {idx}"):
+            with st.expander(label=f"Neurosynchrony - Centroid {report_id}"):
                 pdf_viewer(report, height=700, key=f'centroid {idx}')
-                delete_button = st.button(label="Delete Report", key=f'centroid {idx} button')
 
-                if delete_button:
-                    asyncio.run(data_manager.delete_neuroref_cz_report(report_id=report_id))
-                    st.rerun()
 
-    st.subheader("Documents")
-    with st.popover("Add documents", use_container_width=True):
-        uploaded_zip = st.file_uploader("Upload a Persyst report", type="pdf")
+    render_documents(data_manager)
 
-    st.subheader("Artifact Distortions")
-    with st.popover("Add artifacts", use_container_width=True):
-        with st.form("add_artifact_form", border=False):
-            options = st.multiselect(
-                "Add artifact distortion",
-                [
-                    "Electrocardiographic interference (ECG)",
-                    "Excessive muscle tension (EMG)",
-                    "Eye wandering",
-                    "Eyeblink artifact (EOG)",
-                    "Forehead tension",
-                    "Improper ear clip (A1/A2) set-up",
-                    "Jaw tension",
-                    "Lead wandering",
-                    "Movement",
-                    "Neck tension",
-                    "Possible drowsiness",
-                    "Powerline interference",
-                    "Other"
-                ],
-            )
-            other_input = None
-            if "Other" in options:
-                other_input = st.text_input("Please specify other artifact:")
+    render_artifact_distortions(data_manager)
 
-            submit_button = st.form_submit_button(label="Submit")
-
-            if submit_button:
-                artifacts = options + ([other_input] if other_input else [])
-                asyncio.run(data_manager.save_artifact_distortions(artifacts))
-                st.success("Artifacts saved successfully!")
-
-    st.subheader("Add Irregularity")
-    with st.popover("Add irregularities", use_container_width=True):
-        with st.form("add_irregularity_form", border=False):
-            options = st.multiselect(
-                "Select irregularity",
-                [
-                    "Irregular EEG Activity",
-                    "Irregular Heart Rhythm",
-                    "Other"
-                ]
-            )
-            other_input = None
-            if "Other" in options:
-                other_input = st.text_input("Please specify other irregularity:")
-
-            submit_button = st.form_submit_button(label="Submit")
-
-            if submit_button:
-                irregularities = options + ([other_input] if other_input else [])
-                asyncio.run(data_manager.save_artifact_distortions(irregularities))
-                st.success("Irregularities saved successfully!")
+    render_abnormalities(data_manager)
