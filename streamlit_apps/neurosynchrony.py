@@ -10,6 +10,26 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+
+def translate_artifact_name(artifact_name):
+    artifact_map = {
+        "ecg": "Electrocardiographic interference (ECG)",
+        "excessiveMuscleTension": "Excessive muscle tension (EMG)",
+        "eyeWandering": "Eye wandering",
+        "eog": "Eyeblink artifact (EOG)",
+        "foreheadTension": "Forehead tension",
+        "earclips": "Improper ear clip (A1/A2) set-up",
+        "jawTension": "Jaw tension",
+        "leadWandering": "Lead wandering",
+        "movement": "Movement",
+        "neckTension": "Neck tension",
+        "possibleDrowsiness": "Possible drowsiness",
+        "powerlineInterference": "Powerline interference"
+    }
+    return artifact_map.get(artifact_name, "Other")
+
+
+
 # Render helper functions
 def render_artifact_distortions(data_manager):
     st.subheader("Artifact Distortions")
@@ -19,9 +39,9 @@ def render_artifact_distortions(data_manager):
         artifacts = st.session_state.eeg_reports['artifacts']
         if artifacts:
             st.write("Existing Artifacts:")
-            artifact_list = [artifact['name'] for artifact in artifacts.values()]
-            for artifact in artifact_list:
-                st.write(f"- {artifact.capitalize().replace('_', ' ')}")
+            for artifact_id, artifact_info in artifacts.items():
+                full_label = translate_artifact_name(artifact_info['name'])
+                st.write(f"- {full_label}")
         else:
             st.write("No existing artifacts found.")
     else:
@@ -148,6 +168,15 @@ def render_documents(data_manager):
                     st.error("Failed to upload document. Please try again.")
 
 
+def delete_report(data_manager, report_id, ref='default'):
+    if ref == 'default':
+        asyncio.run(data_manager.delete_neuroref_report(report_id))
+        st.success(f"Neuroref {report_id} successfully deleted!")
+        st.rerun()
+    elif ref=='cz':
+        asyncio.run(data_manager.delete_neuroref_cz_report(report_id))
+        st.success(f"Neuroref Cz {report_id} successfully deleted!")
+        st.rerun()
 
 
 
@@ -215,12 +244,17 @@ with col2:
             asyncio.run(data_manager.update_neuroref_reports(approved_eegs['EEGId'].values.tolist()))
             st.rerun()
 
+
     st.subheader("Reports")
     if "downloaded_neuroref_report" in st.session_state:
         for idx, report_data in enumerate(st.session_state.downloaded_neuroref_report):
             report, report_id = report_data
             with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}"):
                 pdf_viewer(report, height=700, key=f'linked_ears {idx}')
+                st.download_button(label = "Download Neuroref", data = report, file_name = f"Neurosynchrony-{report_id}.pdf", key=f"download-{report_id}")
+                if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
+                    delete_report(data_manager, report_id)
+                    st.success(f"Neuroref {report_id} successfully deleted!")
 
 
     if "downloaded_neuroref_cz_report" in st.session_state:
@@ -228,6 +262,10 @@ with col2:
             report, report_id = report_data
             with st.expander(label=f"Neurosynchrony - Centroid {report_id}"):
                 pdf_viewer(report, height=700, key=f'centroid {idx}')
+                st.download_button(label = "Download Neuroref Cz", data = report, file_name = f"Neurosynchrony-Cz-{report_id}.pdf", key=f"download-cz-{report_id}")
+                if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
+                    delete_report(data_manager, report_id, ref='cz')
+                    st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
 
     render_documents(data_manager)
