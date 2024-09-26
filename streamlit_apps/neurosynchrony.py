@@ -11,8 +11,8 @@ logger = logging.getLogger(__name__)
 
 
 
-def translate_artifact_name(artifact_name):
-    artifact_map = {
+def get_artifact_map():
+    return {
         "ecg": "Electrocardiographic interference (ECG)",
         "excessiveMuscleTension": "Excessive muscle tension (EMG)",
         "eyeWandering": "Eye wandering",
@@ -26,22 +26,28 @@ def translate_artifact_name(artifact_name):
         "possibleDrowsiness": "Possible drowsiness",
         "powerlineInterference": "Powerline interference"
     }
-    return artifact_map.get(artifact_name, "Other")
 
+def translate_artifact_name(artifact_name):
+    artifact_map = get_artifact_map()
+    return artifact_map.get(artifact_name, artifact_name.capitalize())
 
-
-# Render helper functions
 def render_artifact_distortions(data_manager):
     st.subheader("Artifact Distortions")
 
-    # Check if eeg_reports exists in session state and has artifacts
     if 'eeg_reports' in st.session_state and 'artifacts' in st.session_state.eeg_reports:
         artifacts = st.session_state.eeg_reports['artifacts']
         if artifacts:
             st.write("Existing Artifacts:")
             for artifact_id, artifact_info in artifacts.items():
                 full_label = translate_artifact_name(artifact_info['name'])
-                st.write(f"- {full_label}")
+                col1, col2 = st.columns([3, 1])
+                with col1:
+                    st.write(f"- {full_label}")
+                with col2:
+                    if st.button("Delete", key=f"delete_artifact_{artifact_id}"):
+                        asyncio.run(data_manager.delete_artifact(artifact_id))
+                        st.success(f"{full_label} has been deleted.")
+                        st.rerun()
         else:
             st.write("No existing artifacts found.")
     else:
@@ -49,23 +55,12 @@ def render_artifact_distortions(data_manager):
 
     with st.popover("Add artifacts", use_container_width=True):
         with st.form("add_artifact_form", border=False):
+            artifact_map = get_artifact_map()
+            reverse_artifact_map = {v: k for k, v in artifact_map.items()}
+
             options = st.multiselect(
                 "Add artifact distortion",
-                [
-                    "Electrocardiographic interference (ECG)",
-                    "Excessive muscle tension (EMG)",
-                    "Eye wandering",
-                    "Eyeblink artifact (EOG)",
-                    "Forehead tension",
-                    "Improper ear clip (A1/A2) set-up",
-                    "Jaw tension",
-                    "Lead wandering",
-                    "Movement",
-                    "Neck tension",
-                    "Possible drowsiness",
-                    "Powerline interference",
-                    "Other"
-                ],
+                list(artifact_map.values()) + ["Other"]
             )
             other_input = None
             if "Other" in options:
@@ -73,29 +68,13 @@ def render_artifact_distortions(data_manager):
 
             submit_button = st.form_submit_button(label="Submit")
 
-            artifact_map = {
-                "Electrocardiographic interference (ECG)": "ecg",
-                "Excessive muscle tension (EMG)": "excessiveMuscleTension",
-                "Eye wandering": "eyeWandering",
-                "Eyeblink artifact (EOG)": "eog",
-                "Forehead tension": "foreheadTension",
-                "Improper ear clip (A1/A2) set-up": "earclips",
-                "Jaw tension": "jawTension",
-                "Lead wandering": "leadWandering",
-                "Movement": "movement",
-                "Neck tension": "neckTension",
-                "Possible drowsiness": "possibleDrowsiness",
-                "Powerline interference": "powerlineInterference"
-            }
-
-            options = [artifact_map[option] for option in options]
-
             if submit_button:
-                artifacts = options + ([other_input] if other_input else [])
+                artifacts = [reverse_artifact_map.get(option, option) for option in options if option != "Other"]
+                if other_input:
+                    artifacts.append(other_input)
                 asyncio.run(data_manager.save_artifact_distortions(artifacts))
                 st.success("Artifacts saved successfully!")
-                st.rerun()  # Rerun the app to refresh the artifact list
-
+                st.rerun()
 
 
 def render_abnormalities(data_manager):
