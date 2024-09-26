@@ -97,18 +97,38 @@ def render_artifact_distortions(data_manager):
                 st.rerun()  # Rerun the app to refresh the artifact list
 
 
+
 def render_abnormalities(data_manager):
     st.subheader("Abnormalities")
 
-    # Check if eeg_reports exists in session state and has abnormalities
+    converter = {
+        "Irregular EEG Activity (AEA)": "aea",
+        "Irregular Heart Rhythm (AHR)": "ahr"
+    }
+    reverse_converter = {v: k for k, v in converter.items()}
+
     if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
         abnormalities = st.session_state.eeg_reports['abnormalities']
         if abnormalities:
             st.write("Existing Abnormalities:")
-            for abnormality in abnormalities.values():
-                name = abnormality['name'].upper()
+            for abnormality_id, abnormality in abnormalities.items():
+                name = reverse_converter.get(abnormality['name'], abnormality['name'].upper())
                 status = "Approved" if abnormality['isApproved'] else "Not Approved"
-                st.write(f"- {name}: {status}")
+
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.write(f"- {name}: {status}")
+                with col2:
+                    if not abnormality['isApproved']:
+                        if st.button("Approve", key=f"approve_{abnormality_id}"):
+                            asyncio.run(data_manager.approve_abnormality(abnormality_id))
+                            st.success(f"{name} has been approved.")
+                            st.rerun()
+                with col3:
+                    if st.button("Delete", key=f"delete_{abnormality_id}"):
+                        asyncio.run(data_manager.delete_abnormality(abnormality_id))
+                        st.success(f"{name} has been deleted.")
+                        st.rerun()
         else:
             st.write("No existing abnormalities found.")
     else:
@@ -118,31 +138,22 @@ def render_abnormalities(data_manager):
         with st.form("add_irregularity_form", border=False):
             options = st.multiselect(
                 "Select irregularity",
-                [
-                    "Irregular EEG Activity (AEA)",
-                    "Irregular Heart Rhythm (AHR)",
-                    "Other"
-                ]
+                list(converter.keys()) + ["Other"]
             )
             other_input = None
             if "Other" in options:
                 other_input = st.text_input("Please specify other irregularity:")
 
-            submit_button = st.form_submit_button(label="Submit")
-
-            converter = {
-                "Irregular EEG Activity (AEA)": "aea",
-                "Irregular Heart Rhythm (AHR)": "ahr"
-            }
-
-            options = [converter[option] for option in options]
+            submit_button = st.form_submit_button(label="Add")
 
             if submit_button:
-                irregularities = options + ([other_input] if other_input else [])
-                print(irregularities)
-                asyncio.run(data_manager.save_abnormalities(irregularities))
-                st.success("Irregularities saved successfully!")
-                st.rerun()  # Rerun the app to refresh the abnormalities list
+                converted_options = [converter.get(option, option) for option in options if option != "Other"]
+                if other_input:
+                    converted_options.append(other_input)
+
+                asyncio.run(data_manager.save_abnormalities(converted_options))
+                st.success("Irregularities added successfully!")
+                st.rerun()
 
 
 def render_documents(data_manager):

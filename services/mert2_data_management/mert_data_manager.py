@@ -115,6 +115,41 @@ class MeRTDataManager:
             logger.error(f"Failed to save abnormalities: {str(e)}")
             st.error("Failed to save abnormalities.")
 
+    async def delete_abnormality(self, abnormality_id):
+        try:
+            # Call the API to delete the abnormality
+            await self.api.delete_abnormality(
+                abnormality_id=abnormality_id
+            )
+            logger.info(f"Abnormality {abnormality_id} deleted successfully")
+
+            # Remove the abnormality from the local state
+            if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
+                if abnormality_id in st.session_state.eeg_reports['abnormalities']:
+                    del st.session_state.eeg_reports['abnormalities'][abnormality_id]
+
+            # Optionally, you can refresh the entire EEG report here if needed
+            # await self.load_eeg_reports()
+        except Exception as e:
+            logger.error(f"Failed to delete abnormality {abnormality_id}: {str(e)}")
+            raise
+
+    async def approve_abnormality(self, abnormality_id):
+        try:
+            # Call the API to approve the abnormality
+            await self.api.approve_abnormality(
+                abnormality_id=abnormality_id
+            )
+            logger.info(f"Abnormality {abnormality_id} approved successfully")
+
+            # Update the abnormality status in the local state
+            if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
+                if abnormality_id in st.session_state.eeg_reports['abnormalities']:
+                    st.session_state.eeg_reports['abnormalities'][abnormality_id]['isApproved'] = True
+        except Exception as e:
+            logger.error(f"Failed to approve abnormality {abnormality_id}: {str(e)}")
+            raise
+
     async def save_document(self, uploaded_file):
         try:
             url = f"{self.api.config.macro.url}/report_management/save_document"
