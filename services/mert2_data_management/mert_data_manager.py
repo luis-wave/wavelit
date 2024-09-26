@@ -97,6 +97,20 @@ class MeRTDataManager:
     async def save_artifact_distortions(self, artifacts):
         await self.api.save_artifact(artifacts=artifacts)
 
+    async def delete_artifact(self, artifact_id):
+        try:
+            await self.api.delete_artifact(artifact_id)
+            logger.info(f"Artifact {artifact_id} deleted successfully")
+
+            # Remove the artifact from the local state
+            if 'eeg_reports' in st.session_state and 'artifacts' in st.session_state.eeg_reports:
+                if artifact_id in st.session_state.eeg_reports['artifacts']:
+                    del st.session_state.eeg_reports['artifacts'][artifact_id]
+
+        except Exception as e:
+            logger.error(f"Failed to delete artifact {artifact_id}: {str(e)}")
+            raise
+
     async def save_abnormalities(self, abnormalities):
         try:
             # Convert the abnormalities to the format expected by the API

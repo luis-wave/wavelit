@@ -400,3 +400,15 @@ class MeRTApi:
             },
         )
 
+    async def delete_artifact(self, artifact_id: str) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/delete_artifact",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "artifactId": artifact_id
+            },
+        )
+
