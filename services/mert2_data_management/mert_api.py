@@ -1,5 +1,5 @@
 import uuid
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from urllib.parse import urljoin
 
 import aiohttp
@@ -349,5 +349,17 @@ class MeRTApi:
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
                 "reportId": report_id
+            },
+        )
+
+    async def save_abnormality(self, abnormality: List[str]) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/save_abnormality",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "names": abnormality
             },
         )

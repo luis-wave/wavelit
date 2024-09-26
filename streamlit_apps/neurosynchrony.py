@@ -113,8 +113,16 @@ def render_abnormalities(data_manager):
 
             submit_button = st.form_submit_button(label="Submit")
 
+            converter = {
+                "Irregular EEG Activity (AEA)": "aea",
+                "Irregular Heart Rhythm (AHR)": "ahr"
+            }
+
+            options = [converter[option] for option in options]
+
             if submit_button:
                 irregularities = options + ([other_input] if other_input else [])
+                print(irregularities)
                 asyncio.run(data_manager.save_abnormalities(irregularities))
                 st.success("Irregularities saved successfully!")
                 st.rerun()  # Rerun the app to refresh the abnormalities list
@@ -183,7 +191,7 @@ def delete_report(data_manager, report_id, ref='default'):
 # Initialize MeRTDataManager
 data_manager = MeRTDataManager(
     patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
-    eeg_id="EEG-3ed32f89-0d11-40c2-909d-12cdfacd9cab",
+    eeg_id="EEG-6f03e1b4-f511-43b1-88d6-65c2f70b5a52",
     clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
 )
 
@@ -237,11 +245,17 @@ with col2:
         st.header("EEG History")
         with st.form("data_editor_form", border=False):
             edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-            submitted = st.form_submit_button("Update Report")
-        if submitted:
-            st.subheader("Reports")
+            regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
+            regenerate_neuroref_cz = st.form_submit_button("Generate Neuroref Cz Report")
+
+        if regenerate_neuroref:
             approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
             asyncio.run(data_manager.update_neuroref_reports(approved_eegs['EEGId'].values.tolist()))
+            st.rerun()
+
+        if regenerate_neuroref_cz:
+            approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
+            asyncio.run(data_manager.update_neuroref_cz_reports(approved_eegs['EEGId'].values.tolist()))
             st.rerun()
 
 
