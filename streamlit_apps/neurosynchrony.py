@@ -73,6 +73,23 @@ def render_artifact_distortions(data_manager):
 
             submit_button = st.form_submit_button(label="Submit")
 
+            artifact_map = {
+                "Electrocardiographic interference (ECG)": "ecg",
+                "Excessive muscle tension (EMG)": "excessiveMuscleTension",
+                "Eye wandering": "eyeWandering",
+                "Eyeblink artifact (EOG)": "eog",
+                "Forehead tension": "foreheadTension",
+                "Improper ear clip (A1/A2) set-up": "earclips",
+                "Jaw tension": "jawTension",
+                "Lead wandering": "leadWandering",
+                "Movement": "movement",
+                "Neck tension": "neckTension",
+                "Possible drowsiness": "possibleDrowsiness",
+                "Powerline interference": "powerlineInterference"
+            }
+
+            options = [artifact_map[option] for option in options]
+
             if submit_button:
                 artifacts = options + ([other_input] if other_input else [])
                 asyncio.run(data_manager.save_artifact_distortions(artifacts))

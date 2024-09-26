@@ -95,7 +95,7 @@ class MeRTDataManager:
         await self.api.delete_neuroref_cz_report(report_id=report_id)
 
     async def save_artifact_distortions(self, artifacts):
-        await self.api.save_abnormality(abnormality=artifacts)
+        await self.api.save_artifact(artifacts=artifacts)
 
     async def save_abnormalities(self, abnormalities):
         try:

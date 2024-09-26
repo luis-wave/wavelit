@@ -363,3 +363,16 @@ class MeRTApi:
                 "names": abnormality
             },
         )
+
+    async def save_artifact(self, artifacts: List[str]) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/save_artifact",
+            {
+                "eegId": self.eeg_id,
+                "patientId": self.patient_id,
+                "userGroupId": self.clinic_id,
+                "names": artifacts
+            },
+        )
+
