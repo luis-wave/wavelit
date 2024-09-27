@@ -412,3 +412,51 @@ class MeRTApi:
             },
         )
 
+    async def save_document(self, file) -> str:
+        url = f"{self.config.macro.url}" + "macro-service/api/v1/report_management/save_document"
+
+        # Create a multipart form data
+        form_data = aiohttp.FormData()
+        form_data.add_field('userGroupId', self.clinic_id)
+        form_data.add_field('patientId', self.patient_id)
+        form_data.add_field('eegId', self.eeg_id)
+
+        # Add the file as a separate part
+        form_data.add_field('file',
+                            file.getvalue(),
+                            filename=file.name,
+                            content_type=file.type)
+
+        async with aiohttp.ClientSession() as session:
+            async with session.post(url, data=form_data, headers={"Authorization": f"Bearer {self.token}",}) as response:
+                if response.status in (200,204) :
+                    return await response.text()  # This should be the document_id
+                else:
+                    error_text = await response.text()
+                    raise Exception(f"Failed to save document. Status: {response.status}, Error: {error_text}")
+
+
+    async def delete_document(self, document_id: str) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/delete_document",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "documentId": document_id
+            },
+        )
+
+    async def download_document(self, document_id: str) -> bytes:
+        response = await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/download_document",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "documentId": document_id
+            },
+        )
+        return response

@@ -138,34 +138,37 @@ def render_abnormalities(data_manager):
 def render_documents(data_manager):
     st.subheader("Documents")
 
-    # Display existing documents
     if 'eeg_reports' in st.session_state and 'documents' in st.session_state.eeg_reports:
         documents = st.session_state.eeg_reports['documents']
         if documents:
             st.write("Existing Documents:")
             for doc_id, doc_info in documents.items():
-                st.write(f"- {doc_info['filename']} (Size: {doc_info['size']} bytes)")
-
-                # Add a download button for each document
-                if st.button(f"Download {doc_info['filename']}", key=f"download_{doc_id}"):
+                col1, col2, col3 = st.columns([3, 1, 1])
+                with col1:
+                    st.write(f"- {doc_info['filename']}")
+                with col2:
                     try:
-                        # Assuming you have a method to download the document in your data_manager
                         document_content = asyncio.run(data_manager.download_document(doc_id))
                         st.download_button(
-                            label=f"Click to download {doc_info['filename']}",
+                            label=f"Download",
                             data=document_content,
                             file_name=doc_info['filename'],
-                            mime="application/pdf"
                         )
                     except Exception as e:
-                        logger.error(f"Error downloading document {doc_id}: {str(e)}")
                         st.error(f"Failed to download {doc_info['filename']}. Please try again.")
+                with col3:
+                    if st.button(f"Delete", key=f"delete_{doc_id}"):
+                        try:
+                            asyncio.run(data_manager.delete_document(doc_id))
+                            st.success(f"Document {doc_info['filename']} deleted successfully.")
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Failed to delete {doc_info['filename']}. Please try again.{e}")
         else:
             st.write("No existing documents found.")
     else:
         st.write("No document data available.")
 
-    # Upload new documents
     with st.popover("Add documents", use_container_width=True):
         uploaded_file = st.file_uploader("Upload a Persyst report", type="pdf")
 
@@ -174,13 +177,9 @@ def render_documents(data_manager):
                 try:
                     document_id = asyncio.run(data_manager.save_document(uploaded_file))
                     st.success(f"Document uploaded successfully! Document ID: {document_id}")
-
-                    # Refresh the EEG reports to include the new document
-                    asyncio.run(data_manager.load_eeg_reports())
                     st.rerun()
                 except Exception as e:
-                    logger.error(f"Error uploading document: {str(e)}")
-                    st.error("Failed to upload document. Please try again.")
+                    st.error(f"Failed to upload document. Error: {str(e)}")
 
 
 def delete_report(data_manager, report_id, ref='default'):

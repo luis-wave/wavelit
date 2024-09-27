@@ -3,6 +3,7 @@ import streamlit as st
 from services.mert2_data_management.mert_api import MeRTApi
 import pandas as pd
 import logging
+import aiohttp
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -166,28 +167,37 @@ class MeRTDataManager:
 
     async def save_document(self, uploaded_file):
         try:
-            url = f"{self.api.config.macro.url}/report_management/save_document"
-
-            form_data = aiohttp.FormData()
-            form_data.add_field('userGroupId', self.clinic_id)
-            form_data.add_field('patientId', self.patient_id)
-            form_data.add_field('eegId', self.eeg_id)
-            form_data.add_field('file', uploaded_file.getvalue(),
-                                filename=uploaded_file.name,
-                                content_type=uploaded_file.type)
-
-            async with aiohttp.ClientSession() as session:
-                async with session.post(url, data=form_data, headers=self.api._get_headers()) as response:
-                    if response.status == 200:
-                        document_id = await response.text()
-                        logger.info(f"Document {uploaded_file.name} saved successfully with ID: {document_id}")
-                        return document_id
-                    else:
-                        error_text = await response.text()
-                        logger.error(f"Failed to save document {uploaded_file.name}. Status: {response.status}, Error: {error_text}")
-                        raise Exception(f"Failed to save document. Status: {response.status}")
+            document_id = await self.api.save_document(
+                uploaded_file
+            )
+            logger.info(f"Document saved successfully")
+            await self.load_eeg_reports()  # Refresh the EEG reports
+            return document_id
         except Exception as e:
             logger.error(f"Exception while saving document {uploaded_file.name}: {str(e)}")
+            raise
+
+
+    async def delete_document(self, document_id):
+        try:
+            response, status = await self.api.delete_document(document_id)
+            if status in (200, 34):
+                logger.info(f"Document deleted successfully")
+                await self.load_eeg_reports()  # Refresh the EEG reports
+            else:
+                raise Exception(f"Failed to delete document. Status: {status}")
+        except Exception as e:
+            logger.error(f"Failed to delete document {document_id}: {str(e)}")
+            raise
+
+    async def download_document(self, document_id):
+        try:
+            content = await self.api.download_document(document_id)
+            logger.info(f"Document {document_id} downloaded successfully")
+
+            return content
+        except Exception as e:
+            logger.error(f"Failed to download document {document_id}: {str(e)}")
             raise
 
 
