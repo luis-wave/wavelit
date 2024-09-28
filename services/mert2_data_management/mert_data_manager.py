@@ -4,6 +4,7 @@ from services.mert2_data_management.mert_api import MeRTApi
 import pandas as pd
 import logging
 import aiohttp
+from typing import Dict, Any
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -56,6 +57,23 @@ class MeRTDataManager:
 
     async def load_eeg_reports(self):
         st.session_state.eeg_reports = await self.api.get_eeg_report()
+
+    async def fetch_eeg_info_by_patient_id_and_eeg_id(self) -> Dict[str, Any]:
+        try:
+            return await self.api.fetch_eeg_info_by_patient_id_and_eeg_id()
+        except Exception as e:
+            logger.error(f"Failed to fetch EEG info: {str(e)}")
+            raise
+
+
+    async def update_eeg_review(self, is_first_reviewer: bool, state: str) -> Dict[str, Any]:
+        try:
+            return await self.api.update_eeg_review(
+                is_first_reviewer,
+                state
+            )
+        except Exception as e:
+            logger
 
     async def load_neuroref_reports(self):
         if 'eeg_reports' not in st.session_state:

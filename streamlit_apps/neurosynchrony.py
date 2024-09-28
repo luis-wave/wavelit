@@ -4,10 +4,63 @@ from streamlit_pdf_viewer import pdf_viewer
 from services.mert2_data_management.mert_data_manager import MeRTDataManager
 
 import logging
+from datetime import datetime
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
+
+EEG_REVIEW_STATES = {
+    None: 0, '': 0, 'PENDING': 0,
+    'FIRST_REVIEW': 1,
+    'SECOND_REVIEW_NEEDED': 2,
+    'SECOND_REVIEW': 3,
+    'CLINIC_REVIEW': 4,
+    'COMPLETED': 6,
+    'REJECTED': 7,
+}
+
+def render_eeg_review(data_manager):
+    st.markdown("## EEG Review")
+
+    # Fetch EEG info
+    eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+    analysis_meta = eeg_info['eegInfo']['analysisMeta']
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### First Review")
+        st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime'] or 'Not reviewed yet'}")
+        st.markdown(f"**Reviewer ID:** {analysis_meta['reviewerStaffId'] or 'N/A'}")
+
+    with col2:
+        st.markdown("### Second Review")
+        st.markdown(f"**Review Date:** {analysis_meta['secondReviewDatetime'] or 'Not reviewed yet'}")
+        st.markdown(f"**Reviewer ID:** {analysis_meta['secondReviewerStaffId'] or 'N/A'}")
+
+    current_state = analysis_meta['reviewState']
+
+    # Determine if the current user can perform a review
+    can_review = (current_state in ['PENDING', 'FIRST_REVIEW', ''] and st.session_state['id'] not in analysis_meta['reviewerStaffId']) or \
+                 (current_state in ['SECOND_REVIEW' ,'SECOND_REVIEW_NEEDED'] and st.session_state['id'] not in analysis_meta['secondReviewerStaffId'])
+    if can_review:
+        with st.form(key='review_form'):
+            st.markdown("### Complete Review")
+            submit_button = st.form_submit_button(label="Submit Review")
+
+            if submit_button:
+                is_first_review = current_state in ['PENDING', '']
+                new_state = 'FIRST_REVIEW' if is_first_review else 'SECOND_REVIEW'
+                try:
+                    result = asyncio.run(data_manager.update_eeg_review(
+                        is_first_reviewer=is_first_review,
+                        state=new_state
+                    ))
+                    st.success(f"Review updated successfully.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to update review: {str(e)}")
 
 
 
@@ -197,7 +250,7 @@ def delete_report(data_manager, report_id, ref='default'):
 # Initialize MeRTDataManager
 data_manager = MeRTDataManager(
     patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
-    eeg_id="EEG-6f03e1b4-f511-43b1-88d6-65c2f70b5a52",
+    eeg_id="EEG-06bc6524-2fe7-49b8-8c33-860fefec808a",
     clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
 )
 
@@ -293,3 +346,5 @@ with col2:
     render_artifact_distortions(data_manager)
 
     render_abnormalities(data_manager)
+
+    render_eeg_review(data_manager)

@@ -6,6 +6,7 @@ import aiohttp
 import dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+import streamlit as st
 
 
 class Credentials(BaseSettings):
@@ -220,16 +221,6 @@ class MeRTApi:
             },
         )
 
-    async def update_eeg_review(self) -> Dict[str, Any]:
-        return await self._make_request(
-            "POST",
-            "macro-service/api/v1/eeg_management/update_eeg_review",
-            {
-                "patientId": self.patient_id,
-                "eegId": self.eeg_id,
-                "userGroupId": self.clinic_id,
-            },
-        )
 
     async def save_patient_note(
         self, note: str, note_creation_date: str
@@ -460,3 +451,21 @@ class MeRTApi:
             },
         )
         return response
+
+    async def update_eeg_review(self, is_first_reviewer: bool, state: str) -> Dict[str, Any]:
+        response = await self._make_request(
+            "POST",
+            "macro-service/api/v1/eeg_management/update_eeg_review",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "staffId": st.session_state["id"],
+                "isProtocol": False,
+                "isFirstReviewer": is_first_reviewer,
+                "state": state
+
+            },
+        )
+        return response
+
