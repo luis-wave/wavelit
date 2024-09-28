@@ -452,20 +452,11 @@ class MeRTApi:
         )
         return response
 
-    async def update_eeg_review(self, is_first_reviewer: bool, state: str) -> Dict[str, Any]:
+    async def update_eeg_review(self, payload: Dict) -> Dict[str, Any]:
         response = await self._make_request(
             "POST",
             "macro-service/api/v1/eeg_management/update_eeg_review",
-            {
-                "userGroupId": self.clinic_id,
-                "patientId": self.patient_id,
-                "eegId": self.eeg_id,
-                "staffId": st.session_state["id"],
-                "isProtocol": False,
-                "isFirstReviewer": is_first_reviewer,
-                "state": state
-
-            },
+            payload,
         )
         return response
 

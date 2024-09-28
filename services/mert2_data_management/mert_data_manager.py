@@ -4,7 +4,7 @@ from services.mert2_data_management.mert_api import MeRTApi
 import pandas as pd
 import logging
 import aiohttp
-from typing import Dict, Any
+from typing import Dict, Any, List
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -66,14 +66,24 @@ class MeRTDataManager:
             raise
 
 
-    async def update_eeg_review(self, is_first_reviewer: bool, state: str) -> Dict[str, Any]:
+    async def update_eeg_review(self, is_first_reviewer: bool, state: str, rejection_reason: List[str] = None) -> Dict[str, Any]:
         try:
-            return await self.api.update_eeg_review(
-                is_first_reviewer,
-                state
-            )
+            payload = {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "staffId": st.session_state['id'],
+                "isProtocol": False,
+                "isFirstReviewer": is_first_reviewer,
+                "state": state
+            }
+            if state == "REJECTED" and rejection_reason:
+                payload["rejectionReason"] = rejection_reason
+
+            return await self.api.update_eeg_review(payload)
         except Exception as e:
-            logger
+            logger.error(f"Failed to update EEG review: {str(e)}")
+            raise
 
     async def load_neuroref_reports(self):
         if 'eeg_reports' not in st.session_state:
