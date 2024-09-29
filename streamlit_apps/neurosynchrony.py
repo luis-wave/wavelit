@@ -2,6 +2,7 @@ import asyncio
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 from services.mert2_data_management.mert_data_manager import MeRTDataManager
+from enum import Enum
 
 import logging
 from datetime import datetime
@@ -10,16 +11,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 logger = logging.getLogger(__name__)
 
-EEG_REVIEW_STATES = {
-    None: 0, '': 0, 'PENDING': 0,
-    'FIRST_REVIEW': 1,
-    'SECOND_REVIEW_NEEDED': 2,
-    'SECOND_REVIEW': 3,
-    'CLINIC_REVIEW': 4,
-    'COMPLETED': 6,
-    'REJECTED': 7,
-}
-
+class EEGReviewState(Enum):
+    PENDING = 0
+    FIRST_REVIEW = 1
+    SECOND_REVIEW_NEEDED = 2
+    SECOND_REVIEW = 3
+    CLINIC_REVIEW = 4
+    COMPLETED = 6
+    REJECTED = 7
 
 REJECTION_REASONS = {
     "possibleDrowsiness": "Possible Drowsiness",
@@ -28,7 +27,19 @@ REJECTION_REASONS = {
     "incorrectUpload": "Incorrect Upload"
 }
 
-
+def get_next_state(current_state: EEGReviewState) -> EEGReviewState:
+    state_order = [
+        EEGReviewState.PENDING,
+        EEGReviewState.FIRST_REVIEW,
+        EEGReviewState.SECOND_REVIEW_NEEDED,
+        EEGReviewState.SECOND_REVIEW,
+        EEGReviewState.COMPLETED
+    ]
+    try:
+        current_index = state_order.index(current_state)
+        return state_order[current_index + 1] if current_index < len(state_order) - 1 else current_state
+    except ValueError:
+        return current_state
 
 def render_eeg_review(data_manager):
     st.markdown("## EEG Review")
@@ -37,9 +48,9 @@ def render_eeg_review(data_manager):
     eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
     analysis_meta = eeg_info['eegInfo']['analysisMeta']
 
-    current_state = analysis_meta['reviewState']
+    current_state = EEGReviewState[analysis_meta['reviewState']] if analysis_meta['reviewState'] else EEGReviewState.PENDING
 
-    if current_state == "REJECTED":
+    if current_state == EEGReviewState.REJECTED:
         st.markdown("### Rejected")
         st.markdown(f"**Review Date:** {analysis_meta['rejectionDatetime']}")
         st.markdown(f"**Reviewer ID:** {analysis_meta['rejectionReviewerStaffId']}")
@@ -58,58 +69,51 @@ def render_eeg_review(data_manager):
             st.markdown(f"**Review Date:** {analysis_meta['secondReviewDatetime'] or 'Not reviewed yet'}")
             st.markdown(f"**Reviewer ID:** {analysis_meta['secondReviewerStaffId'] or 'N/A'}")
 
+    st.markdown(f"**Current State:** {current_state.name}")
 
+    # Check if the current user can perform a review
+    can_review = st.session_state['id'] not in [analysis_meta['reviewerStaffId'], analysis_meta['secondReviewerStaffId']]
 
-        # Determine if the current user can perform a review
-        can_review = (current_state in ['PENDING', ''] and st.session_state['id'] not in analysis_meta['reviewerStaffId']) or \
-                    (current_state in ['FIRST_REVIEW', 'SECOND_REVIEW' ,'SECOND_REVIEW_NEEDED', 'COMPLETED'] and st.session_state['id'] not in analysis_meta['reviewerStaffId'])
-        if can_review:
-            col1, col2 = st.columns(2)
+    if can_review:
+        col1, col2 = st.columns(2)
 
-            with col1:
-                with st.form(key='approve_form'):
-                    st.markdown("### Approve Review")
-                    approve_button = st.form_submit_button(label="Approve Review")
+        with col1:
+            if st.button("Proceed Review"):
+                next_state = get_next_state(current_state)
+                try:
+                    result = asyncio.run(data_manager.update_eeg_review(
+                        is_first_reviewer=(current_state == EEGReviewState.PENDING),
+                        state=next_state.name
+                    ))
+                    st.success(f"Review updated to {next_state.name}")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to update review: {str(e)}")
 
-                    if approve_button:
-                        is_first_review = current_state in ['PENDING', '']
-                        new_state = 'FIRST_REVIEW' if is_first_review else 'COMPLETED'
+        with col2:
+            with st.form(key='reject_form'):
+                st.markdown("### Reject Review")
+                rejection_reasons = st.multiselect(
+                    "Select Rejection Reasons",
+                    options=list(REJECTION_REASONS.keys()),
+                    format_func=lambda x: REJECTION_REASONS[x]
+                )
+                reject_button = st.form_submit_button(label="Reject Review")
+
+                if reject_button:
+                    if not rejection_reasons:
+                        st.error("Please select at least one rejection reason.")
+                    else:
                         try:
                             result = asyncio.run(data_manager.update_eeg_review(
-                                is_first_reviewer=is_first_review,
-                                state=new_state
+                                is_first_reviewer=(current_state == EEGReviewState.PENDING),
+                                state=EEGReviewState.REJECTED.name,
+                                rejection_reason=rejection_reasons
                             ))
-                            st.success(f"Review approved.")
+                            st.success("Review rejected.")
                             st.rerun()
                         except Exception as e:
-                            st.error(f"Failed to approve review: {str(e)}")
-
-            with col2:
-                with st.form(key='reject_form'):
-                    st.markdown("### Reject Review")
-                    rejection_reasons = st.multiselect(
-                        "Select Rejection Reasons",
-                        options=list(REJECTION_REASONS.keys()),
-                        format_func=lambda x: REJECTION_REASONS[x]
-                    )
-                    reject_button = st.form_submit_button(label="Reject Review")
-
-                    if reject_button:
-                        if not rejection_reasons:
-                            st.error("Please select at least one rejection reason.")
-                        else:
-                            try:
-                                result = asyncio.run(data_manager.update_eeg_review(
-                                    is_first_reviewer=(current_state in ['PENDING', 'FIRST_REVIEW']),
-                                    state="REJECTED",
-                                    rejection_reason=rejection_reasons
-                                ))
-                                st.success(f"Review rejected.")
-                                st.rerun()
-                            except Exception as e:
-                                st.error(f"Failed to reject review: {str(e)}")
-
-
+                            st.error(f"Failed to reject review: {str(e)}")
 
 def get_artifact_map():
     return {
