@@ -24,7 +24,8 @@ REJECTION_REASONS = {
     "possibleDrowsiness": "Possible Drowsiness",
     "excessiveArtifact": "Excessive Artifact",
     "poorEegSetup": "Poor EEG Setup",
-    "incorrectUpload": "Incorrect Upload"
+    "incorrectUpload": "Incorrect Upload",
+    "other": "Other"
 }
 
 def get_next_state(current_state: EEGReviewState) -> EEGReviewState:
@@ -300,10 +301,11 @@ def delete_report(data_manager, report_id, ref='default'):
 
 # Initialize MeRTDataManager
 data_manager = MeRTDataManager(
-    patient_id="PAT-7ab945ce-b879-11ed-b74f-0273bda7c1f3",
-    eeg_id="EEG-06bc6524-2fe7-49b8-8c33-860fefec808a",
+    patient_id="PAT-fcd04aae-29ce-11ef-844f-0a7b03ea8ee1",
+    eeg_id="EEG-396826dd-79f7-46da-8ad6-aa4c3ba1ed57",
     clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
 )
+
 
 # Load all data into session state
 asyncio.run(data_manager.load_all_data())
@@ -326,7 +328,11 @@ with col1:
     patient_id = patient_data["profileInfo"]["patientId"]
     primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
     is_having_seizures = "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
-    treatment_count = st.session_state.treatment_count['CORTICAL']
+
+    if 'CORTICAL' in st.session_state.treatment_count:
+        treatment_count = st.session_state.treatment_count['CORTICAL']
+    else:
+        treatment_count = 0
 
     # Display patient data
     st.header(f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}")

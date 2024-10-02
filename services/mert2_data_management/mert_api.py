@@ -236,16 +236,7 @@ class MeRTApi:
             },
         )
 
-    # Protocol Management endpoints
-    async def save_protocol(self, protocol_data: Dict[str, Any]) -> Dict[str, Any]:
-        return await self._make_request(
-            "POST", "protocol_management/save_protocol", protocol_data
-        )
 
-    async def reject_protocol(self, rejection_data: Dict[str, Any]) -> Dict[str, Any]:
-        return await self._make_request(
-            "POST", "protocol_management/reject_protocol", rejection_data
-        )
 
     async def get_neuroref_report(self, eeg_ids: list) -> Dict[str, Any]:
         return await self._make_request(
@@ -460,3 +451,39 @@ class MeRTApi:
         )
         return response
 
+
+    async def save_protocol(self, protocol: Dict[str, Any]) -> Dict[str, Any]:
+        response = await self._make_request(
+            "POST",
+            "macro-service/api/v1/protocol_management/save_protocol",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "protocol": protocol
+            },
+        )
+        return response
+
+
+    async def reject_protocol(self, protocol: Dict[str, Any], rejection_reason: str) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST", "macro-service/api/v1/protocol_management/reject_protocol",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "protocol": protocol,
+                "rejectionReason": rejection_reason
+            },
+        )
+
+    async def get_doctor_approval_state(self) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST", "macro-service/api/v1/protocol_management/get_doctor_approval_state",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id
+            },
+        )

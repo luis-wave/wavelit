@@ -13,6 +13,9 @@ def render_protocol_page(data_manager):
     analysis_meta = eeg_info['eegInfo']['analysisMeta']
     eeg_info_data = eeg_info['eegInfo']
 
+    # Fetch doctor approval state
+    doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
+
     # Display metadata
     st.subheader("Metadata")
     col1, col2 = st.columns(2)
@@ -24,6 +27,20 @@ def render_protocol_page(data_manager):
         st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
         st.markdown(f"**Upload Date:** {eeg_info_data['uploadDateTime']}")
         st.markdown(f"**Review State:** {analysis_meta['reviewState']}")
+
+    # Display doctor approval state
+    st.subheader("Doctor Approval State")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Clinician**")
+        st.markdown(f"Approved: {doctor_approval_state['clinician']['approved']}")
+        st.markdown(f"Date: {doctor_approval_state['clinician']['datetime'] or 'N/A'}")
+        st.markdown(f"Name: {doctor_approval_state['clinician']['firstName'] or 'N/A'} {doctor_approval_state['clinician']['lastName'] or 'N/A'}")
+    with col2:
+        st.markdown("**Physician**")
+        st.markdown(f"Approved: {doctor_approval_state['physician']['approved']}")
+        st.markdown(f"Date: {doctor_approval_state['physician']['datetime'] or 'N/A'}")
+        st.markdown(f"Name: {doctor_approval_state['physician']['firstName'] or 'N/A'} {doctor_approval_state['physician']['lastName'] or 'N/A'}")
 
     # Create editable dataframe for base protocol
     st.subheader("Base Protocol")
@@ -44,37 +61,91 @@ def render_protocol_page(data_manager):
         "P4-PO4-O2", "PO3-O1-PO7", "PO4-O2-PO8"
     ]
 
-    # Create the editable dataframe
-    edited_df = st.data_editor(
-        protocol_df,
-        num_rows="fixed",
-        use_container_width=True,
-        column_config={
-            "pulseMode": st.column_config.SelectboxColumn(
-                "Pulse Mode",
-                options=['Biphasic', 'Monophasic'],
-                required=True
-            ),
-            "location": st.column_config.SelectboxColumn(
-                "Location",
-                options=location_options,
-                required=True
-            )
-        },
-        hide_index=True,
-    )
+    with st.form("data_editor_form", border=False):
+        # Create the editable dataframe
+        edited_df = st.data_editor(
+            protocol_df,
+            num_rows="fixed",
+            use_container_width=True,
+            column_config={
+                "pulseMode": st.column_config.SelectboxColumn(
+                    "Pulse Mode",
+                    options=['Biphasic', 'Monophasic'],
+                    required=True
+                ),
+                "location": st.column_config.SelectboxColumn(
+                    "Location",
+                    options=location_options,
+                    required=True
+                )
+            },
+            hide_index=True,
+        )
 
-    # Check if there are changes in the protocol
-    if not edited_df.equals(protocol_df):
-        if st.button("Save Protocol Changes"):
-            try:
-                # Convert the edited dataframe to a dictionary
-                updated_protocol = edited_df.iloc[0].to_dict()
-                # Here you would call a method to update the protocol
-                # For example: asyncio.run(data_manager.update_base_protocol(updated_protocol))
-                st.success("Protocol updated successfully!")
-            except Exception as e:
-                st.error(f"Failed to update protocol: {str(e)}")
+        # Check if there are changes in the protocol
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.form_submit_button("Save Protocol Changes"):
+                try:
+                    # Convert the edited dataframe to a dictionary
+                    updated_protocol = edited_df.iloc[0].to_dict()
+
+                    # Prepare the protocol object
+                    protocol = {
+                        "acknowledgeState": {
+                            "clinician":doctor_approval_state['clinician'],
+                            "physician": doctor_approval_state['physician']
+                        },
+                        "approvedByName": "",
+                        "approvedDate": "",
+                        "createdByName": "UAT Scientist",
+                        "createdDate": datetime.utcnow().isoformat() + "Z",
+                        "eegId": data_manager.eeg_id,
+                        "numPhases": 1,
+                        "patientId": data_manager.patient_id,
+                        "phases": [{
+                            "location": updated_protocol["location"],
+                            "goalIntensity": updated_protocol.get("goalIntensity", 0),
+                            "pulseParameters": {"phase": "MONO" if updated_protocol["pulseMode"] == "Monophasic" else "BIPHASIC"},
+                            "frequency": updated_protocol["frequency"],
+                            "burstDuration": updated_protocol.get("burstDuration"),
+                            "burstFrequency": updated_protocol.get("burstFrequency"),
+                            "burstNumber": updated_protocol.get("burstNumber"),
+                            "interBurstInterval": updated_protocol.get("interBurstInterval"),
+                            "interTrainInterval": updated_protocol["interTrainInterval"],
+                            "phaseDuration": updated_protocol.get("phaseDuration", 0),
+                            "trainDuration": updated_protocol["trainDuration"],
+                            "trainNumber": updated_protocol["trainNumber"]
+                        }],
+                        "subtype": "CORTICAL",
+                        "totalDuration": updated_protocol.get("totalDuration", 0),
+                        "type": "TREATMENT"
+                    }
+
+                    # Call the save_protocol method
+                    result = asyncio.run(data_manager.save_protocol(protocol))
+                    st.success("Protocol updated successfully!")
+                except Exception as e:
+                    st.error(f"Failed to update protocol: {str(e)}")
+
+        with col2:
+            rejection_reason = st.text_input("Rejection Reason")
+            if st.form_submit_button("Reject Protocol"):
+                if rejection_reason:
+                    try:
+                        # Prepare the protocol object (same as in the save function)
+                        protocol = {
+                            # ... (same as in the save function)
+                        }
+
+                        # Call the reject_protocol method
+                        result = asyncio.run(data_manager.reject_protocol(rejection_reason, protocol))
+                        st.success("Protocol rejected successfully!")
+                    except Exception as e:
+                        st.error(f"Failed to reject protocol: {str(e)}")
+                else:
+                    st.warning("Please provide a rejection reason.")
 
     # Display additional EEG information
     st.subheader("Additional EEG Information")

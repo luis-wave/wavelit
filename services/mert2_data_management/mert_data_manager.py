@@ -228,6 +228,39 @@ class MeRTDataManager:
             logger.error(f"Failed to download document {document_id}: {str(e)}")
             raise
 
+    async def save_protocol(self, protocol: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            result = await self.api.save_protocol(
+                protocol=protocol
+            )
+            logger.info(f"Protocol saved successfully for EEG ID: {self.eeg_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to save protocol: {str(e)}")
+            raise
+
+    async def reject_protocol(self, rejection_reason: str, protocol: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            result = await self.api.reject_protocol(
+                rejection_reason=rejection_reason,
+                protocol=protocol
+            )
+            logger.info(f"Protocol rejected successfully for EEG ID: {self.eeg_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to reject protocol: {str(e)}")
+            raise
+
+    async def get_doctor_approval_state(self) -> Dict[str, Any]:
+        try:
+            result = await self.api.get_doctor_approval_state()
+            logger.info(f"Retrieved doctor approval state for EEG ID: {self.eeg_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to get doctor approval state: {str(e)}")
+            raise
+
+
 
     @staticmethod
     def parse_eeg_data_extended(data):
