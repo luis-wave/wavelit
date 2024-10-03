@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
         protocol_page = st.Page("sigma_dashboards/protocols.py", title="Protocols")
 
-        report_page = st.Page("sigma_dashboards/reports.py", title="Reports")
+        report_page = st.Page("sigma_dashboards/reports.py", title="Queue")
 
         dods_dashboards_page = st.Page(
             "sigma_dashboards/dods_dashboards.py", title="DoDS Dashboards"
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         )
 
         eeg_page = st.Page(
-            "streamlit_apps/🧠 eeg.py", title="EEG", icon="🧠", url_path="/eeg"
+            "streamlit_apps/eeg.py", title="EEG", icon="🧠", url_path="/eeg"
         )
 
         ecg_page = st.Page(
@@ -61,12 +61,19 @@ if __name__ == "__main__":
             url_path="/typeform",
         )
 
+        neurosynchrony_page = st.Page(
+            "streamlit_apps/neurosynchrony.py",
+            title="MeRT2",
+            icon="📨",
+            url_path="/mert_reports",
+        )
+
+
         nav = st.navigation(
             {
                 "Sigma Dashboards": [report_page, protocol_page, dods_dashboards_page, admin_page],
-                "Tools": [eeg_page, ecg_page, epoch_page],
+                "Tools": [eeg_page, ecg_page,  neurosynchrony_page],
                 "Research & Development": [ngboost_page],
-                "Surveys": [surveys_page],
             }
         )
 

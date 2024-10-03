@@ -4,42 +4,62 @@ credentials:
       email: lcamargo@waveneuro.com
       name: Luis Camargo
       password: $2b$12$7DKVVLidvWx2m179Eea98.RfcInbP6dFRayVUn5tcjEkvueSyAyI2
+      id: STF-e465eb68-ba87-11eb-8611-06b700432873
+      m2_username: lcamargo_ea
     aring:
       email: alex@waveneuro.com
       name: Alex Ring
       password: $2b$12$qiQk.vjIql3NPzN66dHEq.k63JmoNioebMkpbgkbJscWd.pUPypdW
+      id: STF-6d38ac86-ba89-11eb-8b42-029e69ddbc8b
+      m2_username: aring_es
     sllaga:
       email: stephanie@waveneuro.com
       name: Stephanie Llaga
       password: $2b$12$tk.L.ZeTw1D2yQ.7g36Yj.uYW1SzBRRBmAg.ZATA58ibrhSrFYbFW
+      id: STF-ac677ad4-a595-11ec-82d9-02fd9bf033d7
+      m2_username: sllaga_ea_phys
     ppolk:
       email: patrick@waveneuro.com
       name: Patrick Polk
       password: $2b$12$1Ka6UhF6KA8B/Q0difn3HufvYn0l1RE6oSBYEN.LPN/j9MY0iDMJO
+      id: STF-e8b6c0a2-27f5-11ed-b837-02b0e344b06f
+      m2_username: ppolk
     jchong:
       email: joseph@waveneuro.com
       name: Joseph Chong
       password: $2b$12$6KU9dOLQcVTju4pwej/Hp.cLGni16oO4f2bI8/oErWz5CLR6jq7lC
+      id: STF-934d6632-a17e-11ec-b364-0aa26dca46cb
+      m2_username: jchong
     nyu:
       email: nicole@waveneuro.com
       name: Nicole Yu
       password: $2b$12$XWir/Spi.9ELDYlnJ92fNeV0RjSGfnnORaBXq1Db45NYKojhOibLW
+      id: STF-031845e2-b505-11ec-8b5d-0a86265d54df
+      m2_username: nyu_ea
     ble:
       email: ble@waveneuro.com
       name: Binh Le
       password: $2b$12$EiWUNwezz2UBzDTu3KCa9uUDbXhyXHfqlESlGKMDQMaoxYv5Rnm7S
+      id: STF-d844feb2-241c-11ef-8e46-02fb253d52c7
+      m2_username: ble5
     rmendoza:
       email: rmendoza@waveneuro.com
       name: Rey Mendoza
       password: $2b$12$hUdQ97E92aRGqF.nCavUg.vl2I5ufDDErghJgQcjxuDeRLtI0wkDS
+      id: STF-7a0aa2d4-241c-11ef-a5ac-06026d518b71
+      m2_username: rmendoza1
     jkumar:
       email: jay@waveneuro.com
       name: Jay Kumar
       password: $2b$12$p9aOPRJnAJLqBEdszmwQ2uNmksVQvvaFCosSwz25bqoGWJNIocaTi
+      id: STF-0710bc38-2e40-11ed-a807-027d8017651d
+      m2_username: jkumar_eap
     jijeong:
       email: jijeong@waveneuro.com
       name: Jijeong Kim
       password: $2b$12$de/PzEyp2wa9ne8mqaLTseA2hrNhZ7FwSN4uxHullzbiyyXi8k.dy
+      id: STF-472808de-ba89-11eb-967d-029e69ddbc8b
+      m2_username: jkim_ea
     lprichep:
       email: leslie@waveneuro.com
       name: Leslie Prichep

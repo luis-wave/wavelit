@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.0] - 2024-02
+### Added
+- Neurosynchrony report page. Enables lab to approve, reject reports without using MeRT2.
+- MeRT2Api, makes api calls to MeRT2 macroservice.
+- MeRT2 data manager, loads responses from API calls to streamlit session state.
+- Render functions for displaying patient, clinic, report, artifact, and abnormality data.
+- Streamlit pdf viewer component.
+- Report page, approve/reject/edit protocol treatment parameters.
+- Organize MeRT 2 components in tabs.
+- View and add notes
+
+
+
 ## [2.4.0] - 2024-09-01
 ### Added
 - Query parameter for EEG reference.

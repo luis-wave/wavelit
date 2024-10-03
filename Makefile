@@ -14,6 +14,8 @@ simulation:
 app:
 	docker run -p 8501:8501 streamlit-epoch
 
+mert:
+	python -m streamlit run streamlit_apps/reports.py
 
 sigma:
 	python -m streamlit run protocols.py
