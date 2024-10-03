@@ -7,7 +7,7 @@ import dotenv
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 import streamlit as st
-
+from datetime import datetime
 
 class Credentials(BaseSettings):
     username: str
@@ -485,5 +485,21 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id
+            },
+        )
+
+    async def save_eeg_scientist_patient_note(self, note: Dict[str, Any]) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST", "macro-service/api/v1/patient_management/save_eeg_scientist_patient_note",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "noteCreationDate": datetime.utcnow().isoformat() + "Z",
+                "eegScientistPatientNote": {
+                    "recordingDate": note["recordingDate"],
+                    "subject": note["subject"],
+                    "content": note["content"],
+                    "dateEdited": datetime.utcnow().isoformat() + "Z"
+                }
             },
         )

@@ -260,6 +260,17 @@ class MeRTDataManager:
             logger.error(f"Failed to get doctor approval state: {str(e)}")
             raise
 
+    async def save_eeg_scientist_patient_note(self, note: Dict[str, Any]) -> Dict[str, Any]:
+        try:
+            result = await self.api.save_eeg_scientist_patient_note(
+                note=note
+            )
+            logger.info(f"EEG scientist patient note saved successfully for patient ID: {self.patient_id}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to save EEG scientist patient note: {str(e)}")
+            raise
+
 
 
     @staticmethod
