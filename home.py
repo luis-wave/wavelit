@@ -53,22 +53,16 @@ if __name__ == "__main__":
 
         reports_page = st.Page(
             "streamlit_apps/neurosynchrony.py",
-            title="MeRT 2 Reports",
+            title="MeRT2",
             icon="📨",
             url_path="/mert_reports",
         )
 
-        protocols_page = st.Page(
-            "streamlit_apps/protocols.py",
-            title="MeRT 2 Protocols",
-            icon="🧘",
-            url_path="/mert_protocols",
-        )
 
         nav = st.navigation(
             {
                 "Sigma Dashboards": [report_page, protocol_page, report_log_page],
-                "Tools": [eeg_page, ecg_page, epoch_page, reports_page, protocols_page],
+                "Tools": [eeg_page, ecg_page, epoch_page, reports_page],
                 "Research & Development": [ngboost_page],
                 "Surveys": [surveys_page],
             }

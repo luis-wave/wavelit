@@ -1,4 +1,5 @@
 import asyncio
+import pandas as pd
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 from services.mert2_data_management.mert_data_manager import MeRTDataManager
@@ -10,6 +11,11 @@ from datetime import datetime
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
+
+
+tabs = ["Reports", "Protocols"]
+
+tab1, tab2 = st.tabs(tabs)
 
 class EEGReviewState(Enum):
     PENDING = 0
@@ -297,6 +303,165 @@ def delete_report(data_manager, report_id, ref='default'):
         st.success(f"Neuroref Cz {report_id} successfully deleted!")
         st.rerun()
 
+def render_protocol_page(data_manager):
+    st.title("EEG Protocol")
+
+    # Fetch EEG info
+    eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+    base_protocol = eeg_info['baseProtocol']
+    analysis_meta = eeg_info['eegInfo']['analysisMeta']
+    eeg_info_data = eeg_info['eegInfo']
+
+    # Fetch doctor approval state
+    doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
+
+    # Display metadata
+    st.subheader("Metadata")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
+        st.markdown(f"**Patient ID:** {data_manager.patient_id}")
+        st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
+    with col2:
+        st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
+        st.markdown(f"**Upload Date:** {eeg_info_data['uploadDateTime']}")
+        st.markdown(f"**Review State:** {analysis_meta['reviewState']}")
+
+    # Display doctor approval state
+    st.subheader("Doctor Approval State")
+    col1, col2 = st.columns(2)
+    with col1:
+        st.markdown("**Clinician**")
+        st.markdown(f"Approved: {doctor_approval_state['clinician']['approved']}")
+        st.markdown(f"Date: {doctor_approval_state['clinician']['datetime'] or 'N/A'}")
+        st.markdown(f"Name: {doctor_approval_state['clinician']['firstName'] or 'N/A'} {doctor_approval_state['clinician']['lastName'] or 'N/A'}")
+    with col2:
+        st.markdown("**Physician**")
+        st.markdown(f"Approved: {doctor_approval_state['physician']['approved']}")
+        st.markdown(f"Date: {doctor_approval_state['physician']['datetime'] or 'N/A'}")
+        st.markdown(f"Name: {doctor_approval_state['physician']['firstName'] or 'N/A'} {doctor_approval_state['physician']['lastName'] or 'N/A'}")
+
+    # Create editable dataframe for base protocol
+    st.subheader("Base Protocol")
+
+    # Add new fields to the protocol
+    base_protocol['pulseMode'] = base_protocol.get('pulseMode', 'Biphasic')
+    base_protocol['location'] = base_protocol.get('location', 'F1-FZ-F2')
+
+    # Create the dataframe without transposing
+    protocol_df = pd.DataFrame([base_protocol])
+
+    # Define the location options
+    location_options = [
+        "FP1-FPZ-FP2", "F1-FZ-F2", "C1-CZ-C2", "P1-PZ-P2", "F1-F3-F5", "F2-F4-F6",
+        "F7-FT7-T3", "F8-FT8-T4", "CP1-CPZ-CP2", "FC1-FCZ-FC2", "TP7-T3-FT7",
+        "TP8-T4-FT8", "C5-C3-C1", "C6-C4-C2", "C3-CP3-P3", "C4-CP4-P4", "P3-CP5-T3",
+        "P4-CP6-T4", "P1-P3-P5", "P2-P4-P6", "P3-P5-P7", "P4-P6-P8", "P3-PO3-O1",
+        "P4-PO4-O2", "PO3-O1-PO7", "PO4-O2-PO8"
+    ]
+
+    with st.form("protocol_data_editor_form", border=False):
+        # Create the editable dataframe
+        edited_df = st.data_editor(
+            protocol_df,
+            num_rows="fixed",
+            use_container_width=True,
+            column_config={
+                "pulseMode": st.column_config.SelectboxColumn(
+                    "Pulse Mode",
+                    options=['Biphasic', 'Monophasic'],
+                    required=True
+                ),
+                "location": st.column_config.SelectboxColumn(
+                    "Location",
+                    options=location_options,
+                    required=True
+                )
+            },
+            hide_index=True,
+        )
+
+        # Check if there are changes in the protocol
+        col1, col2 = st.columns(2)
+
+        with col1:
+            if st.form_submit_button("Save Protocol Changes"):
+                try:
+                    # Convert the edited dataframe to a dictionary
+                    updated_protocol = edited_df.iloc[0].to_dict()
+
+                    # Prepare the protocol object
+                    protocol = {
+                        "acknowledgeState": {
+                            "clinician":doctor_approval_state['clinician'],
+                            "physician": doctor_approval_state['physician']
+                        },
+                        "approvedByName": "",
+                        "approvedDate": "",
+                        "createdByName": "UAT Scientist",
+                        "createdDate": datetime.utcnow().isoformat() + "Z",
+                        "eegId": data_manager.eeg_id,
+                        "numPhases": 1,
+                        "patientId": data_manager.patient_id,
+                        "phases": [{
+                            "location": updated_protocol["location"],
+                            "goalIntensity": updated_protocol.get("goalIntensity", 0),
+                            "pulseParameters": {"phase": "MONO" if updated_protocol["pulseMode"] == "Monophasic" else "BIPHASIC"},
+                            "frequency": updated_protocol["frequency"],
+                            "burstDuration": updated_protocol.get("burstDuration"),
+                            "burstFrequency": updated_protocol.get("burstFrequency"),
+                            "burstNumber": updated_protocol.get("burstNumber"),
+                            "interBurstInterval": updated_protocol.get("interBurstInterval"),
+                            "interTrainInterval": updated_protocol["interTrainInterval"],
+                            "phaseDuration": updated_protocol.get("phaseDuration", 0),
+                            "trainDuration": updated_protocol["trainDuration"],
+                            "trainNumber": updated_protocol["trainNumber"]
+                        }],
+                        "subtype": "CORTICAL",
+                        "totalDuration": updated_protocol.get("totalDuration", 0),
+                        "type": "TREATMENT"
+                    }
+
+                    # Call the save_protocol method
+                    result = asyncio.run(data_manager.save_protocol(protocol))
+                    st.success("Protocol updated successfully!")
+                except Exception as e:
+                    st.error(f"Failed to update protocol: {str(e)}")
+
+        with col2:
+            rejection_reason = st.text_input("Rejection Reason")
+            if st.form_submit_button("Reject Protocol"):
+                if rejection_reason:
+                    try:
+                        # Prepare the protocol object (same as in the save function)
+                        protocol = {
+                            # ... (same as in the save function)
+                        }
+
+                        # Call the reject_protocol method
+                        result = asyncio.run(data_manager.reject_protocol(rejection_reason, protocol))
+                        st.success("Protocol rejected successfully!")
+                    except Exception as e:
+                        st.error(f"Failed to reject protocol: {str(e)}")
+                else:
+                    st.warning("Please provide a rejection reason.")
+
+    # Display additional EEG information
+    st.subheader("Additional EEG Information")
+    st.markdown(f"**File Name:** {eeg_info_data['fileName']}")
+    st.markdown(f"**Is Import:** {'Yes' if eeg_info_data['isImport'] else 'No'}")
+    st.markdown(f"**Is Processed:** {'Yes' if eeg_info_data['isProcessed'] else 'No'}")
+    st.markdown(f"**Quality Status:** {eeg_info_data['qualityStatus'] or 'N/A'}")
+
+    # Display review information
+    st.subheader("Review Information")
+    st.markdown(f"**Review Deadline:** {analysis_meta['reviewDeadline']}")
+    st.markdown(f"**Reviewer ID:** {analysis_meta['reviewerStaffId']}")
+    st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
+    st.markdown(f"**Second Reviewer ID:** {analysis_meta['secondReviewerStaffId'] or 'N/A'}")
+    st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")
+
+
 
 
 # Initialize MeRTDataManager
@@ -310,98 +475,103 @@ data_manager = MeRTDataManager(
 # Load all data into session state
 asyncio.run(data_manager.load_all_data())
 
-# Start rendering the UI
-st.title("NeuroSynchrony Review")
+with tab1:
 
-col1, col2 = st.columns(2)
+    # Start rendering the UI
+    st.title("NeuroSynchrony Review")
 
-with col1:
-    patient_data = st.session_state.patient_data
-    clinic_info = st.session_state.clinic_info
+    col1, col2 = st.columns(2)
 
-    first_name = patient_data["profileInfo"]["name"]["first"]
-    last_name = patient_data["profileInfo"]["name"]["last"]
-    middle_name = patient_data["profileInfo"]["name"]["middle"]
-    username = patient_data["profileInfo"]["username"]
-    dob = patient_data["profileInfo"]["dateOfBirth"]
-    sex = patient_data["profileInfo"]["sex"].capitalize()
-    patient_id = patient_data["profileInfo"]["patientId"]
-    primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
-    is_having_seizures = "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
+    with col1:
+        patient_data = st.session_state.patient_data
+        clinic_info = st.session_state.clinic_info
 
-    if 'CORTICAL' in st.session_state.treatment_count:
-        treatment_count = st.session_state.treatment_count['CORTICAL']
-    else:
-        treatment_count = 0
+        first_name = patient_data["profileInfo"]["name"]["first"]
+        last_name = patient_data["profileInfo"]["name"]["last"]
+        middle_name = patient_data["profileInfo"]["name"]["middle"]
+        username = patient_data["profileInfo"]["username"]
+        dob = patient_data["profileInfo"]["dateOfBirth"]
+        sex = patient_data["profileInfo"]["sex"].capitalize()
+        patient_id = patient_data["profileInfo"]["patientId"]
+        primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
+        is_having_seizures = "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
 
-    # Display patient data
-    st.header(f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}")
-    st.markdown(f"Username: **{username}**")
-    st.markdown(f"Sex: **{sex}**")
-    st.markdown(f"DOB: **{dob}**")
-    st.markdown(f"Seizure History: **{is_having_seizures}**")
-    st.markdown(f"Treatment Session Count: **{treatment_count}**")
-    st.markdown(f"PatientId: **{patient_id}**")
-    st.markdown(f"Primary Chief Complaint: **{primary_complaint}**")
+        if 'CORTICAL' in st.session_state.treatment_count:
+            treatment_count = st.session_state.treatment_count['CORTICAL']
+        else:
+            treatment_count = 0
 
-    st.divider()
+        # Display patient data
+        st.header(f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}")
+        st.markdown(f"Username: **{username}**")
+        st.markdown(f"Sex: **{sex}**")
+        st.markdown(f"DOB: **{dob}**")
+        st.markdown(f"Seizure History: **{is_having_seizures}**")
+        st.markdown(f"Treatment Session Count: **{treatment_count}**")
+        st.markdown(f"PatientId: **{patient_id}**")
+        st.markdown(f"Primary Chief Complaint: **{primary_complaint}**")
 
-    # Clinic info
-    st.subheader(clinic_info["name"])
-    st.markdown(f"ClinicId: **{clinic_info['clinicId']}**")
-    st.markdown(f"Phone number: **{clinic_info['phone']}**")
-    st.markdown(f"City: **{clinic_info['address']['city']}**")
-    st.markdown(f"State: **{clinic_info['address']['state']}**")
-    st.markdown(f"Country: **{clinic_info['address']['country']}**")
+        st.divider()
 
-with col2:
-    eeg_history_df = st.session_state.eeg_history
+        # Clinic info
+        st.subheader(clinic_info["name"])
+        st.markdown(f"ClinicId: **{clinic_info['clinicId']}**")
+        st.markdown(f"Phone number: **{clinic_info['phone']}**")
+        st.markdown(f"City: **{clinic_info['address']['city']}**")
+        st.markdown(f"State: **{clinic_info['address']['state']}**")
+        st.markdown(f"Country: **{clinic_info['address']['country']}**")
 
-    with st.popover("Generate report"):
-        st.header("EEG History")
-        with st.form("data_editor_form", border=False):
-            edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-            regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
-            regenerate_neuroref_cz = st.form_submit_button("Generate Neuroref Cz Report")
+    with col2:
+        render_eeg_review(data_manager)
+        eeg_history_df = st.session_state.eeg_history
 
-        if regenerate_neuroref:
-            approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
-            asyncio.run(data_manager.update_neuroref_reports(approved_eegs['EEGId'].values.tolist()))
-            st.rerun()
+        with st.popover("Generate report"):
+            st.header("EEG History")
+            with st.form("data_editor_form", border=False):
+                edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
+                regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
+                regenerate_neuroref_cz = st.form_submit_button("Generate Neuroref Cz Report")
 
-        if regenerate_neuroref_cz:
-            approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
-            asyncio.run(data_manager.update_neuroref_cz_reports(approved_eegs['EEGId'].values.tolist()))
-            st.rerun()
+            if regenerate_neuroref:
+                approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
+                asyncio.run(data_manager.update_neuroref_reports(approved_eegs['EEGId'].values.tolist()))
+                st.rerun()
 
-
-    st.subheader("Reports")
-    if "downloaded_neuroref_report" in st.session_state:
-        for idx, report_data in enumerate(st.session_state.downloaded_neuroref_report):
-            report, report_id = report_data
-            with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}"):
-                pdf_viewer(report, height=700, key=f'linked_ears {idx}')
-                st.download_button(label = "Download Neuroref", data = report, file_name = f"Neurosynchrony-{report_id}.pdf", key=f"download-{report_id}")
-                if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
-                    delete_report(data_manager, report_id)
-                    st.success(f"Neuroref {report_id} successfully deleted!")
+            if regenerate_neuroref_cz:
+                approved_eegs = edited_eeg_history_df[edited_eeg_history_df['include?']==True]
+                asyncio.run(data_manager.update_neuroref_cz_reports(approved_eegs['EEGId'].values.tolist()))
+                st.rerun()
 
 
-    if "downloaded_neuroref_cz_report" in st.session_state:
-        for idx, report_data in enumerate(st.session_state.downloaded_neuroref_cz_report):
-            report, report_id = report_data
-            with st.expander(label=f"Neurosynchrony - Centroid {report_id}"):
-                pdf_viewer(report, height=700, key=f'centroid {idx}')
-                st.download_button(label = "Download Neuroref Cz", data = report, file_name = f"Neurosynchrony-Cz-{report_id}.pdf", key=f"download-cz-{report_id}")
-                if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
-                    delete_report(data_manager, report_id, ref='cz')
-                    st.success(f"Neuroref Cz {report_id} successfully deleted!")
+        st.subheader("Reports")
+        if "downloaded_neuroref_report" in st.session_state:
+            for idx, report_data in enumerate(st.session_state.downloaded_neuroref_report):
+                report, report_id = report_data
+                with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}"):
+                    pdf_viewer(report, height=700, key=f'linked_ears {idx}')
+                    st.download_button(label = "Download Neuroref", data = report, file_name = f"Neurosynchrony-{report_id}.pdf", key=f"download-{report_id}")
+                    if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
+                        delete_report(data_manager, report_id)
+                        st.success(f"Neuroref {report_id} successfully deleted!")
 
 
-    render_documents(data_manager)
+        if "downloaded_neuroref_cz_report" in st.session_state:
+            for idx, report_data in enumerate(st.session_state.downloaded_neuroref_cz_report):
+                report, report_id = report_data
+                with st.expander(label=f"Neurosynchrony - Centroid {report_id}"):
+                    pdf_viewer(report, height=700, key=f'centroid {idx}')
+                    st.download_button(label = "Download Neuroref Cz", data = report, file_name = f"Neurosynchrony-Cz-{report_id}.pdf", key=f"download-cz-{report_id}")
+                    if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
+                        delete_report(data_manager, report_id, ref='cz')
+                        st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-    render_artifact_distortions(data_manager)
 
-    render_abnormalities(data_manager)
+        render_documents(data_manager)
 
-    render_eeg_review(data_manager)
+        render_artifact_distortions(data_manager)
+
+        render_abnormalities(data_manager)
+
+
+with tab2:
+    render_protocol_page(data_manager)
