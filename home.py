@@ -21,8 +21,13 @@ if __name__ == "__main__":
 
         report_page = st.Page("sigma_dashboards/reports.py", title="Reports")
 
-        report_log_page = st.Page(
-            "sigma_dashboards/report-logs.py", title="Report Logs"
+        dods_dashboards_page = st.Page(
+            "sigma_dashboards/dods_dashboards.py", title="DoDS Dashboards"
+        )
+
+        admin_page = st.Page(
+            "sigma_dashboards/wavelit_admin.py", title="Teammate Availability"
+
         )
 
         eeg_page = st.Page(
@@ -53,7 +58,7 @@ if __name__ == "__main__":
 
         nav = st.navigation(
             {
-                "Sigma Dashboards": [report_page, protocol_page, report_log_page],
+                "Sigma Dashboards": [report_page, protocol_page, dods_dashboards_page, admin_page],
                 "Tools": [eeg_page, ecg_page, epoch_page],
                 "Research & Development": [ngboost_page],
                 "Surveys": [surveys_page],
