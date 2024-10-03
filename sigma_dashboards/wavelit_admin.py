@@ -78,12 +78,3 @@ if st.button("Update"):
         st.error("Error: Incomplete credentials provided")
     except Exception as e:
         st.error(f"Error: {e}")
-
-# Footer section
-version = get_version_from_pyproject()
-footer_html = f"""
-    <div style='position: fixed; bottom: 0; left: 0; padding: 10px;'>
-        <span>Version: {version}</span>
-    </div>
-"""
-st.markdown(footer_html, unsafe_allow_html=True)
