@@ -29,10 +29,33 @@ if "eeg" in query_params:
 else:
     show_eeg = False
 
+# These set of query parameters are relevant for Neurosynchrony report and protocol review.
+if "eegid" in query_params:
+    eegid = query_params["eegid"]
+else:
+    eegid = None
+
+if "pid" in query_params:
+    pid = query_params["pid"]
+else:
+    pid = None
+
+if "clinicid" in query_params:
+    clinicid = query_params["clinicid"]
+else:
+    clinicid = None
+
+if eegid and clinicid and pid:
+    st.session_state['eegid'] = eegid
+    st.session_state['pid'] = pid
+    st.session_state['clinicid'] = clinicid
+    st.switch_page('streamlit_apps/neurosynchrony.py')
+
+
 
 if not eeg_id:
     # Title
-    st.title("EEG Reports Dashboard")
+    st.title("Queue")
 
     url = "https://app.sigmacomputing.com/embed/1-4j797MKZT5T7Xf8Wf5g8D5"
 

@@ -19,6 +19,22 @@ if "eegId" in query_params:
 else:
     eeg_id = None
 
+if "eegid" in query_params:
+    eegid = query_params["eegid"]
+else:
+    eegid = None
+
+if "pid" in query_params:
+    pid = query_params["pid"]
+else:
+    pid = None
+
+if "clinicid" in query_params:
+    clinicid = query_params["clinicid"]
+else:
+    clinicid = None
+
+
 if not eeg_id:
     # Title
     st.title("Protocol Review Dashboard")

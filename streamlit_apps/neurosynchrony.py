@@ -1,10 +1,11 @@
 import asyncio
-import pytz
 import pandas as pd
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
 from services.mert2_data_management.mert_data_manager import MeRTDataManager
 from enum import Enum
+import streamlit.components.v1 as components
+from access_control import access_eeg_data
 
 import logging
 from datetime import datetime
@@ -510,13 +511,14 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         st.divider()
 
 
+if ('eegid' in st.session_state) and ('pid' in st.session_state) and ('clinicid' in st.session_state):
+    # Initialize MeRTDataManager
+    data_manager = MeRTDataManager(
+        patient_id = st.session_state['pid'],
+        eeg_id = st.session_state['eegid'],
+        clinic_id = st.session_state['clinicid']
+    )
 
-# Initialize MeRTDataManager
-data_manager = MeRTDataManager(
-    patient_id="PAT-fcd04aae-29ce-11ef-844f-0a7b03ea8ee1",
-    eeg_id="EEG-396826dd-79f7-46da-8ad6-aa4c3ba1ed57",
-    clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
-)
 
 # Initialize MeRTDataManager
 # data_manager = MeRTDataManager(
@@ -636,3 +638,6 @@ with tab1:
 
 with tab2:
     render_protocol_page(data_manager)
+    st.title("Protocol Queue")
+    html = f'<iframe src="https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5" frameborder="0" width="100%" height="900px"></iframe>'
+    components.html(html, height=1000, scrolling=False)
