@@ -103,7 +103,6 @@ class MeRTApi:
                 json=data,
                 timeout=self.config.timeout,
             ) as response:
-                print(response)
                 response.raise_for_status()
                 if "text/html" in response.headers.get("Content-Type", ""):
                     return await self._parse_html_response(response)
