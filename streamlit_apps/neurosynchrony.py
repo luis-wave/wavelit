@@ -1,4 +1,5 @@
 import asyncio
+import pytz
 import pandas as pd
 import streamlit as st
 from streamlit_pdf_viewer import pdf_viewer
@@ -463,12 +464,52 @@ def render_protocol_page(data_manager):
 
 
 
+def render_notes(eeg_scientist_patient_notes):
+    st.subheader("EEG Scientist Patient Notes")
+
+    if not eeg_scientist_patient_notes:
+        st.write("No notes available.")
+        return
+
+    # Sort notes by date (newest first)
+    sorted_notes = sorted(eeg_scientist_patient_notes.items(), key=lambda x: x[0], reverse=True)
+
+    for date, note in sorted_notes:
+        st.markdown(f"### {note['subject']} - {note['recordingDate']}")
+        st.write(f"**Date Edited:** {note['dateEdited']}")
+        st.write(f"**Recording Date:** {note['recordingDate']}")
+        st.write(f"**Subject:** {note['subject']}")
+        st.write("**Content:**")
+
+        # Prepare the content for the text area
+        content = ""
+        content_lines = note['content'].split('\n')
+        for line in content_lines:
+            if ':' in line:
+                key, value = line.split(':', 1)
+                content += f"{key.strip()}: {value.strip()}\n"
+            else:
+                content += f"{line}\n"
+
+        # Display content in a text area
+        st.text_area("", value=content, height=150, key=f"note_{date}")
+
+        st.divider()
+
+
+
+# # Initialize MeRTDataManager
+# data_manager = MeRTDataManager(
+#     patient_id="PAT-fcd04aae-29ce-11ef-844f-0a7b03ea8ee1",
+#     eeg_id="EEG-396826dd-79f7-46da-8ad6-aa4c3ba1ed57",
+#     clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
+# )
 
 # Initialize MeRTDataManager
 data_manager = MeRTDataManager(
-    patient_id="PAT-fcd04aae-29ce-11ef-844f-0a7b03ea8ee1",
-    eeg_id="EEG-396826dd-79f7-46da-8ad6-aa4c3ba1ed57",
-    clinic_id="c3e85638-86c9-11eb-84b6-0aea104587df"
+    patient_id="PAT-30b930ec-54fe-11ef-ad41-061437b3c891",
+    eeg_id="EEG-a256f17a-3845-46d2-ad6f-d70f3eedfc98",
+    clinic_id="e1dcbb02-1d48-11ef-ba1d-0288bfc01eb5"
 )
 
 
@@ -520,6 +561,11 @@ with tab1:
         st.markdown(f"City: **{clinic_info['address']['city']}**")
         st.markdown(f"State: **{clinic_info['address']['state']}**")
         st.markdown(f"Country: **{clinic_info['address']['country']}**")
+
+    if 'eegScientistPatientNotes' not in patient_data:
+        st.write("No notes available.")
+    else:
+        render_notes(patient_data['eegScientistPatientNotes'])
 
     with col2:
         render_eeg_review(data_manager)
