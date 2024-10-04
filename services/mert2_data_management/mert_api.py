@@ -53,7 +53,6 @@ class Config(BaseSettings):
 
 
 def load_settings():
-    dotenv.load_dotenv("services/mert2_data_management/.env")
     return Config()
 
 
@@ -77,6 +76,10 @@ class MeRTApi:
             f"{self.config.cybermed.project_prefix}{self.config.cybermed.scientist.username}",
             self.config.cybermed.scientist.password,
         )
+
+        if not self.config.cybermed.url:
+            raise ValueError("The base URL (self.config.cybermed.url) is not set.")
+
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url, auth=auth, timeout=self.config.timeout
