@@ -7,6 +7,9 @@ from enum import Enum
 import streamlit.components.v1 as components
 from access_control import access_eeg_data
 
+from streamlit_dashboards import (ecg_visualization_dashboard,
+                                  eeg_visualization_dashboard)
+
 import logging
 from datetime import datetime
 
@@ -15,9 +18,9 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-tabs = ["Reports", "Protocols"]
+tabs = ["Reports", "Protocols", "EEG Review"]
 
-tab1, tab2 = st.tabs(tabs)
+tab1, tab2, tab3 = st.tabs(tabs)
 
 class EEGReviewState(Enum):
     PENDING = 0
@@ -520,14 +523,6 @@ if ('eegid' in st.session_state) and ('pid' in st.session_state) and ('clinicid'
     )
 
 
-# Initialize MeRTDataManager
-# data_manager = MeRTDataManager(
-#     patient_id="PAT-30b930ec-54fe-11ef-ad41-061437b3c891",
-#     eeg_id="EEG-a256f17a-3845-46d2-ad6f-d70f3eedfc98",
-#     clinic_id="e1dcbb02-1d48-11ef-ba1d-0288bfc01eb5"
-# )
-
-
 # Load all data into session state
 asyncio.run(data_manager.load_all_data())
 
@@ -641,3 +636,7 @@ with tab2:
     st.title("Protocol Queue")
     html = f'<iframe src="https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5" frameborder="0" width="100%" height="900px"></iframe>'
     components.html(html, height=1000, scrolling=False)
+
+with tab3:
+    asyncio.run(access_eeg_data(st.session_state['eegid']))
+    eeg_visualization_dashboard()

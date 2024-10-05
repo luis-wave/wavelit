@@ -90,7 +90,7 @@ def eeg_visualization_dashboard():
             if aea is not None:
                 if not aea[selected_reference].empty:
                     st.header("Edit AEA Predictions")
-                    with st.form("data_editor_form", border=False):
+                    with st.form("aea_data_editor_form", border=False):
                         editable_df = st.session_state.aea[selected_reference].copy()
                         editable_df["reviewer"] = st.session_state["user"]
                         edited_df = st.data_editor(
