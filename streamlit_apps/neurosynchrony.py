@@ -18,7 +18,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
-tabs = ["Reports", "Protocols", "EEG Review"]
+tabs = ["Reports", "Protocols", "EEG"]
 
 tab1, tab2, tab3 = st.tabs(tabs)
 
