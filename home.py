@@ -19,14 +19,24 @@ if __name__ == "__main__":
 
         protocol_page = st.Page("sigma_dashboards/protocols.py", title="Protocols")
 
-        report_page = st.Page("sigma_dashboards/reports.py", title="Reports")
+        report_page = st.Page("sigma_dashboards/reports.py", title="Queue")
 
-        report_log_page = st.Page(
-            "sigma_dashboards/report-logs.py", title="Report Logs"
+        dods_dashboards_page = st.Page(
+            "sigma_dashboards/dods_dashboards.py", title="DoDS Dashboards"
+        )
+
+        admin_page = st.Page(
+            "sigma_dashboards/wavelit_admin.py", title="Teammate Availability"
+
+        )
+
+        admin_page = st.Page(
+            "sigma_dashboards/wavelit_admin.py", title="Wavelit Admin"
+
         )
 
         eeg_page = st.Page(
-            "streamlit_apps/🧠 eeg.py", title="EEG", icon="🧠", url_path="/eeg"
+            "streamlit_apps/eeg.py", title="EEG", icon="🧠", url_path="/eeg"
         )
 
         ecg_page = st.Page(
@@ -51,12 +61,19 @@ if __name__ == "__main__":
             url_path="/typeform",
         )
 
+        neurosynchrony_page = st.Page(
+            "streamlit_apps/neurosynchrony.py",
+            title="MeRT2",
+            icon="📨",
+            url_path="/mert_reports",
+        )
+
+
         nav = st.navigation(
             {
-                "Sigma Dashboards": [report_page, protocol_page, report_log_page],
-                "Tools": [eeg_page, ecg_page, epoch_page],
+                "Sigma Dashboards": [report_page, protocol_page, dods_dashboards_page, admin_page],
+                "Tools": [eeg_page, ecg_page,  neurosynchrony_page],
                 "Research & Development": [ngboost_page],
-                "Surveys": [surveys_page],
             }
         )
 
