@@ -14,7 +14,7 @@ Seamless integration with our data platform. These dashboards are specifically d
 
 ![sigma](images/sigma.png)
 
-
+ 
 ### Automatic EEG Viewer (AEV)
 EEG visualization tool for highlighting and annotating abnormal EEG activity (seizure, artifact). Enables feedback for Wave's set of neural networks and machine learning models.
 
