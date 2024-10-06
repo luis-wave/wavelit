@@ -18,6 +18,20 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+mert2_user = {
+    "STF-e465eb68-ba87-11eb-8611-06b700432873": "Luis Camargo",
+    "STF-6d38ac86-ba89-11eb-8b42-029e69ddbc8b": "Alex Ring",
+    "STF-ac677ad4-a595-11ec-82d9-02fd9bf033d7": "Stephanie Llaga",
+    "STF-e8b6c0a2-27f5-11ed-b837-02b0e344b06f": "Patrick Polk",
+    "STF-934d6632-a17e-11ec-b364-0aa26dca46cb": "Joseph Chong",
+    "STF-031845e2-b505-11ec-8b5d-0a86265d54df": "Nicole Yu",
+    "STF-d844feb2-241c-11ef-8e46-02fb253d52c7": "Binh Le",
+    "STF-7a0aa2d4-241c-11ef-a5ac-06026d518b71": "Rey Mendoza",
+    "STF-0710bc38-2e40-11ed-a807-027d8017651d": "Jay Kumar",
+    "STF-472808de-ba89-11eb-967d-029e69ddbc8b": "Jijeong Kim"
+}
+
+
 tabs = ["Reports", "Protocols", "EEG"]
 
 tab1, tab2, tab3 = st.tabs(tabs)
@@ -53,6 +67,7 @@ def get_next_state(current_state: EEGReviewState) -> EEGReviewState:
     except ValueError:
         return current_state
 
+@st.fragment
 def render_eeg_review(data_manager):
     st.markdown("## EEG Review")
 
@@ -65,7 +80,7 @@ def render_eeg_review(data_manager):
     if current_state == EEGReviewState.REJECTED:
         st.markdown("### Rejected")
         st.markdown(f"**Review Date:** {analysis_meta['rejectionDatetime']}")
-        st.markdown(f"**Reviewer ID:** {analysis_meta['rejectionReviewerStaffId']}")
+        st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['rejectionReviewerStaffId']]}")
         st.markdown("**Rejection Reason(s):**")
         for i in analysis_meta["rejectionReason"]:
             st.write(REJECTION_REASONS[i])
@@ -74,12 +89,12 @@ def render_eeg_review(data_manager):
         with col1:
             st.markdown("### First Review")
             st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Reviewer ID:** {analysis_meta['reviewerStaffId'] or 'N/A'}")
+            st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['reviewerStaffId']] or 'N/A'}")
 
         with col2:
             st.markdown("### Second Review")
             st.markdown(f"**Review Date:** {analysis_meta['secondReviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Reviewer ID:** {analysis_meta['secondReviewerStaffId'] or 'N/A'}")
+            st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['secondReviewerStaffId']]or 'N/A'}")
 
     st.markdown(f"**Current State:** {current_state.name}")
 
@@ -147,6 +162,7 @@ def translate_artifact_name(artifact_name):
     artifact_map = get_artifact_map()
     return artifact_map.get(artifact_name, artifact_name.capitalize())
 
+@st.fragment
 def render_artifact_distortions(data_manager):
     st.subheader("Artifact Distortions")
 
@@ -192,7 +208,7 @@ def render_artifact_distortions(data_manager):
                 st.success("Artifacts saved successfully!")
                 st.rerun()
 
-
+@st.fragment
 def render_abnormalities(data_manager):
     st.subheader("Abnormalities")
 
@@ -250,7 +266,7 @@ def render_abnormalities(data_manager):
                 st.success("Irregularities added successfully!")
                 st.rerun()
 
-
+@st.fragment
 def render_documents(data_manager):
     st.subheader("Documents")
 
@@ -308,6 +324,7 @@ def delete_report(data_manager, report_id, ref='default'):
         st.success(f"Neuroref Cz {report_id} successfully deleted!")
         st.rerun()
 
+@st.fragment
 def render_protocol_page(data_manager):
     st.title("EEG Protocol")
 
@@ -461,13 +478,13 @@ def render_protocol_page(data_manager):
     # Display review information
     st.subheader("Review Information")
     st.markdown(f"**Review Deadline:** {analysis_meta['reviewDeadline']}")
-    st.markdown(f"**Reviewer ID:** {analysis_meta['reviewerStaffId']}")
+    st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['reviewerStaffId']]}")
     st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
-    st.markdown(f"**Second Reviewer ID:** {analysis_meta['secondReviewerStaffId'] or 'N/A'}")
+    st.markdown(f"**Second Reviewer ID:** {mert2_user[analysis_meta['secondReviewerStaffId']] or 'N/A'}")
     st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")
 
 
-
+@st.fragment
 def render_notes(data_manager, eeg_scientist_patient_notes):
     st.subheader("EEG Scientist Patient Notes")
 
