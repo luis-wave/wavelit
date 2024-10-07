@@ -80,7 +80,7 @@ def render_eeg_review(data_manager):
     if current_state == EEGReviewState.REJECTED:
         st.markdown("### Rejected")
         st.markdown(f"**Review Date:** {analysis_meta['rejectionDatetime']}")
-        st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['rejectionReviewerStaffId']]}")
+        st.markdown(f"**Rejected by:** {mert2_user[analysis_meta['rejectionReviewerStaffId']]}")
         st.markdown("**Rejection Reason(s):**")
         for i in analysis_meta["rejectionReason"]:
             st.write(REJECTION_REASONS[i])
@@ -89,12 +89,12 @@ def render_eeg_review(data_manager):
         with col1:
             st.markdown("### First Review")
             st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['reviewerStaffId']] or 'N/A'}")
+            st.markdown(f"**Approved By:** {mert2_user[analysis_meta['reviewerStaffId']] or 'N/A'}")
 
         with col2:
             st.markdown("### Second Review")
             st.markdown(f"**Review Date:** {analysis_meta['secondReviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['secondReviewerStaffId']]or 'N/A'}")
+            st.markdown(f"**Approved By:** {mert2_user[analysis_meta['secondReviewerStaffId']]or 'N/A'}")
 
     st.markdown(f"**Current State:** {current_state.name}")
 
@@ -478,9 +478,9 @@ def render_protocol_page(data_manager):
     # Display review information
     st.subheader("Review Information")
     st.markdown(f"**Review Deadline:** {analysis_meta['reviewDeadline']}")
-    st.markdown(f"**Reviewer ID:** {mert2_user[analysis_meta['reviewerStaffId']]}")
+    st.markdown(f"**Reviewer:** {mert2_user[analysis_meta['reviewerStaffId']]}")
     st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
-    st.markdown(f"**Second Reviewer ID:** {mert2_user[analysis_meta['secondReviewerStaffId']] or 'N/A'}")
+    st.markdown(f"**Second Reviewer:** {mert2_user[analysis_meta['secondReviewerStaffId']] or 'N/A'}")
     st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")
 
 
