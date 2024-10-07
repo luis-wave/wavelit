@@ -77,6 +77,16 @@ def render_eeg_review(data_manager):
 
     current_state = EEGReviewState[analysis_meta['reviewState']] if analysis_meta['reviewState'] else EEGReviewState.PENDING
 
+    if analysis_meta and 'reviewerStaffId' in analysis_meta:
+        first_reviewer = mert2_user.get(analysis_meta['reviewerStaffId'], 'N/A')
+    else:
+        first_reviewer = 'N/A'
+
+    if analysis_meta and 'secondReviewerStaffId' in analysis_meta:
+        second_reviewer = mert2_user.get(analysis_meta['secondReviewerStaffId'], 'N/A')
+    else:
+        second_reviewer = 'N/A'
+
     if current_state == EEGReviewState.REJECTED:
         st.markdown("### Rejected")
         st.markdown(f"**Review Date:** {analysis_meta['rejectionDatetime']}")
@@ -89,12 +99,12 @@ def render_eeg_review(data_manager):
         with col1:
             st.markdown("### First Review")
             st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Approved By:** {mert2_user[analysis_meta['reviewerStaffId']] or 'N/A'}")
+            st.markdown(f"**Approved By:** {first_reviewer}")
 
         with col2:
             st.markdown("### Second Review")
             st.markdown(f"**Review Date:** {analysis_meta['secondReviewDatetime'] or 'Not reviewed yet'}")
-            st.markdown(f"**Approved By:** {mert2_user[analysis_meta['secondReviewerStaffId']]or 'N/A'}")
+            st.markdown(f"**Approved By:** {second_reviewer}")
 
     st.markdown(f"**Current State:** {current_state.name}")
 
