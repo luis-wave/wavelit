@@ -347,6 +347,16 @@ def render_protocol_page(data_manager):
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
+    if analysis_meta and 'reviewerStaffId' in analysis_meta:
+        first_reviewer = mert2_user.get(analysis_meta['reviewerStaffId'], 'N/A')
+    else:
+        first_reviewer = 'N/A'
+
+    if analysis_meta and 'secondReviewerStaffId' in analysis_meta:
+        second_reviewer = mert2_user.get(analysis_meta['secondReviewerStaffId'], 'N/A')
+    else:
+        second_reviewer = 'N/A'
+
     # Display metadata
     st.subheader("Metadata")
     col1, col2 = st.columns(2)
@@ -488,9 +498,9 @@ def render_protocol_page(data_manager):
     # Display review information
     st.subheader("Review Information")
     st.markdown(f"**Review Deadline:** {analysis_meta['reviewDeadline']}")
-    st.markdown(f"**Reviewer:** {mert2_user[analysis_meta['reviewerStaffId']]}")
+    st.markdown(f"**Reviewer:** {first_reviewer}")
     st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
-    st.markdown(f"**Second Reviewer:** {mert2_user[analysis_meta['secondReviewerStaffId']] or 'N/A'}")
+    st.markdown(f"**Second Reviewer:** {second_reviewer}")
     st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")
 
 
