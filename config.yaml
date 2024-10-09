@@ -84,14 +84,14 @@ credentials:
       email: uma@waveneuro.com
       name: Uma Ghokale
       password: $2b$12$mjF5B3Y7STWn9im.CFYhI.4aGewjVvOAwrY0yToMgC6kQd0Yze85O
-      id: STF-e465eb68-ba87-11eb-8611-06b700432873
-      m2_username: lcamargo_ea
+      id: STF-143c1a12-8657-11ef-8e6a-020ab1ebdc67
+      m2_username: uatscientist3
     uma2:
       email: uma@waveneuro.com
       name: Uma2 Ghokale
       password: $2b$12$tIuCKsYP2/KBd1F..e/NKOODF8CsiODCSPQ4tSHjp5.2rnxW9NjV.
-      id: STF-472808de-ba89-11eb-967d-029e69ddbc8b
-      m2_username: jkim_ea
+      id: STF-8b4db98a-8657-11ef-9d8b-020ab1ebdc67
+      m2_username: uatscientist4
 preauthorized:
   emails:
   - sneiley@waveneuro.com
