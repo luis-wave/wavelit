@@ -28,7 +28,9 @@ mert2_user = {
     "STF-d844feb2-241c-11ef-8e46-02fb253d52c7": "Binh Le",
     "STF-7a0aa2d4-241c-11ef-a5ac-06026d518b71": "Rey Mendoza",
     "STF-0710bc38-2e40-11ed-a807-027d8017651d": "Jay Kumar",
-    "STF-472808de-ba89-11eb-967d-029e69ddbc8b": "Jijeong Kim"
+    "STF-472808de-ba89-11eb-967d-029e69ddbc8b": "Jijeong Kim",
+    "STF-143c1a12-8657-11ef-8e6a-020ab1ebdc67": "Uma Gokhale",
+    "STF-8b4db98a-8657-11ef-9d8b-020ab1ebdc67": "Uma Gokhale2"
 }
 
 
