@@ -1,17 +1,16 @@
-import streamlit as st
-
-import pandas as pd
 import numpy as np
+import pandas as pd
+import streamlit as st
 from scipy.signal import find_peaks
 
 
 @st.cache_data
 def scale_dataframe(df):
     """
-    Scale a dataframe with EEG (+EKG) channels so the default "sensitivity" for 
+    Scale a dataframe with EEG (+EKG) channels so the default "sensitivity" for
     viewing means readable activity. The scaling expects a channel offset of 1.
 
-    Parameters: 
+    Parameters:
     - df: pandas.core.frame.DataFrame
         Containing channel names with their channel data.
 
@@ -19,17 +18,23 @@ def scale_dataframe(df):
     - scaled_df: pandas.core.frame.DataFrame
         The same df just scaled to be readable for an offest between channels of 1.
     """
-    
+
     # separate the 'Time' column
-    try: times_col = df['time']
-    except: pass
-    try: timestamps_col = df['timestamp']
-    except: pass
+    try:
+        times_col = df["time"]
+    except:
+        pass
+    try:
+        timestamps_col = df["timestamp"]
+    except:
+        pass
 
     # identify ECG and EEG columns
-    try: 
-        ecg_columns = df.filter(like='ECG').columns
-        eeg_columns = df.columns.difference(ecg_columns).difference(['time', 'timestamp'])
+    try:
+        ecg_columns = df.filter(like="ECG").columns
+        eeg_columns = df.columns.difference(ecg_columns).difference(
+            ["time", "timestamp"]
+        )
     except:
         eeg_columns = df.columns
 
@@ -77,23 +82,29 @@ def scale_dataframe(df):
     bound = (median_max + abs(median_min)) / 2
     scaled_eeg = (df_eeg / bound) * 0.25
 
-    try: 
+    try:
         # scale ECG column(s) separately
         median_max, median_min, mean_max, mean_min = get_min_max_stats(ecg_columns, df)
 
         df_ecg = df[ecg_columns]
-        
+
         # new norm: scale to -1, 1 and then adjust it to a percentage of
         bound = (median_max + abs(median_min)) / 2
         scaled_ecg = (df_ecg / bound) * 0.05
 
         # reattach the 'time' column and combine scaled columns
-        try: scaled_df = pd.concat([times_col, timestamps_col, scaled_ecg, scaled_eeg], axis=1)
-        except: scaled_df = pd.concat([times_col, scaled_ecg, scaled_eeg], axis=1)
+        try:
+            scaled_df = pd.concat(
+                [times_col, timestamps_col, scaled_ecg, scaled_eeg], axis=1
+            )
+        except:
+            scaled_df = pd.concat([times_col, scaled_ecg, scaled_eeg], axis=1)
 
     except:
         # reattach the 'time' column and combine scaled columns
-        try: scaled_df = pd.concat([times_col, timestamps_col, scaled_eeg], axis=1)
-        except: scaled_df = pd.concat([times_col, scaled_eeg], axis=1)
+        try:
+            scaled_df = pd.concat([times_col, timestamps_col, scaled_eeg], axis=1)
+        except:
+            scaled_df = pd.concat([times_col, scaled_eeg], axis=1)
 
     return scaled_df

@@ -27,13 +27,9 @@ if __name__ == "__main__":
 
         admin_page = st.Page(
             "sigma_dashboards/wavelit_admin.py", title="Teammate Availability"
-
         )
 
-        admin_page = st.Page(
-            "sigma_dashboards/wavelit_admin.py", title="Wavelit Admin"
-
-        )
+        admin_page = st.Page("sigma_dashboards/wavelit_admin.py", title="Wavelit Admin")
 
         eeg_page = st.Page(
             "streamlit_apps/eeg.py", title="EEG", icon="🧠", url_path="/eeg"
@@ -68,11 +64,15 @@ if __name__ == "__main__":
             url_path="/mert_reports",
         )
 
-
         nav = st.navigation(
             {
-                "Sigma Dashboards": [report_page, protocol_page, dods_dashboards_page, admin_page],
-                "Tools": [eeg_page, ecg_page,  neurosynchrony_page],
+                "Sigma Dashboards": [
+                    report_page,
+                    protocol_page,
+                    dods_dashboards_page,
+                    admin_page,
+                ],
+                "Tools": [eeg_page, ecg_page, neurosynchrony_page],
                 "Research & Development": [ngboost_page],
             }
         )

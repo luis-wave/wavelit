@@ -6,10 +6,9 @@ from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     SeizureDxPipeline
 
+import dsp.graph_preprocessing as waev
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
-
-import dsp.graph_preprocessing as waev
 
 
 def eeg_visualization_dashboard():

@@ -46,11 +46,10 @@ else:
     clinicid = None
 
 if eegid and clinicid and pid:
-    st.session_state['eegid'] = eegid
-    st.session_state['pid'] = pid
-    st.session_state['clinicid'] = clinicid
-    st.switch_page('streamlit_apps/neurosynchrony.py')
-
+    st.session_state["eegid"] = eegid
+    st.session_state["pid"] = pid
+    st.session_state["clinicid"] = clinicid
+    st.switch_page("streamlit_apps/neurosynchrony.py")
 
 
 if not eeg_id:

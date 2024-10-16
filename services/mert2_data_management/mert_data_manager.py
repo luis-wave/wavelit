@@ -1,14 +1,19 @@
 import asyncio
-import streamlit as st
-from services.mert2_data_management.mert_api import MeRTApi
-import pandas as pd
 import logging
-import aiohttp
-from typing import Dict, Any, List
+from typing import Any, Dict, List
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+import aiohttp
+import pandas as pd
+import streamlit as st
+
+from services.mert2_data_management.mert_api import MeRTApi
+
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 logger = logging.getLogger(__name__)
+
 
 class MeRTDataManager:
     def __init__(self, patient_id, eeg_id, clinic_id):
@@ -29,7 +34,7 @@ class MeRTDataManager:
             self.load_all_eeg_info(),
             self.load_clinic_info(),
             self.load_treatment_count(),
-            self.load_eeg_reports()
+            self.load_eeg_reports(),
         )
         await self.load_neuroref_reports()
 
@@ -39,21 +44,27 @@ class MeRTDataManager:
     async def load_user_profile(self):
         st.session_state.user_profile = await self.api.get_user_profile(
             user_id="STF-e465eb68-ba87-11eb-8611-06b700432873",
-            user_group_id="a9cf82fc-7c4d-11eb-b3ca-0a508de74e57"
+            user_group_id="a9cf82fc-7c4d-11eb-b3ca-0a508de74e57",
         )
 
     async def load_patient_data(self):
         st.session_state.patient_data = await self.api.fetch_patient_by_id()
 
     async def load_all_eeg_info(self):
-        st.session_state.all_eeg_info = await self.api.fetch_all_eeg_info_by_patient_id()
-        st.session_state.eeg_history = self.parse_eeg_data_extended(st.session_state.all_eeg_info)
+        st.session_state.all_eeg_info = (
+            await self.api.fetch_all_eeg_info_by_patient_id()
+        )
+        st.session_state.eeg_history = self.parse_eeg_data_extended(
+            st.session_state.all_eeg_info
+        )
 
     async def load_clinic_info(self):
         st.session_state.clinic_info = await self.api.fetch_clinic_info()
 
     async def load_treatment_count(self):
-        st.session_state.treatment_count = await self.api.get_completed_treatment_count_by_patient_id()
+        st.session_state.treatment_count = (
+            await self.api.get_completed_treatment_count_by_patient_id()
+        )
 
     async def load_eeg_reports(self):
         st.session_state.eeg_reports = await self.api.get_eeg_report()
@@ -65,17 +76,18 @@ class MeRTDataManager:
             logger.error(f"Failed to fetch EEG info: {str(e)}")
             raise
 
-
-    async def update_eeg_review(self, is_first_reviewer: bool, state: str, rejection_reason: List[str] = None) -> Dict[str, Any]:
+    async def update_eeg_review(
+        self, is_first_reviewer: bool, state: str, rejection_reason: List[str] = None
+    ) -> Dict[str, Any]:
         try:
             payload = {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
-                "staffId": st.session_state['id'],
+                "staffId": st.session_state["id"],
                 "isProtocol": False,
                 "isFirstReviewer": is_first_reviewer,
-                "state": state
+                "state": state,
             }
             if state == "REJECTED" and rejection_reason:
                 payload["rejectionReason"] = rejection_reason
@@ -86,11 +98,15 @@ class MeRTDataManager:
             raise
 
     async def load_neuroref_reports(self):
-        if 'eeg_reports' not in st.session_state:
+        if "eeg_reports" not in st.session_state:
             await self.load_eeg_reports()
 
-        neuroref_linked_ear_report_ids = list(st.session_state.eeg_reports.get('neuroRefReports', {}).keys())
-        neuroref_centroid_report_ids = list(st.session_state.eeg_reports.get('neurorefcz', {}).keys())
+        neuroref_linked_ear_report_ids = list(
+            st.session_state.eeg_reports.get("neuroRefReports", {}).keys()
+        )
+        neuroref_centroid_report_ids = list(
+            st.session_state.eeg_reports.get("neurorefcz", {}).keys()
+        )
 
         st.session_state.downloaded_neuroref_report = await self.download_reports(
             neuroref_linked_ear_report_ids, self.api.download_neuroref_report
@@ -105,17 +121,24 @@ class MeRTDataManager:
         return list(zip(responses, report_ids))
 
     async def update_neuroref_reports(self, eeg_ids):
-        st.session_state.neuroref_report = await self.api.get_neuroref_report(eeg_ids=eeg_ids)
-        st.session_state.downloaded_neuroref_report = await self.api.download_neuroref_report(
-            report_id=st.session_state.neuroref_report["reportId"]
+        st.session_state.neuroref_report = await self.api.get_neuroref_report(
+            eeg_ids=eeg_ids
+        )
+        st.session_state.downloaded_neuroref_report = (
+            await self.api.download_neuroref_report(
+                report_id=st.session_state.neuroref_report["reportId"]
+            )
         )
 
     async def update_neuroref_cz_reports(self, eeg_ids):
-        st.session_state.neuroref_cz_report = await self.api.get_neuroref_cz_report(eeg_ids=eeg_ids)
-        st.session_state.downloaded_neuroref_cz_report = await self.api.download_neuroref_cz_report(
-            report_id=st.session_state.neuroref_cz_report["reportId"]
+        st.session_state.neuroref_cz_report = await self.api.get_neuroref_cz_report(
+            eeg_ids=eeg_ids
         )
-
+        st.session_state.downloaded_neuroref_cz_report = (
+            await self.api.download_neuroref_cz_report(
+                report_id=st.session_state.neuroref_cz_report["reportId"]
+            )
+        )
 
     async def delete_neuroref_report(self, report_id):
         await self.api.delete_neuroref_report(report_id=report_id)
@@ -132,9 +155,12 @@ class MeRTDataManager:
             logger.info(f"Artifact {artifact_id} deleted successfully")
 
             # Remove the artifact from the local state
-            if 'eeg_reports' in st.session_state and 'artifacts' in st.session_state.eeg_reports:
-                if artifact_id in st.session_state.eeg_reports['artifacts']:
-                    del st.session_state.eeg_reports['artifacts'][artifact_id]
+            if (
+                "eeg_reports" in st.session_state
+                and "artifacts" in st.session_state.eeg_reports
+            ):
+                if artifact_id in st.session_state.eeg_reports["artifacts"]:
+                    del st.session_state.eeg_reports["artifacts"][artifact_id]
 
         except Exception as e:
             logger.error(f"Failed to delete artifact {artifact_id}: {str(e)}")
@@ -161,15 +187,16 @@ class MeRTDataManager:
     async def delete_abnormality(self, abnormality_id):
         try:
             # Call the API to delete the abnormality
-            await self.api.delete_abnormality(
-                abnormality_id=abnormality_id
-            )
+            await self.api.delete_abnormality(abnormality_id=abnormality_id)
             logger.info(f"Abnormality {abnormality_id} deleted successfully")
 
             # Remove the abnormality from the local state
-            if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
-                if abnormality_id in st.session_state.eeg_reports['abnormalities']:
-                    del st.session_state.eeg_reports['abnormalities'][abnormality_id]
+            if (
+                "eeg_reports" in st.session_state
+                and "abnormalities" in st.session_state.eeg_reports
+            ):
+                if abnormality_id in st.session_state.eeg_reports["abnormalities"]:
+                    del st.session_state.eeg_reports["abnormalities"][abnormality_id]
 
             # Optionally, you can refresh the entire EEG report here if needed
             # await self.load_eeg_reports()
@@ -180,31 +207,33 @@ class MeRTDataManager:
     async def approve_abnormality(self, abnormality_id):
         try:
             # Call the API to approve the abnormality
-            await self.api.approve_abnormality(
-                abnormality_id=abnormality_id
-            )
+            await self.api.approve_abnormality(abnormality_id=abnormality_id)
             logger.info(f"Abnormality {abnormality_id} approved successfully")
 
             # Update the abnormality status in the local state
-            if 'eeg_reports' in st.session_state and 'abnormalities' in st.session_state.eeg_reports:
-                if abnormality_id in st.session_state.eeg_reports['abnormalities']:
-                    st.session_state.eeg_reports['abnormalities'][abnormality_id]['isApproved'] = True
+            if (
+                "eeg_reports" in st.session_state
+                and "abnormalities" in st.session_state.eeg_reports
+            ):
+                if abnormality_id in st.session_state.eeg_reports["abnormalities"]:
+                    st.session_state.eeg_reports["abnormalities"][abnormality_id][
+                        "isApproved"
+                    ] = True
         except Exception as e:
             logger.error(f"Failed to approve abnormality {abnormality_id}: {str(e)}")
             raise
 
     async def save_document(self, uploaded_file):
         try:
-            document_id = await self.api.save_document(
-                uploaded_file
-            )
+            document_id = await self.api.save_document(uploaded_file)
             logger.info(f"Document saved successfully")
             await self.load_eeg_reports()  # Refresh the EEG reports
             return document_id
         except Exception as e:
-            logger.error(f"Exception while saving document {uploaded_file.name}: {str(e)}")
+            logger.error(
+                f"Exception while saving document {uploaded_file.name}: {str(e)}"
+            )
             raise
-
 
     async def delete_document(self, document_id):
         try:
@@ -230,20 +259,19 @@ class MeRTDataManager:
 
     async def save_protocol(self, protocol: Dict[str, Any]) -> Dict[str, Any]:
         try:
-            result = await self.api.save_protocol(
-                protocol=protocol
-            )
+            result = await self.api.save_protocol(protocol=protocol)
             logger.info(f"Protocol saved successfully for EEG ID: {self.eeg_id}")
             return result
         except Exception as e:
             logger.error(f"Failed to save protocol: {str(e)}")
             raise
 
-    async def reject_protocol(self, rejection_reason: str, protocol: Dict[str, Any]) -> Dict[str, Any]:
+    async def reject_protocol(
+        self, rejection_reason: str, protocol: Dict[str, Any]
+    ) -> Dict[str, Any]:
         try:
             result = await self.api.reject_protocol(
-                rejection_reason=rejection_reason,
-                protocol=protocol
+                rejection_reason=rejection_reason, protocol=protocol
             )
             logger.info(f"Protocol rejected successfully for EEG ID: {self.eeg_id}")
             return result
@@ -260,31 +288,33 @@ class MeRTDataManager:
             logger.error(f"Failed to get doctor approval state: {str(e)}")
             raise
 
-    async def save_eeg_scientist_patient_note(self, note: Dict[str, Any]) -> Dict[str, Any]:
+    async def save_eeg_scientist_patient_note(
+        self, note: Dict[str, Any]
+    ) -> Dict[str, Any]:
         try:
-            result = await self.api.save_eeg_scientist_patient_note(
-                note=note
+            result = await self.api.save_eeg_scientist_patient_note(note=note)
+            logger.info(
+                f"EEG scientist patient note saved successfully for patient ID: {self.patient_id}"
             )
-            logger.info(f"EEG scientist patient note saved successfully for patient ID: {self.patient_id}")
             return result
         except Exception as e:
             logger.error(f"Failed to save EEG scientist patient note: {str(e)}")
             raise
 
-
-
     @staticmethod
     def parse_eeg_data_extended(data):
         rows = []
         for key, content in data.items():
-            recording_date = content.get('baseProtocol', {}).get('recordingDate', None)
-            rows.append({
-                'EEGId': key,
-                'RecordingDate': recording_date,
-            })
+            recording_date = content.get("baseProtocol", {}).get("recordingDate", None)
+            rows.append(
+                {
+                    "EEGId": key,
+                    "RecordingDate": recording_date,
+                }
+            )
 
         df = pd.DataFrame(rows)
-        df['RecordingDate'] = pd.to_datetime(df['RecordingDate'], errors='coerce')
-        df = df.sort_values(by='RecordingDate', ascending=False)
-        df['include?'] = True
+        df["RecordingDate"] = pd.to_datetime(df["RecordingDate"], errors="coerce")
+        df = df.sort_values(by="RecordingDate", ascending=False)
+        df["include?"] = True
         return df
