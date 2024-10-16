@@ -96,7 +96,7 @@ def ecg_visualization_dashboard():
                         column_config={
                             "probability": st.column_config.ProgressColumn(
                                 "Probability",
-                                help="The probability of a seizure occurrence (shown as a percentage)",
+                                help="The probability of a arrhythmia occurrence (shown as a percentage)",
                                 min_value=0,
                                 max_value=1,  # Assuming the probability is normalized between 0 and 1
                             ),
