@@ -414,6 +414,13 @@ def render_protocol_page(data_manager):
     if protocol_data:
         phases_data = protocol_data["phases"][0]
 
+    if "approvedByName" in protocol_data:
+        approver_name = protocol_data["approvedByName"]
+        st.markdown(f"**Approved by:** {approver_name}")
+
+    if "isRejected" in protocol_data:
+        st.markdown("**Protocol is REJECTED**")
+
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
