@@ -15,14 +15,17 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Form for adding a new note
     with st.form("new_note_form"):
         st.write("Add New Note")
-        recording_date = st.date_input("Recording Date")
+        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        dateTime = eeg_info_data['dateTime']
+        recording_dateTime = datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S.%fZ')
+        recording_date = st.date_input("Recording Date", value = recording_dateTime, disabled=True)
         subject = st.text_input("Subject")
         content = st.text_area("Content")
         submitted = st.form_submit_button("Submit Note")
 
         if submitted:
             new_note = {
-                "recordingDate": recording_date.strftime("%a, %B %d %Y, %H:%M:%S"),
+                "recordingDate": recording_dateTime.strftime('%a, %B %d %Y, %I:%M:%S %p'),
                 "subject": subject,
                 "content": content,
             }
