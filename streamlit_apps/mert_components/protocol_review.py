@@ -34,17 +34,19 @@ def render_protocol_page(data_manager):
     analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
     eeg_info_data = eeg_info["eegInfo"]
 
-    protocol_data = eeg_info["protocol"]
+    if "protocol" in eeg_info:
+        protocol_data = eeg_info["protocol"]
 
-    if protocol_data:
         phases_data = protocol_data["phases"][0]
 
-    if "approvedByName" in protocol_data:
-        approver_name = protocol_data["approvedByName"]
-        st.markdown(f"**Approved by:** {approver_name}")
+        if "approvedByName" in protocol_data:
+            approver_name = protocol_data["approvedByName"]
+            st.markdown(f"**Approved by:** {approver_name}")
 
-    if "isRejected" in protocol_data:
-        st.markdown("**Protocol is REJECTED**")
+        if "isRejected" in protocol_data:
+            st.markdown("**Protocol is REJECTED**")
+    else:
+        protocol_data = None
 
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
@@ -216,6 +218,10 @@ def render_protocol_page(data_manager):
 
                     # Call the save_protocol method
                     asyncio.run(data_manager.save_protocol(protocol))
+
+                    # Ran twice to complete, protocol review by eeg scientist
+                    asyncio.run(data_manager.save_protocol(protocol))
+
                     st.success("Protocol updated successfully!")
                 except Exception as e:
                     st.error(f"Failed to update protocol: {str(e)}")
