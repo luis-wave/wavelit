@@ -1,13 +1,14 @@
 import uuid
-from typing import Any, Dict, Optional, List
+from datetime import datetime
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin
 
 import aiohttp
 import dotenv
+import streamlit as st
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-import streamlit as st
-from datetime import datetime
+
 
 class Credentials(BaseSettings):
     username: str
@@ -223,7 +224,6 @@ class MeRTApi:
             },
         )
 
-
     async def save_patient_note(
         self, note: str, note_creation_date: str
     ) -> Dict[str, Any]:
@@ -237,8 +237,6 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
             },
         )
-
-
 
     async def get_neuroref_report(self, eeg_ids: list) -> Dict[str, Any]:
         return await self._make_request(
@@ -288,7 +286,9 @@ class MeRTApi:
             },
         )
 
-    async def save_hr_report(self, heart_rate_bpm: int, st_dev_bpm:int) -> Dict[str, Any]:
+    async def save_hr_report(
+        self, heart_rate_bpm: int, st_dev_bpm: int
+    ) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
             "macro-service/api/v1/report_management/save_hr_report",
@@ -297,18 +297,20 @@ class MeRTApi:
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
                 "heartrateBpm": heart_rate_bpm,
-                "stdevBpm": st_dev_bpm
+                "stdevBpm": st_dev_bpm,
             },
         )
 
-    async def delete_hr_report(self, heart_rate_bpm: int, st_dev_bpm:int) -> Dict[str, Any]:
+    async def delete_hr_report(
+        self, heart_rate_bpm: int, st_dev_bpm: int
+    ) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
             "macro-service/api/v1/report_management/delete_hr_report",
             {
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
-                "userGroupId": self.clinic_id
+                "userGroupId": self.clinic_id,
             },
         )
 
@@ -320,7 +322,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "reportId": report_id
+                "reportId": report_id,
             },
         )
 
@@ -332,7 +334,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "reportId": report_id
+                "reportId": report_id,
             },
         )
 
@@ -344,7 +346,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "names": abnormality
+                "names": abnormality,
             },
         )
 
@@ -356,7 +358,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "abnormalityId": abnormality_id
+                "abnormalityId": abnormality_id,
             },
         )
 
@@ -368,7 +370,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "abnormalityId": abnormality_id
+                "abnormalityId": abnormality_id,
             },
         )
 
@@ -380,7 +382,7 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "names": artifacts
+                "names": artifacts,
             },
         )
 
@@ -392,33 +394,42 @@ class MeRTApi:
                 "eegId": self.eeg_id,
                 "patientId": self.patient_id,
                 "userGroupId": self.clinic_id,
-                "artifactId": artifact_id
+                "artifactId": artifact_id,
             },
         )
 
     async def save_document(self, file) -> str:
-        url = f"{self.config.macro.url}" + "macro-service/api/v1/report_management/save_document"
+        url = (
+            f"{self.config.macro.url}"
+            + "macro-service/api/v1/report_management/save_document"
+        )
 
         # Create a multipart form data
         form_data = aiohttp.FormData()
-        form_data.add_field('userGroupId', self.clinic_id)
-        form_data.add_field('patientId', self.patient_id)
-        form_data.add_field('eegId', self.eeg_id)
+        form_data.add_field("userGroupId", self.clinic_id)
+        form_data.add_field("patientId", self.patient_id)
+        form_data.add_field("eegId", self.eeg_id)
 
         # Add the file as a separate part
-        form_data.add_field('file',
-                            file.getvalue(),
-                            filename=file.name,
-                            content_type=file.type)
+        form_data.add_field(
+            "file", file.getvalue(), filename=file.name, content_type=file.type
+        )
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, data=form_data, headers={"Authorization": f"Bearer {self.token}",}) as response:
-                if response.status in (200,204) :
+            async with session.post(
+                url,
+                data=form_data,
+                headers={
+                    "Authorization": f"Bearer {self.token}",
+                },
+            ) as response:
+                if response.status in (200, 204):
                     return await response.text()  # This should be the document_id
                 else:
                     error_text = await response.text()
-                    raise Exception(f"Failed to save document. Status: {response.status}, Error: {error_text}")
-
+                    raise Exception(
+                        f"Failed to save document. Status: {response.status}, Error: {error_text}"
+                    )
 
     async def delete_document(self, document_id: str) -> Dict[str, Any]:
         return await self._make_request(
@@ -428,7 +439,7 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
-                "documentId": document_id
+                "documentId": document_id,
             },
         )
 
@@ -440,7 +451,7 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
-                "documentId": document_id
+                "documentId": document_id,
             },
         )
         return response
@@ -453,7 +464,6 @@ class MeRTApi:
         )
         return response
 
-
     async def save_protocol(self, protocol: Dict[str, Any]) -> Dict[str, Any]:
         response = await self._make_request(
             "POST",
@@ -462,37 +472,43 @@ class MeRTApi:
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
-                "protocol": protocol
+                "protocol": protocol,
             },
         )
         return response
 
-
-    async def reject_protocol(self, protocol: Dict[str, Any], rejection_reason: str) -> Dict[str, Any]:
+    async def reject_protocol(
+        self, protocol: Dict[str, Any], rejection_reason: str
+    ) -> Dict[str, Any]:
         return await self._make_request(
-            "POST", "macro-service/api/v1/protocol_management/reject_protocol",
+            "POST",
+            "macro-service/api/v1/protocol_management/reject_protocol",
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
                 "protocol": protocol,
-                "rejectionReason": rejection_reason
+                "rejectionReason": rejection_reason,
             },
         )
 
     async def get_doctor_approval_state(self) -> Dict[str, Any]:
         return await self._make_request(
-            "POST", "macro-service/api/v1/protocol_management/get_doctor_approval_state",
+            "POST",
+            "macro-service/api/v1/protocol_management/get_doctor_approval_state",
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
-                "eegId": self.eeg_id
+                "eegId": self.eeg_id,
             },
         )
 
-    async def save_eeg_scientist_patient_note(self, note: Dict[str, Any]) -> Dict[str, Any]:
+    async def save_eeg_scientist_patient_note(
+        self, note: Dict[str, Any]
+    ) -> Dict[str, Any]:
         return await self._make_request(
-            "POST", "macro-service/api/v1/patient_management/save_eeg_scientist_patient_note",
+            "POST",
+            "macro-service/api/v1/patient_management/save_eeg_scientist_patient_note",
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
@@ -501,7 +517,7 @@ class MeRTApi:
                     "recordingDate": note["recordingDate"],
                     "subject": note["subject"],
                     "content": note["content"],
-                    "dateEdited": datetime.utcnow().isoformat() + "Z"
-                }
+                    "dateEdited": datetime.utcnow().isoformat() + "Z",
+                },
             },
         )

@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.5.0] - 2024-02
+## [2.5.1] - 2024-10-15
+### Fixed
+- Protocol update logic, protocol can only be updated between 8-13 Hz.
+- Base protocol data is provided if updated protocol is not provided.
+- Update review logic to proceed to second review status.
+
+## [2.5.0] - 2024-10-02
 ### Added
 - Neurosynchrony report page. Enables lab to approve, reject reports without using MeRT2.
 - MeRT2Api, makes api calls to MeRT2 macroservice.

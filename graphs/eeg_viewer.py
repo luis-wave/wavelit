@@ -22,9 +22,9 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
         offset = i * offset_value
         fig.add_trace(
             go.Scattergl(
-                x=df['time'],
+                x=df["time"],
                 y=df[channel] + offset,
-                mode='lines',
+                mode="lines",
                 name=channel,
                 line=dict(
                     color="#4E4E4E",
@@ -102,13 +102,13 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
             "tickvals": yticks,
             "ticktext": ytick_labels,
             "tickmode": "array",
-            "range": [(-1.5), (max(yticks) + offset_value+0.5)],
+            "range": [(-1.5), (max(yticks) + offset_value + 0.5)],
         },
         legend=dict(
             traceorder="reversed",
             # itemsizing='constant'
-            ),
+        ),
         height=740,
-        margin=dict(t=20,l=0,r=0,b=5),
+        margin=dict(t=20, l=0, r=0, b=5),
     )
     return fig

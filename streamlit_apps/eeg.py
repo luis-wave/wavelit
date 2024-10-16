@@ -5,7 +5,7 @@ import streamlit as st
 from access_control import access_eeg_data, get_version_from_pyproject
 from streamlit_dashboards import eeg_visualization_dashboard
 
-if 'eegid' in st.session_state:
+if "eegid" in st.session_state:
     asyncio.run(access_eeg_data(st.session_state.eegid))
 else:
     asyncio.run(access_eeg_data())
