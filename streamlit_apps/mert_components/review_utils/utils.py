@@ -29,7 +29,7 @@ class EEGReviewState(Enum):
 def get_next_state(current_state: EEGReviewState) -> EEGReviewState:
     state_order = [
         EEGReviewState.PENDING,
-        EEGReviewState.FIRST_REVIEW,
+        EEGReviewState.SECOND_REVIEW_NEEDED,
         EEGReviewState.SECOND_REVIEW,
         EEGReviewState.COMPLETED,
     ]

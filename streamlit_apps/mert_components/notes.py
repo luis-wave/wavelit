@@ -4,6 +4,7 @@ Do not alter this functionality.
 """
 
 import asyncio
+from datetime import datetime
 
 import streamlit as st
 
@@ -16,16 +17,19 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     with st.form("new_note_form"):
         st.write("Add New Note")
         eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
-        dateTime = eeg_info_data['dateTime']
-        recording_dateTime = datetime.strptime(dateTime, '%Y-%m-%dT%H:%M:%S.%fZ')
-        recording_date = st.date_input("Recording Date", value = recording_dateTime, disabled=True)
+        eeg_info_data = eeg_info["eegInfo"]
+        dateTime = eeg_info_data["dateTime"]
+        recording_dateTime = datetime.strptime(dateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
+        st.date_input("Recording Date", value=recording_dateTime, disabled=True)
         subject = st.text_input("Subject")
         content = st.text_area("Content")
         submitted = st.form_submit_button("Submit Note")
 
         if submitted:
             new_note = {
-                "recordingDate": recording_dateTime.strftime('%a, %B %d %Y, %I:%M:%S %p'),
+                "recordingDate": recording_dateTime.strftime(
+                    "%a, %B %d %Y, %I:%M:%S %p"
+                ),
                 "subject": subject,
                 "content": content,
             }

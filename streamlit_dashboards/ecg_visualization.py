@@ -19,7 +19,7 @@ def ecg_visualization_dashboard():
     st.session_state["data"] = None
 
     if "mw_object" not in st.session_state:
-        st.error("Please load EEG data")
+        st.error("Please load ECG data")
     else:
         if st.session_state.heart_rate is None:
             st.error(

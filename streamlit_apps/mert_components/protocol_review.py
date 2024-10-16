@@ -38,6 +38,9 @@ def render_protocol_page(data_manager):
 
         if "isRejected" in protocol_data:
             st.markdown("**Protocol is REJECTED**")
+
+        if "isRejected" not in protocol_data:
+            st.markdown("**Protocol is PENDING**")
     else:
         protocol_data = None
 
