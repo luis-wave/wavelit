@@ -6,7 +6,7 @@
 
 Wavelit is a Streamlit application designed to streamline and enhance the workflow of the lab. Wavelit offers an integrated platform that hosts a variety of web applications, each tailored to improve the efficiency and effectiveness of EEG-related tasks.
 
-
+ 
 ## Key Features
 
 ### Sigma Dashboards
@@ -14,7 +14,7 @@ Seamless integration with our data platform. These dashboards are specifically d
 
 ![sigma](images/sigma.png)
 
-
+ 
 ### Automatic EEG Viewer (AEV)
 EEG visualization tool for highlighting and annotating abnormal EEG activity (seizure, artifact). Enables feedback for Wave's set of neural networks and machine learning models.
 

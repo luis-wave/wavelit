@@ -55,7 +55,7 @@ async def access_eeg_data(eeg_id=None):
 
     if not eeg_id:
         # Upload EEG file
-        uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+        uploaded_file = st.file_uploader("Upload an ECG file", type=["dat", "edf"])
 
         # Download EEG file by EEG ID
         st.write("Or")
