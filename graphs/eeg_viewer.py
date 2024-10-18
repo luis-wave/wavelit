@@ -52,8 +52,8 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
                     ),  # end time of seizure (2 seconds after start)
                     y0=-150,  # start y (adjust according to your scale)
                     y1=offset * len(ordered_channels),  # end y
-                    fillcolor="#FF7373",  # color of the shaded area
-                    opacity=1,  # transparency
+                    fillcolor="#7e35ac",  # color of the shaded area, og: "#FF7373"
+                    opacity=0.1,  # transparency, og: 0.9
                     layer="below",  # draw below the data
                     line_width=0,
                 )
@@ -74,8 +74,8 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
                         ),  # end time of seizure (2 seconds after start)
                         y0=-150,  # start y (adjust according to your scale)
                         y1=offset * len(ordered_channels),  # end y
-                        fillcolor="#5ad1ad",  # color of the shaded area
-                        opacity=0.5,  # transparency
+                        fillcolor="#355cac",  # color of the shaded area, og: #5ad1ad
+                        opacity=0.1,  # transparency
                         layer="below",  # draw below the data
                         line_width=0,
                     )
@@ -88,27 +88,33 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
 
     fig.update_layout(
         title=st.session_state.recording_date,
-        xaxis_title="Time",
-        yaxis_title="EEG Channels",
+        xaxis_title="",
+        yaxis_title="",
         xaxis={
-            "rangeslider": {"visible": True},
+            "rangeslider": {"visible": True,
+                            "thickness": 0.06,
+                            },
             "range": [
                 df["time"].iloc[0],
                 df["time"].iloc[0] + pd.Timedelta(seconds=20),
             ],
             "tickformat": "%M:%S.%L",
+            "showgrid": True,
+            "gridcolor": "#bdbdbd",
+            "dtick": 1000,
         },
         yaxis={
             "tickvals": yticks,
             "ticktext": ytick_labels,
             "tickmode": "array",
             "range": [(-1.5), (max(yticks) + offset_value+0.5)],
+            "showgrid": False,
         },
         legend=dict(
             traceorder="reversed",
             # itemsizing='constant'
             ),
-        height=740,
+        height=800,
         margin=dict(t=20,l=0,r=0,b=5),
     )
     return fig
