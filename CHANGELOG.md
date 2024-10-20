@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.3] - 2024-10-20
+### Fixed
+- Wavelit would error out if users did not have a MeRT Id or username field.
+
 ## [2.5.2] - 2024-10-16
 ### Changed
 - Split up code in Neurosynchrony into several modules to improve separation of concerns and code maintenance.
