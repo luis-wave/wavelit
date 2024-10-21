@@ -31,10 +31,10 @@ def authenticate_user():
 
     st.session_state["name"] = name
 
-    if "id" in st.session_state:
+    if "id" in user_config:
         st.session_state["id"] = user_config["id"]
 
-    if "m2_username" in st.session_state:
+    if "m2_username" in user_config:
         st.session_state["m2_username"] = user_config["m2_username"]
 
     return name, authentication_status, username, authenticator
