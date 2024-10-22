@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.5.4] - 2024-10-21
+### Fixed
+- User config error
+
 ## [2.5.3] - 2024-10-20
 ### Fixed
 - Wavelit would error out if users did not have a MeRT Id or username field.
