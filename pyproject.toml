@@ -6,11 +6,11 @@ description = "EEG plot generator"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>"]
 license = "Proprietary"
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 streamlit = "^1.33.0"
-mywaveanalytics = { git = "https://github.com/waveneuroscience/MyWaveAnalytics.git", branch = "MWP-290" }
 plotly = "^5.22.0"
 streamlit-authenticator = "^0.3.2"
 seaborn = "0.11.2"
@@ -24,6 +24,7 @@ pydantic = "^2.9.1"
 pydantic-settings = "^2.5.2"
 bs4 = "^0.0.2"
 streamlit-pdf-viewer = "^0.0.18"
+mywaveanalytics = {path = "C:/Users/ppolk/Projects/Repos/wheels/mywaveanalytics-4.0.0-290MWP-py3-none-any.whl"}
 
 
 
