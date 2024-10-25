@@ -1,7 +1,3 @@
-"""
-Set up protocol approval/rejection process. Enable the editing of treatment parameters within certain thresholds.
-"""
-
 import asyncio
 from datetime import datetime
 
@@ -9,7 +5,6 @@ import pandas as pd
 import streamlit as st
 
 from .review_utils import EEGReviewState, mert2_user
-
 
 @st.fragment
 def render_protocol_page(data_manager):
@@ -29,8 +24,6 @@ def render_protocol_page(data_manager):
 
     if "protocol" in eeg_info:
         protocol_data = eeg_info["protocol"]
-
-        phases_data = protocol_data["phases"][0]
 
         if "approvedByName" in protocol_data:
             approver_name = protocol_data["approvedByName"]
@@ -87,23 +80,6 @@ def render_protocol_page(data_manager):
             f"Name: {doctor_approval_state['physician']['firstName'] or 'N/A'} {doctor_approval_state['physician']['lastName'] or 'N/A'}"
         )
 
-    # Create editable dataframe for base protocol
-    st.subheader("Base Protocol")
-
-    # Add new fields to the protocol
-    base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
-    base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
-
-    if protocol_data:
-        if "MONO" in phases_data["pulseParameters"]["phase"]:
-            phases_data["pulseMode"] = "Monophasic"
-        else:
-            phases_data["pulseMode"] = "Biphasic"
-        phases_data.pop("pulseParameters")
-        protocol_df = pd.DataFrame([phases_data])
-    else:
-        protocol_df = pd.DataFrame([base_protocol])
-
     # Define the location options
     location_options = [
         "FP1-FPZ-FP2",
@@ -134,13 +110,70 @@ def render_protocol_page(data_manager):
         "PO4-O2-PO8",
     ]
 
-    with st.form("protocol_data_editor_form", border=False):
-        # Create the editable dataframe
+    # Create multiple protocol phase tables
+    if protocol_data and "phases" in protocol_data:
+        phases = protocol_data["phases"]
+    else:
+        # If no protocol data, create a single phase from base protocol
+        base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
+        base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
+        phases = [base_protocol]
+
+    # Add a button to add new phase
+    if st.button("Add Phase", key="add_phase_button"):
+        try:
+            # Create a new phase based on the last phase's data
+            last_phase = phases[-1].copy()
+
+            # Prepare the protocol object with the additional phase
+            current_protocol = {
+                "acknowledgeState": {
+                    "clinician": doctor_approval_state["clinician"],
+                    "physician": doctor_approval_state["physician"],
+                },
+                "approvedByName": st.session_state["name"],
+                "approvedDate": datetime.utcnow().isoformat() + "Z",
+                "createdByName": st.session_state["name"],
+                "createdDate": datetime.utcnow().isoformat() + "Z",
+                "eegId": data_manager.eeg_id,
+                "numPhases": len(phases) + 1,
+                "patientId": data_manager.patient_id,
+                "phases": [*phases, last_phase],
+                "subtype": "CORTICAL",
+                "type": "TREATMENT",
+            }
+
+            # Save the protocol with the new phase
+            asyncio.run(data_manager.save_protocol(current_protocol))
+            asyncio.run(data_manager.save_protocol(current_protocol))  # Run twice as per original code
+
+            # Refresh the page to show the new phase
+            st.rerun()
+        except Exception as e:
+            st.error(f"Failed to add new phase: {str(e)}")
+
+    edited_phases = []
+
+    # Display each phase's data editor
+    for i, phase in enumerate(phases):
+        st.subheader(f"Phase {i + 1}")
+
+        # Add pulseMode to phase data
+        if "pulseParameters" in phase:
+            phase["pulseMode"] = "Monophasic" if "MONO" in phase["pulseParameters"]["phase"] else "Biphasic"
+        else:
+            phase["pulseMode"] = "Biphasic"
+
+        # Convert phase to DataFrame
+        phase_df = pd.DataFrame([phase])
+
+        # Create editable table for each phase - Added unique key
         edited_df = st.data_editor(
-            protocol_df,
+            phase_df,
             num_rows="fixed",
             use_container_width=True,
-            disabled=["recordingDate"],
+            key=f"phase_{i}_editor",  # Added unique key based on phase index
+            disabled=["recordingDate"] if "recordingDate" in phase_df.columns else [],
             column_config={
                 "pulseMode": st.column_config.SelectboxColumn(
                     "Pulse Mode", options=["Biphasic", "Monophasic"], required=True
@@ -148,143 +181,130 @@ def render_protocol_page(data_manager):
                 "location": st.column_config.SelectboxColumn(
                     "Location", options=location_options, required=True
                 ),
-                "protocol": st.column_config.NumberColumn(
-                    "Protocol (Hz)", min_value=8, max_value=13, step=0.1
+                "frequency": st.column_config.NumberColumn(
+                    "Frequency (Hz)", min_value=8, max_value=13, step=0.1
+                ),
+                "trainDuration": st.column_config.NumberColumn(
+                    "Train Duration (s)", min_value=1, step=1
+                ),
+                "trainNumber": st.column_config.NumberColumn(
+                    "Train Number", min_value=1, step=1
+                ),
+                "interTrainInterval": st.column_config.NumberColumn(
+                    "Inter-Train Interval (s)", min_value=1, step=1
                 ),
             },
             hide_index=True,
         )
+        edited_phases.append(edited_df.iloc[0].to_dict())
 
-        # Check if there are changes in the protocol
+    # Create a separate form for actions
+    with st.form("protocol_actions_form"):
+        rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
+
+        # Add form submit buttons
         col1, col2 = st.columns(2)
-
         with col1:
-            if st.form_submit_button("Save Protocol Changes"):
-                try:
-                    # Convert the edited dataframe to a dictionary
-                    updated_protocol = edited_df.iloc[0].to_dict()
-
-                    # Prepare the protocol object
-                    protocol = {
-                        "acknowledgeState": {
-                            "clinician": doctor_approval_state["clinician"],
-                            "physician": doctor_approval_state["physician"],
-                        },
-                        "approvedByName": st.session_state["name"],
-                        "approvedDate": datetime.utcnow().isoformat() + "Z",
-                        "createdByName": st.session_state["name"],
-                        "createdDate": datetime.utcnow().isoformat() + "Z",
-                        "eegId": data_manager.eeg_id,
-                        "numPhases": 1,
-                        "patientId": data_manager.patient_id,
-                        "phases": [
-                            {
-                                "location": updated_protocol["location"],
-                                "goalIntensity": updated_protocol.get(
-                                    "goalIntensity", 0
-                                ),
-                                "pulseParameters": {
-                                    "phase": "MONO"
-                                    if updated_protocol["pulseMode"] == "Monophasic"
-                                    else "BIPHASIC"
-                                },
-                                "frequency": updated_protocol["frequency"],
-                                "burstDuration": updated_protocol.get("burstDuration"),
-                                "burstFrequency": updated_protocol.get(
-                                    "burstFrequency"
-                                ),
-                                "burstNumber": updated_protocol.get("burstNumber"),
-                                "interBurstInterval": updated_protocol.get(
-                                    "interBurstInterval"
-                                ),
-                                "interTrainInterval": updated_protocol[
-                                    "interTrainInterval"
-                                ],
-                                "phaseDuration": updated_protocol.get(
-                                    "phaseDuration", 0
-                                ),
-                                "trainDuration": updated_protocol["trainDuration"],
-                                "trainNumber": updated_protocol["trainNumber"],
-                            }
-                        ],
-                        "subtype": "CORTICAL",
-                        "totalDuration": updated_protocol.get("totalDuration", 0),
-                        "type": "TREATMENT",
-                    }
-
-                    # Call the save_protocol method
-                    asyncio.run(data_manager.save_protocol(protocol))
-
-                    # Ran twice to complete, protocol review by eeg scientist
-                    asyncio.run(data_manager.save_protocol(protocol))
-
-                    asyncio.run(
-                        data_manager.update_eeg_review(
-                            is_first_reviewer=(current_state == EEGReviewState.PENDING),
-                            state=EEGReviewState.CLINIC_REVIEW.name,
-                        )
-                    )
-                    st.success("Protocol updated successfully!")
-                except Exception as e:
-                    st.error(f"Failed to update protocol: {str(e)}")
-
+            save_submitted = st.form_submit_button("Save Protocol Changes")
         with col2:
-            rejection_reason = st.text_input("Rejection Reason")
-            if st.form_submit_button("Reject Protocol"):
-                if rejection_reason:
-                    try:
-                        updated_protocol = protocol_df.iloc[0].to_dict()
+            reject_submitted = st.form_submit_button("Reject Protocol")
 
-                        # Prepare the protocol object (same as in the save function)
-                        protocol = {
-                            "acknowledgeState": {"clinician": "", "physician": ""},
-                            "approvedByName": "",
-                            "approvedDate": "",
-                            "createdByName": "",
-                            "createdDate": "",
-                            "eegId": data_manager.eeg_id,
-                            "numPhases": 1,
-                            "patientId": data_manager.patient_id,
-                            "phases": [
-                                {
-                                    "location": updated_protocol["location"],
-                                    "goalIntensity": updated_protocol.get(
-                                        "goalIntensity", 0
-                                    ),
-                                    "pulseParameters": {
-                                        "phase": "MONO"
-                                        if updated_protocol["pulseMode"] == "Monophasic"
-                                        else "BIPHASIC"
-                                    },
-                                    "frequency": updated_protocol["frequency"],
-                                    "burstDuration": None,
-                                    "burstFrequency": None,
-                                    "burstNumber": None,
-                                    "interBurstInterval": None,
-                                    "interTrainInterval": updated_protocol[
-                                        "interTrainInterval"
-                                    ],
-                                    "phaseDuration": updated_protocol.get(
-                                        "phaseDuration", 0
-                                    ),
-                                    "trainDuration": updated_protocol["trainDuration"],
-                                    "trainNumber": updated_protocol["trainNumber"],
-                                }
-                            ],
-                            "subtype": "CORTICAL",
-                            "totalDuration": updated_protocol.get("totalDuration", 0),
-                            "type": "TREATMENT",
+    # Handle form submissions
+    if save_submitted:
+        try:
+            # Prepare the protocol object with multiple phases
+            protocol = {
+                "acknowledgeState": {
+                    "clinician": doctor_approval_state["clinician"],
+                    "physician": doctor_approval_state["physician"],
+                },
+                "approvedByName": st.session_state["name"],
+                "approvedDate": datetime.utcnow().isoformat() + "Z",
+                "createdByName": st.session_state["name"],
+                "createdDate": datetime.utcnow().isoformat() + "Z",
+                "eegId": data_manager.eeg_id,
+                "numPhases": len(edited_phases),
+                "patientId": data_manager.patient_id,
+                "phases": [
+                    {
+                        "location": phase["location"],
+                        "goalIntensity": phase.get("goalIntensity", 0),
+                        "pulseParameters": {
+                            "phase": "MONO" if phase["pulseMode"] == "Monophasic" else "BIPHASIC"
+                        },
+                        "frequency": phase["frequency"],
+                        "burstDuration": phase.get("burstDuration", 0),
+                        "burstFrequency": phase.get("burstFrequency", 0),
+                        "burstNumber": phase.get("burstNumber", 0),
+                        "interBurstInterval": phase.get("interBurstInterval", 0),
+                        "interTrainInterval": phase["interTrainInterval"],
+                        "phaseDuration": phase.get("phaseDuration", 0),
+                        "trainDuration": phase["trainDuration"],
+                        "trainNumber": phase["trainNumber"],
+                    }
+                    for phase in edited_phases
+                ],
+                "subtype": "CORTICAL",
+                "totalDuration": sum(phase.get("totalDuration", 0) for phase in edited_phases),
+                "type": "TREATMENT",
+            }
+
+            # Save the protocol
+            asyncio.run(data_manager.save_protocol(protocol))
+            asyncio.run(data_manager.save_protocol(protocol))
+
+            asyncio.run(
+                data_manager.update_eeg_review(
+                    is_first_reviewer=(current_state == EEGReviewState.PENDING),
+                    state=EEGReviewState.CLINIC_REVIEW.name,
+                )
+            )
+            st.success("Protocol updated successfully!")
+        except Exception as e:
+            st.error(f"Failed to update protocol: {str(e)}")
+
+    if reject_submitted:
+        if rejection_reason:
+            try:
+                protocol = {
+                    "acknowledgeState": {"clinician": "", "physician": ""},
+                    "approvedByName": "",
+                    "approvedDate": "",
+                    "createdByName": "",
+                    "createdDate": "",
+                    "eegId": data_manager.eeg_id,
+                    "numPhases": len(edited_phases),
+                    "patientId": data_manager.patient_id,
+                    "phases": [
+                        {
+                            "location": phase["location"],
+                            "goalIntensity": phase.get("goalIntensity", 0),
+                            "pulseParameters": {
+                                "phase": "MONO" if phase["pulseMode"] == "Monophasic" else "BIPHASIC"
+                            },
+                            "frequency": phase["frequency"],
+                            "burstDuration": 0,
+                            "burstFrequency": 0,
+                            "burstNumber": 0,
+                            "interBurstInterval": 0,
+                            "interTrainInterval": phase["interTrainInterval"],
+                            "phaseDuration": phase.get("phaseDuration", 0),
+                            "trainDuration": phase["trainDuration"],
+                            "trainNumber": phase["trainNumber"],
                         }
+                        for phase in edited_phases
+                    ],
+                    "subtype": "CORTICAL",
+                    "totalDuration": 0,
+                    "type": "TREATMENT",
+                }
 
-                        # Call the reject_protocol method
-                        asyncio.run(
-                            data_manager.reject_protocol(rejection_reason, protocol)
-                        )
-                        st.success("Protocol rejected successfully!")
-                    except Exception as e:
-                        st.error(f"Failed to reject protocol: {str(e)}")
-                else:
-                    st.warning("Please provide a rejection reason.")
+                asyncio.run(data_manager.reject_protocol(rejection_reason, protocol))
+                st.success("Protocol rejected successfully!")
+            except Exception as e:
+                st.error(f"Failed to reject protocol: {str(e)}")
+        else:
+            st.warning("Please provide a rejection reason.")
 
     # Display additional EEG information
     st.subheader("Additional EEG Information")
@@ -299,6 +319,4 @@ def render_protocol_page(data_manager):
     st.markdown(f"**Reviewer:** {first_reviewer}")
     st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
     st.markdown(f"**Second Reviewer:** {second_reviewer}")
-    st.markdown(
-        f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}"
-    )
+    st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")

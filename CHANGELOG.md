@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.6.0] - 2024-10-25
+### Changed
+- EEG Viewer UI/UX was updated.
+- Annotation colors changed from red to purple for AEA, green to blue for Autoreject.
+- The scrollbar height was minimized, the X and Y axis borders were removed for a cleaner look.
+
+### Added
+- Add pulse button, the lab can add additional treatment location in the MeRT protocol.
+
+
+
 ## [2.5.4] - 2024-10-21
 ### Fixed
 - User config error
