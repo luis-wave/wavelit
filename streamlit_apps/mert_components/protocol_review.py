@@ -25,7 +25,7 @@ def render_protocol_page(data_manager):
     if "protocol" in eeg_info:
         protocol_data = eeg_info["protocol"]
 
-        if "approvedByName" in protocol_data:
+        if ("approvedByName" in protocol_data) and  ("isRejected" not in protocol_data):
             approver_name = protocol_data["approvedByName"]
             st.markdown(f"**Approved by:** {approver_name}")
 
