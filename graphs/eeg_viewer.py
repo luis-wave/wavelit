@@ -100,6 +100,7 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
         xaxis={
             "rangeslider": {"visible": True,
                             "thickness": 0.06,
+                            "range": [df["time"].iloc[0], df["time"].iloc[-1]], # range of beginning to end
                             },
             "range": [
                 df["time"].iloc[0],

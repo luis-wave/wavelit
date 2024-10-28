@@ -33,11 +33,19 @@ def eeg_visualization_dashboard():
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
 
+            if "current_montage" not in st.session_state:
+                st.session_state.current_montage = None
+            if "ref_index" not in st.session_state:
+                st.session_state.ref_index = 0
+            if "ref_changed" not in st.session_state:
+                st.session_state.ref_changed = None
+
             with st.container() as row2:
                 col1, col2 = st.columns(2)
 
                 # Override selected reference if necessary. For hyperlinks
                 query_params = st.query_params.to_dict()
+                
                 if "ref" in query_params:
                     selected_reference = query_params["ref"]
                 else:
@@ -50,17 +58,29 @@ def eeg_visualization_dashboard():
                                 "centroid",
                                 "bipolar longitudinal",
                             ],
-                            index=0,  # Default to 'linked ears'
+                            index=st.session_state.get("ref_index", 0),  # Default to 'linked ears'
                             label_visibility="collapsed",
+                            key="ref_selectbox",
                         )
 
                         selected_references = {
                             "linked ears": "linked_ears",
-                            "bipolar longitudinal": "bipolar_longitudinal",
                             "centroid": "centroid",
+                            "bipolar longitudinal": "bipolar_longitudinal",
                         }
 
-                        selected_reference = selected_references[ref]
+                        if selected_references[ref] is not st.session_state.get("current_montage", None):
+                            st.session_state.current_montage = selected_references[ref]
+                            st.session_state.ref_changed = True
+                        else: 
+                            st.session_state.ref_changed = False
+
+                        # If the reference's data is available, change the reference being used
+                        if selected_references[ref] in st.session_state.eeg_graph.keys():
+                            selected_reference = selected_references[ref]
+                        else: # change back to linked ears -- currently disabled feature 
+                            # st.session_state.ref_index = 0
+                            selected_reference = "linked_ears"
 
                 with col2: 
                     if st.button("AEA Detection"):
@@ -81,6 +101,9 @@ def eeg_visualization_dashboard():
                 # Create DataFrame from MyWaveAnalytics object
                 df = st.session_state.eeg_graph[selected_reference]
 
+                def save_to_selection():
+                    print(selected_data)
+
                 if df is not None:
                     # Generate the Plotly figure
                     with st.spinner("Scaling..."):
@@ -89,7 +112,10 @@ def eeg_visualization_dashboard():
                         fig = draw_eeg_graph(df, selected_reference)
 
                         # Display the Plotly figure
-                        st.plotly_chart(fig, use_container_width=True)
+                        selected_data = st.plotly_chart(fig, 
+                                        use_container_width=True,
+                                        on_select=save_to_selection,
+                                        )
 
             with st.container() as row4:
                 # Retrieve ahr from session state
