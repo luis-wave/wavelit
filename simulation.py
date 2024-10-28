@@ -6,6 +6,10 @@ import mne
 import pandas as pd
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics as mwa
+from mywaveanalytics.libraries import (
+    filters,
+    references
+)
 
 from access_control import get_version_from_pyproject
 from data_models.abnormality_parsers import serialize_aea_to_pandas
@@ -18,11 +22,17 @@ with open("synthetic_data/aea.json", "rb") as f:
     aea_data = {
         "linked_ears": serialize_aea_to_pandas(
             aea.get("linked_ears"), ref="linked_ears"
-        )
+        ),
+        "centroid": serialize_aea_to_pandas(
+            aea.get("centroid"), ref="centroid"
+        ),
+        "bipolar_longitudinal": serialize_aea_to_pandas(
+            aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal"
+        ),
     }
 
 
-def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=False):
+def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=True):
     try:
         # Convert MyWaveObject MNE raw instance
         raw = mw_object
@@ -53,7 +63,19 @@ def main():
     st.session_state.filename = "Synthetic Oscillations"
     st.session_state.eeg_id = "EEG-123456789"
     st.session_state.eeg_graph = {
-        "linked_ears": serialize_mw_to_df(mw_object.eeg),
+        "linked_ears": serialize_mw_to_df(
+            mw_object.eeg
+        ),
+        "centroid": serialize_mw_to_df(
+            references.centroid(
+                mw_object.copy().eeg
+            )
+        ),
+        "bipolar_longitudinal": serialize_mw_to_df(
+            references.temporal_central_parasagittal(
+                mw_object.copy().eeg
+            )
+        ),
     }
     st.session_state.aea = aea_data
     st.session_state.user = "Nicolas Cage"

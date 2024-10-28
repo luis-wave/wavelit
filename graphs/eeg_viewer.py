@@ -2,6 +2,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from mywaveanalytics.utils.params import (CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
+                                          CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL,
                                           CHANNEL_ORDER_PERSYST)
 
 
@@ -13,7 +14,8 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
     if ref in ["linked_ears", "centroid"]:
         ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
     elif ref in ["bipolar_longitudinal"]:
-        ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+        # ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+        ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
 
     df["time"] = pd.to_datetime(df["time"], unit="s")
 
@@ -24,11 +26,16 @@ def draw_eeg_graph(df, ref, offset_value=1.0):
             go.Scattergl(
                 x=df["time"],
                 y=df[channel] + offset,
-                mode="lines",
+                mode="lines+markers",
                 name=channel,
                 line=dict(
                     color="#4E4E4E",
                     width=0.8,
+                ),
+                marker=dict(
+                    size=2,
+                    opacity=0.01,
+                    color="#4E4E4E", # dark purple
                 ),
             )
         )
