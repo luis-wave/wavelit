@@ -10,6 +10,8 @@ import dsp.graph_preprocessing as waev
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
 
+import pandas as pd
+from datetime import datetime
 
 def eeg_visualization_dashboard():
     # Title
@@ -33,6 +35,9 @@ def eeg_visualization_dashboard():
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
 
+            if "selected_onsets" not in st.session_state:
+                columns = ['x', 'curve_number', 'point_index']
+                st.session_state.selected_onsets = pd.DataFrame(columns=columns)
             if "current_montage" not in st.session_state:
                 st.session_state.current_montage = None
             if "ref_index" not in st.session_state:
@@ -101,9 +106,6 @@ def eeg_visualization_dashboard():
                 # Create DataFrame from MyWaveAnalytics object
                 df = st.session_state.eeg_graph[selected_reference]
 
-                def save_to_selection():
-                    print(selected_data)
-
                 if df is not None:
                     # Generate the Plotly figure
                     with st.spinner("Scaling..."):
@@ -112,13 +114,22 @@ def eeg_visualization_dashboard():
                         fig = draw_eeg_graph(df, selected_reference)
 
                         # Display the Plotly figure
-                        selected_data = st.plotly_chart(fig, 
+                        select_event = st.plotly_chart(fig, 
                                         use_container_width=True,
-                                        on_select=save_to_selection,
+                                        on_select="rerun",
                                         )
+                        selection_list = waev.event_to_list(select_event)
+
+                        selected_df = waev.add_list_to_df(
+                            st.session_state.get("selected_onsets", pd.DataFrame()),
+                            selection_list
+                        )
+
+                        st.session_state.selected_onsets = selected_df
+                       
 
             with st.container() as row4:
-                # Retrieve ahr from session state
+                # Retrieve aea from session state
                 aea = st.session_state.get("aea", None)
 
                 if aea is not None:

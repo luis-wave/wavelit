@@ -3,6 +3,8 @@ import pandas as pd
 import streamlit as st
 from scipy.signal import find_peaks
 
+from datetime import datetime
+
 
 @st.cache_data
 def scale_dataframe(df):
@@ -108,3 +110,54 @@ def scale_dataframe(df):
             scaled_df = pd.concat([times_col, scaled_eeg], axis=1)
 
     return scaled_df
+
+
+
+def event_to_list(select_event):
+    def convert_timestamp(timestamp):
+        # Parse the input timestamp
+        timestamp = timestamp.split(" ", 1)[1] if " " in timestamp else timestamp
+        
+        try: 
+            dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
+        except:
+            dt = datetime.strptime(timestamp, "%H:%M:%S")
+        
+        # Format as MM:SS
+        formatted_time = dt.strftime("%M:%S")
+        return formatted_time
+    
+    
+    onsets = select_event["selection"].get("points", None)
+    # Create a list with each row in the specified order
+    selection_list = [
+        [
+            convert_timestamp(point['x']),  # x value
+            point['curve_number'],          # curve number
+            point['point_index']            # point index
+        ]
+        for i, point in enumerate(onsets)
+    ]
+    
+    return selection_list
+
+
+def add_list_to_df(df, row_list, sort=True):
+    print(f"SELECTED ONSETS: {df}")
+    
+    # Convert the DataFrame to a list of lists
+    df_as_list = df.values.tolist()
+    
+    # Add rows from the new list if they don't already exist
+    combined_list = df_as_list + row_list
+    
+    # Convert the combined list back to a DataFrame with the original columns
+    combined_df = pd.DataFrame(combined_list, columns=df.columns)
+
+    if sort:
+        combined_df.sort_values(by=['x', 'curve_number'], ascending=[True, True])
+        combined_df = combined_df.reset_index(drop=True)
+
+    print(f"SELECTED COMBINED ONSETS: {combined_df}")
+    
+    return combined_df
