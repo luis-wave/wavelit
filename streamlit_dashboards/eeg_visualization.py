@@ -88,19 +88,20 @@ def eeg_visualization_dashboard():
                             selected_reference = "linked_ears"
 
                 with col2: 
-                    if st.button("AEA Detection"):
-                        with st.spinner("Running..."):
-                            mw_object = st.session_state.mw_object
-                            pipeline = SeizureDxPipeline(
-                                mw_object.copy(), reference=selected_reference
-                            )
-                            pipeline.run()
-                            analysis_json = pipeline.analysis_json
+                    pass
+                    # if st.button("AEA Detection"):
+                    #     with st.spinner("Running..."):
+                    #         mw_object = st.session_state.mw_object
+                    #         pipeline = SeizureDxPipeline(
+                    #             mw_object.copy(), reference=selected_reference
+                    #         )
+                    #         pipeline.run()
+                    #         analysis_json = pipeline.analysis_json
 
-                            aea_df = serialize_aea_to_pandas(
-                                analysis_json, ref=selected_reference
-                            )
-                            st.session_state["aea"][selected_reference] = aea_df
+                    #         aea_df = serialize_aea_to_pandas(
+                    #             analysis_json, ref=selected_reference
+                    #         )
+                    #         st.session_state["aea"][selected_reference] = aea_df
 
             with st.container() as row3:
                 # Create DataFrame from MyWaveAnalytics object
@@ -110,6 +111,7 @@ def eeg_visualization_dashboard():
                     # Generate the Plotly figure
                     with st.spinner("Scaling..."):
                         df = waev.scale_dataframe(df)
+
                     with st.spinner("Rendering..."):
                         fig = draw_eeg_graph(df, selected_reference)
 
@@ -117,6 +119,7 @@ def eeg_visualization_dashboard():
                         select_event = st.plotly_chart(fig, 
                                         use_container_width=True,
                                         on_select="rerun",
+                                        selection_mode="points",
                                         )
                         selection_list = waev.event_to_list(select_event)
 
@@ -129,65 +132,68 @@ def eeg_visualization_dashboard():
                        
 
             with st.container() as row4:
-                # Retrieve aea from session state
-                aea = st.session_state.get("aea", None)
+                st.dataframe(
+                    st.session_state.selected_onsets,
+                )
+            #     # Retrieve aea from session state
+            #     aea = st.session_state.get("aea", None)
 
-                if aea is not None:
-                    if not aea[selected_reference].empty:
-                        st.header("Edit AEA Predictions")
-                        with st.form("aea_data_editor_form", border=False):
-                            editable_df = st.session_state.aea[selected_reference].copy()
-                            editable_df["reviewer"] = st.session_state["user"]
-                            edited_df = st.data_editor(
-                                editable_df,
-                                column_config={
-                                    "probability": st.column_config.ProgressColumn(
-                                        "Probability",
-                                        help="The probability of a seizure occurrence (shown as a percentage)",
-                                        min_value=0,
-                                        max_value=1,  # Assuming the probability is normalized between 0 and 1
-                                    ),
-                                },
-                                hide_index=True,
-                            )
-                            # Submit button for the form
-                            submitted = st.form_submit_button("Save Changes")
+            #     if aea is not None:
+            #         if not aea[selected_reference].empty:
+            #             st.header("Edit AEA Predictions")
+            #             with st.form("aea_data_editor_form", border=False):
+            #                 editable_df = st.session_state.aea[selected_reference].copy()
+            #                 editable_df["reviewer"] = st.session_state["user"]
+            #                 edited_df = st.data_editor(
+            #                     editable_df,
+            #                     column_config={
+            #                         "probability": st.column_config.ProgressColumn(
+            #                             "Probability",
+            #                             help="The probability of a seizure occurrence (shown as a percentage)",
+            #                             min_value=0,
+            #                             max_value=1,  # Assuming the probability is normalized between 0 and 1
+            #                         ),
+            #                     },
+            #                     hide_index=True,
+            #                 )
+            #                 # Submit button for the form
+            #                 submitted = st.form_submit_button("Save Changes")
 
-                            if submitted:
-                                # Update the session state with the edited DataFrame
-                                st.session_state["data"] = edited_df
-                                st.success("Changes saved successfully!")
+            #                 if submitted:
+            #                     # Update the session state with the edited DataFrame
+            #                     st.session_state["data"] = edited_df
+            #                     st.success("Changes saved successfully!")
 
-                                try:
-                                    # Convert DataFrame to CSV and save it locally
-                                    csv_file_name = f"{st.session_state.eeg_id}"
-                                    edited_df.to_csv(csv_file_name, index=False)
+            #                     try:
+            #                         # Convert DataFrame to CSV and save it locally
+            #                         csv_file_name = f"{st.session_state.eeg_id}"
+            #                         edited_df.to_csv(csv_file_name, index=False)
 
-                                    # S3 client setup
-                                    s3 = boto3.client("s3")
-                                    bucket_name = "lake-superior-prod"
-                                    file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
+            #                         # S3 client setup
+            #                         s3 = boto3.client("s3")
+            #                         bucket_name = "lake-superior-prod"
+            #                         file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
 
-                                    # Adding metadata
-                                    processed_date = time.time()
-                                    _ = s3.upload_file(
-                                        csv_file_name,
-                                        bucket_name,
-                                        file_path,
-                                        ExtraArgs={
-                                            "Metadata": {
-                                                "processed_date": str(processed_date),
-                                                "file_name": csv_file_name,
-                                            }
-                                        },
-                                    )
-                                    print("File uploaded successfully")
-                                except NoCredentialsError:
-                                    st.error("Error: Unable to locate credentials")
-                                except PartialCredentialsError:
-                                    st.error("Error: Incomplete credentials provided")
-                                except Exception as e:
-                                    st.error(f"Error: {e}")
+            #                         # Adding metadata
+            #                         processed_date = time.time()
+            #                         _ = s3.upload_file(
+            #                             csv_file_name,
+            #                             bucket_name,
+            #                             file_path,
+            #                             ExtraArgs={
+            #                                 "Metadata": {
+            #                                     "processed_date": str(processed_date),
+            #                                     "file_name": csv_file_name,
+            #                                 }
+            #                             },
+            #                         )
+            #                         print("File uploaded successfully")
+            #                     except NoCredentialsError:
+            #                         st.error("Error: Unable to locate credentials")
+            #                     except PartialCredentialsError:
+            #                         st.error("Error: Incomplete credentials provided")
+            #                     except Exception as e:
+            #                         st.error(f"Error: {e}")
 
         else:
             st.error(

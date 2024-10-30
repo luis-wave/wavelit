@@ -55,30 +55,32 @@ def main():
     # Example of loading real EEG data from an EDF file
     edf_file_path = "synthetic_data/synthetic_eeg.edf"
 
-    # Assigning real data to MockMyWaveAnalytics object
-    mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)
+    if "mw_object" not in st.session_state:
 
-    st.session_state.mw_object = mw_object
-    st.session_state.recording_date = datetime.now().strftime("%b %d, %Y")
-    st.session_state.filename = "Synthetic Oscillations"
-    st.session_state.eeg_id = "EEG-123456789"
-    st.session_state.eeg_graph = {
-        "linked_ears": serialize_mw_to_df(
-            mw_object.eeg
-        ),
-        "centroid": serialize_mw_to_df(
-            references.centroid(
-                mw_object.copy().eeg
-            )
-        ),
-        "bipolar_longitudinal": serialize_mw_to_df(
-            references.temporal_central_parasagittal(
-                mw_object.copy().eeg
-            )
-        ),
-    }
-    st.session_state.aea = aea_data
-    st.session_state.user = "Nicolas Cage"
+        # Assigning real data to MockMyWaveAnalytics object
+        mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)
+
+        st.session_state.mw_object = mw_object
+        st.session_state.recording_date = datetime.now().strftime("%b %d, %Y")
+        st.session_state.filename = "Synthetic Oscillations"
+        st.session_state.eeg_id = "EEG-123456789"
+        st.session_state.eeg_graph = {
+            "linked_ears": serialize_mw_to_df(
+                mw_object.eeg
+            ),
+            "centroid": serialize_mw_to_df(
+                references.centroid(
+                    mw_object.copy().eeg
+                )
+            ),
+            "bipolar_longitudinal": serialize_mw_to_df(
+                references.temporal_central_parasagittal(
+                    mw_object.copy().eeg
+                )
+            ),
+        }
+        st.session_state.aea = aea_data
+        st.session_state.user = "Nicolas Cage"
 
     eeg_visualization_dashboard()
 

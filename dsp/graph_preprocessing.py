@@ -143,8 +143,7 @@ def event_to_list(select_event):
 
 
 def add_list_to_df(df, row_list, sort=True):
-    print(f"SELECTED ONSETS: {df}")
-    
+
     # Convert the DataFrame to a list of lists
     df_as_list = df.values.tolist()
     
@@ -157,7 +156,5 @@ def add_list_to_df(df, row_list, sort=True):
     if sort:
         combined_df.sort_values(by=['x', 'curve_number'], ascending=[True, True])
         combined_df = combined_df.reset_index(drop=True)
-
-    print(f"SELECTED COMBINED ONSETS: {combined_df}")
     
     return combined_df
