@@ -35,7 +35,7 @@ def eeg_visualization_dashboard():
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
-            columns = ['x', 'curve_number', 'point_index']
+            columns = ['x', 'curve_number', 'reference', 'point_x', 'user']
 
             if "selected_onsets" not in st.session_state:
                 st.session_state.selected_onsets = pd.DataFrame(columns=columns)
@@ -109,18 +109,15 @@ def eeg_visualization_dashboard():
                     def select_event_callback():
                         # Turn the event into an ordered list
                         selection_list = evh.event_to_list(st.session_state.plotly_select_event)
-                        # print(f"SELECTION LIST: {selection_list}")
 
                         # Add selection list to existing df of selected onsets
                         selected_df = evh.add_list_to_df(
                             st.session_state.get("selected_onsets", pd.DataFrame()),
-                            selection_list
+                            selection_list,
+                            sort=True,
                         )
                         # Save to session state the new collection of onsets
-                        st.session_state.selected_onsets = selected_df
-
-                        # print("SELECTED ONSETS:")
-                        # print(st.session_state.selected_onsets)
+                        st.session_state.selected_onsets = selected_df.reset_index(drop=True)
 
                     # Display the Plotly figure
                     select_event = st.plotly_chart(
@@ -135,13 +132,19 @@ def eeg_visualization_dashboard():
 
             with st.container():
                 data_editor_table = st.data_editor(
-                    st.session_state.get("selected_onsets", pd.DataFrame()),
+                    st.session_state.get(
+                        "selected_onsets", pd.DataFrame(
+                            columns=columns
+                        )
+                    ),
                     key="my_data",
                     num_rows="dynamic",
                     column_config = {
                         "x": "Onset",
                         "curve_number": "Channel",
-                        "point_index": "Data Point"
+                        "reference": "Montage",
+                        "point_x": "Timestamp",
+                        "user": "Reviewer",
                     },
                 )
                 st.session_state.selected_onsets = data_editor_table

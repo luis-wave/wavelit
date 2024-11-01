@@ -25,7 +25,10 @@ def event_to_list(select_event):
         [
             convert_timestamp(point['x']),  # x value
             point['curve_number'],          # curve number
-            point['point_index']            # point index
+            st.session_state.ref_selectbox,
+            point['x'],     
+            st.session_state.user,
+
         ]
         for i, point in enumerate(onsets)
     ]
@@ -48,7 +51,7 @@ def add_list_to_df(df, row_list, sort=True):
     combined_df = pd.DataFrame(df_as_list, columns=df.columns)
 
     if sort:
-        combined_df.sort_values(by=['x', 'curve_number'], ascending=[True, True])
+        combined_df = combined_df.sort_values(by=['x', 'curve_number'], ascending=[True, False])
         combined_df = combined_df.reset_index(drop=True)
     
     return combined_df
