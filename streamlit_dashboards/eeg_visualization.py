@@ -1,3 +1,4 @@
+import pandas as pd
 import time
 
 import boto3
@@ -7,11 +8,12 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
     SeizureDxPipeline
 
 import dsp.graph_preprocessing as waev
+import graph_helpers.eeg_viewer_helper as evh
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
 
-import pandas as pd
-from datetime import datetime
+
+
 
 def eeg_visualization_dashboard():
     # Title
@@ -20,7 +22,7 @@ def eeg_visualization_dashboard():
     if "mw_object" not in st.session_state:
         st.error("Please load EEG data")
     else:
-        with st.container() as row1:
+        with st.container():
             col1, col2 = st.columns(2)
 
             if st.session_state.filename and ("/tmp/" not in st.session_state.filename):
@@ -34,10 +36,13 @@ def eeg_visualization_dashboard():
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             mw_copy = mw_object.copy()
+            columns = ['x', 'curve_number', 'point_index']
 
             if "selected_onsets" not in st.session_state:
-                columns = ['x', 'curve_number', 'point_index']
                 st.session_state.selected_onsets = pd.DataFrame(columns=columns)
+            if "selected_onsets_table" not in st.session_state:
+                st.session_state.selected_onsets_table = pd.DataFrame(columns=columns)
+
             if "current_montage" not in st.session_state:
                 st.session_state.current_montage = None
             if "ref_index" not in st.session_state:
@@ -45,7 +50,7 @@ def eeg_visualization_dashboard():
             if "ref_changed" not in st.session_state:
                 st.session_state.ref_changed = None
 
-            with st.container() as row2:
+            with st.container():
                 col1, col2 = st.columns(2)
 
                 # Override selected reference if necessary. For hyperlinks
@@ -83,9 +88,11 @@ def eeg_visualization_dashboard():
                         # If the reference's data is available, change the reference being used
                         if selected_references[ref] in st.session_state.eeg_graph.keys():
                             selected_reference = selected_references[ref]
-                        else: # change back to linked ears -- currently disabled feature 
-                            # st.session_state.ref_index = 0
+                        else: # change back to linked ears
                             selected_reference = "linked_ears"
+                            st.session_state.ref_selectbox = "linked_ears"
+                            
+                            
 
                 with col2: 
                     pass
@@ -103,38 +110,71 @@ def eeg_visualization_dashboard():
                     #         )
                     #         st.session_state["aea"][selected_reference] = aea_df
 
-            with st.container() as row3:
+            with st.container():
                 # Create DataFrame from MyWaveAnalytics object
                 df = st.session_state.eeg_graph[selected_reference]
 
                 if df is not None:
                     # Generate the Plotly figure
-                    with st.spinner("Scaling..."):
-                        df = waev.scale_dataframe(df)
+                    # with st.spinner("Scaling..."):
+                    df = waev.scale_dataframe(df)
 
-                    with st.spinner("Rendering..."):
-                        fig = draw_eeg_graph(df, selected_reference)
+                    # with st.spinner("Rendering..."):
+                    fig = draw_eeg_graph(df, selected_reference)
 
-                        # Display the Plotly figure
-                        select_event = st.plotly_chart(fig, 
-                                        use_container_width=True,
-                                        on_select="rerun",
-                                        selection_mode="points",
-                                        )
-                        selection_list = waev.event_to_list(select_event)
+                    def capture_event():
+                        # Turn the event into an ordered list
+                        selection_list = evh.event_to_list(st.session_state.plotly_select_event)
+                        print(f"SELECTION LIST: {selection_list}")
 
-                        selected_df = waev.add_list_to_df(
+                        # Add selection list to existing df of selected onsets
+                        selected_df = evh.add_list_to_df(
                             st.session_state.get("selected_onsets", pd.DataFrame()),
                             selection_list
                         )
-
+                        # Save to session state the new collection of onsets
                         st.session_state.selected_onsets = selected_df
-                       
 
-            with st.container() as row4:
-                st.dataframe(
-                    st.session_state.selected_onsets,
+                        print("SELECTED ONSETS:")
+                        print(st.session_state.selected_onsets)
+
+                    # Display the Plotly figure
+                    select_event = st.plotly_chart(
+                        fig, 
+                        use_container_width=True,
+                        key="plotly_select_event",
+                        # on_select="rerun",
+                        on_select=capture_event,
+                        selection_mode="points",
+                    )
+                
+
+            with st.container():
+                def data_editor_callback():
+                    """
+                    Update the selected_onsets session state with whatever 
+                    is in selected_onsets_table session state.
+                    """
+                    print("...Updating selected onsets")
+                    # df = st.session_state.selected_onsets_table
+                    # st.session_state.selected_onsets = df
+                
+                data_editor_table = st.data_editor(
+                    st.session_state.get("selected_onsets", pd.DataFrame()),
+                    key="my_data",
+                    num_rows="dynamic",
+                    column_config = {
+                        "x": "Onset",
+                        "curve_number": "Channel",
+                        "point_index": "Data Point"
+                    },
+                    on_change=data_editor_callback,
                 )
+
+                st.session_state.selected_onsets_table = data_editor_table
+                st.session_state.selected_onsets = st.session_state.selected_onsets_table
+
+
             #     # Retrieve aea from session state
             #     aea = st.session_state.get("aea", None)
 

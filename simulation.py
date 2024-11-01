@@ -56,7 +56,7 @@ def main():
     edf_file_path = "synthetic_data/synthetic_eeg.edf"
 
     if "mw_object" not in st.session_state:
-
+        
         # Assigning real data to MockMyWaveAnalytics object
         mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)
 
