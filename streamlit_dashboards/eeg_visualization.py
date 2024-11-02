@@ -40,7 +40,7 @@ def eeg_visualization_dashboard():
             if "selected_onsets" not in st.session_state:
                 st.session_state.selected_onsets = pd.DataFrame(columns=columns)
             if "current_montage" not in st.session_state:
-                st.session_state.current_montage = None
+                st.session_state.current_montage = "linked ears"
             if "ref_index" not in st.session_state:
                 st.session_state.ref_index = 0
             if "ref_changed" not in st.session_state:
