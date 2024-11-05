@@ -1,5 +1,6 @@
 import pandas as pd
 import time
+from datetime import datetime
 
 import boto3
 import streamlit as st
@@ -34,7 +35,7 @@ def eeg_visualization_dashboard():
         # Check if `mw_object` is available
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
-            mw_copy = mw_object.copy()
+            # mw_copy = mw_object.copy()
             columns = ['x', 'curve_number', 'reference', 'point_x', 'user']
 
             if "selected_onsets" not in st.session_state:
@@ -99,13 +100,11 @@ def eeg_visualization_dashboard():
 
                 if df is not None:
                     # Generate the Plotly figure
-                    # with st.spinner("Scaling..."):
-                    df = waev.scale_dataframe(df)
-
-                    # with st.spinner("Rendering..."):
-                    fig = draw_eeg_graph(df, selected_reference)
-
-
+                    with st.spinner("Scaling..."):
+                        df = waev.scale_dataframe(df)
+                    with st.spinner("Rendering..."):
+                        fig = draw_eeg_graph(df, selected_reference)
+    
                     def select_event_callback():
                         # Turn the event into an ordered list
                         selection_list = evh.event_to_list(st.session_state.plotly_select_event)
@@ -119,6 +118,7 @@ def eeg_visualization_dashboard():
                         # Save to session state the new collection of onsets
                         st.session_state.selected_onsets = selected_df.reset_index(drop=True)
 
+                    # start_time = datetime.now()
                     # Display the Plotly figure
                     select_event = st.plotly_chart(
                         fig, 
@@ -128,59 +128,77 @@ def eeg_visualization_dashboard():
                         on_select=select_event_callback,
                         selection_mode="points",
                     )
+                    # end_time = datetime.now()
+                    # print(f"GET PLOTLY CHART: {end_time - start_time}")
                 
+                    select_event
 
             with st.container():
-                data_editor_table = st.data_editor(
-                    st.session_state.get(
-                        "selected_onsets", pd.DataFrame(
-                            columns=columns
-                        )
-                    ),
-                    key="my_data",
-                    num_rows="dynamic",
-                    column_config = {
-                        "x": "Onset",
-                        "curve_number": "Channel",
-                        "reference": "Montage",
-                        "point_x": "Timestamp",
-                        "user": "Reviewer",
-                    },
-                )
-                st.session_state.selected_onsets = data_editor_table
+                col1, col2 = st.columns(2)
+
+                with col1: 
+                    data_editor_table = st.data_editor(
+                        st.session_state.get(
+                            "selected_onsets", pd.DataFrame(
+                                columns=columns
+                            )
+                        ),
+                        key="my_data",
+                        num_rows="dynamic",
+                        use_container_width=True,
+                        column_config = {
+                            "x": "Onset",
+                            "curve_number": "Channel",
+                            "reference": "Montage",
+                            "point_x": "Timestamp",
+                            "user": "Reviewer",
+                        },
+                    )
+                    st.session_state.selected_onsets = data_editor_table
 
 
-                if st.button("Submit Onsets", type="primary"):
-                    try:
-                        # Convert DataFrame to CSV and save it locally
-                        csv_file_name = f"{st.session_state.eeg_id}"
-                        data_editor_table.to_csv(csv_file_name, index=False)
+                    if st.button("Submit Onsets", type="primary"):
+                        try:
+                            # Convert DataFrame to CSV and save it locally
+                            csv_file_name = f"{st.session_state.eeg_id}"
+                            data_editor_table.to_csv(csv_file_name, index=False)
 
-                        # S3 client setup
-                        s3 = boto3.client("s3")
-                        bucket_name = "lake-superior-prod"
-                        file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
+                            # S3 client setup
+                            s3 = boto3.client("s3")
+                            bucket_name = "lake-superior-prod"
+                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
 
-                        # Adding metadata
-                        processed_date = time.time()
-                        _ = s3.upload_file(
-                            csv_file_name,
-                            bucket_name,
-                            file_path,
-                            ExtraArgs={
-                                "Metadata": {
-                                    "processed_date": str(processed_date),
-                                    "file_name": csv_file_name,
-                                }
-                            },
-                        )
-                        print("File uploaded successfully")
-                    except NoCredentialsError:
-                        st.error("Error: Unable to locate credentials")
-                    except PartialCredentialsError:
-                        st.error("Error: Incomplete credentials provided")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
+                            # Adding metadata
+                            processed_date = time.time()
+                            _ = s3.upload_file(
+                                csv_file_name,
+                                bucket_name,
+                                file_path,
+                                ExtraArgs={
+                                    "Metadata": {
+                                        "processed_date": str(processed_date),
+                                        "file_name": csv_file_name,
+                                    }
+                                },
+                            )
+                            print("File uploaded successfully")
+                        except NoCredentialsError:
+                            st.error("Error: Unable to locate credentials")
+                        except PartialCredentialsError:
+                            st.error("Error: Incomplete credentials provided")
+                        except Exception as e:
+                            st.error(f"Error: {e}")
+                
+                with col2: 
+                    # Text area widget
+                    onset_text = st.text_area(
+                        label="Onset List", 
+                        value=', '.join(data_editor_table['x'].astype(str)),
+                        label_visibility="collapsed",
+                        height=400, 
+                        key="onset_text_box",
+                    )
+
 
         else:
             st.error(
@@ -188,6 +206,6 @@ def eeg_visualization_dashboard():
             )
 
 
-# To run the function as a Streamlit app
+# # To run the function as a Streamlit app
 if __name__ == "__main__":
     eeg_visualization_dashboard()
