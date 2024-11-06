@@ -137,57 +137,120 @@ def eeg_visualization_dashboard():
                 col1, col2 = st.columns(2)
 
                 with col1: 
-                    data_editor_table = st.data_editor(
-                        st.session_state.get(
-                            "selected_onsets", pd.DataFrame(
-                                columns=columns
-                            )
-                        ),
-                        key="my_data",
-                        num_rows="dynamic",
-                        use_container_width=True,
-                        column_config = {
-                            "x": "Onset",
-                            "curve_number": "Channel",
-                            "reference": "Montage",
-                            "point_x": "Timestamp",
-                            "user": "Reviewer",
-                        },
-                    )
-                    st.session_state.selected_onsets = data_editor_table
+                    tab1, tab2 = st.tabs(["Onsets", "ML Onsets"])
+                    with tab1:
+                        data_editor_table = st.data_editor(
+                            st.session_state.get(
+                                "selected_onsets", pd.DataFrame(
+                                    columns=columns
+                                )
+                            ),
+                            key="my_data",
+                            num_rows="dynamic",
+                            use_container_width=True,
+                            column_config = {
+                                "x": "Onset",
+                                "curve_number": "Channel",
+                                "reference": "Montage",
+                                "point_x": "Timestamp",
+                                "user": "Reviewer",
+                            },
+                        )
+                        st.session_state.selected_onsets = data_editor_table
 
 
-                    if st.button("Submit Onsets", type="primary"):
-                        try:
-                            # Convert DataFrame to CSV and save it locally
-                            csv_file_name = f"{st.session_state.eeg_id}"
-                            data_editor_table.to_csv(csv_file_name, index=False)
+                        if st.button("Submit Onsets", type="primary"):
+                            try:
+                                # Convert DataFrame to CSV and save it locally
+                                csv_file_name = f"{st.session_state.eeg_id}"
+                                data_editor_table.to_csv(csv_file_name, index=False)
 
-                            # S3 client setup
-                            s3 = boto3.client("s3")
-                            bucket_name = "lake-superior-prod"
-                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
+                                # S3 client setup
+                                s3 = boto3.client("s3")
+                                bucket_name = "lake-superior-prod"
+                                file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
 
-                            # Adding metadata
-                            processed_date = time.time()
-                            _ = s3.upload_file(
-                                csv_file_name,
-                                bucket_name,
-                                file_path,
-                                ExtraArgs={
-                                    "Metadata": {
-                                        "processed_date": str(processed_date),
-                                        "file_name": csv_file_name,
-                                    }
-                                },
-                            )
-                            print("File uploaded successfully")
-                        except NoCredentialsError:
-                            st.error("Error: Unable to locate credentials")
-                        except PartialCredentialsError:
-                            st.error("Error: Incomplete credentials provided")
-                        except Exception as e:
-                            st.error(f"Error: {e}")
+                                # Adding metadata
+                                processed_date = time.time()
+                                _ = s3.upload_file(
+                                    csv_file_name,
+                                    bucket_name,
+                                    file_path,
+                                    ExtraArgs={
+                                        "Metadata": {
+                                            "processed_date": str(processed_date),
+                                            "file_name": csv_file_name,
+                                        }
+                                    },
+                                )
+                                print("File uploaded successfully")
+                            except NoCredentialsError:
+                                st.error("Error: Unable to locate credentials")
+                            except PartialCredentialsError:
+                                st.error("Error: Incomplete credentials provided")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
+                    
+                    with tab2:
+                        # Retrieve aea from session state
+                        aea = st.session_state.get("aea", None)
+
+                        if aea is not None:
+                            if not aea[selected_reference].empty:
+                                st.header("Edit AEA Predictions")
+                                with st.form("aea_data_editor_form", border=False):
+                                    editable_df = st.session_state.aea[selected_reference].copy()
+                                    editable_df["reviewer"] = st.session_state["user"]
+                                    edited_df = st.data_editor(
+                                        editable_df,
+                                        column_config={
+                                            "probability": st.column_config.ProgressColumn(
+                                                "Probability",
+                                                help="The probability of a seizure occurrence (shown as a percentage)",
+                                                min_value=0,
+                                                max_value=1,  # Assuming the probability is normalized between 0 and 1
+                                            ),
+                                        },
+                                        hide_index=True,
+                                    )
+                                    # Submit button for the form
+                                    submitted = st.form_submit_button("Save Changes")
+
+                                    if submitted:
+                                        # Update the session state with the edited DataFrame
+                                        st.session_state["data"] = edited_df
+                                        st.success("Changes saved successfully!")
+
+                                        try:
+                                            # Convert DataFrame to CSV and save it locally
+                                            csv_file_name = f"{st.session_state.eeg_id}"
+                                            edited_df.to_csv(csv_file_name, index=False)
+
+                                            # S3 client setup
+                                            s3 = boto3.client("s3")
+                                            bucket_name = "lake-superior-prod"
+                                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
+
+                                            # Adding metadata
+                                            processed_date = time.time()
+                                            _ = s3.upload_file(
+                                                csv_file_name,
+                                                bucket_name,
+                                                file_path,
+                                                ExtraArgs={
+                                                    "Metadata": {
+                                                        "processed_date": str(processed_date),
+                                                        "file_name": csv_file_name,
+                                                    }
+                                                },
+                                            )
+                                            print("File uploaded successfully")
+                                        except NoCredentialsError:
+                                            st.error("Error: Unable to locate credentials")
+                                        except PartialCredentialsError:
+                                            st.error("Error: Incomplete credentials provided")
+                                        except Exception as e:
+                                            st.error(f"Error: {e}")
                 
                 with col2: 
                     # Text area widget
@@ -197,8 +260,10 @@ def eeg_visualization_dashboard():
                         label_visibility="collapsed",
                         height=400, 
                         key="onset_text_box",
+                        disabled=True,
                     )
 
+                # st.write(st.session_state.aea[selected_reference])
 
         else:
             st.error(
