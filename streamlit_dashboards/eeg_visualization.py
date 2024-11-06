@@ -36,7 +36,7 @@ def eeg_visualization_dashboard():
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
             # mw_copy = mw_object.copy()
-            columns = ['x', 'curve_number', 'reference', 'point_x', 'user']
+            columns = ['x', 'probability', 'curve_number', 'reference', 'point_x', 'user']
 
             if "selected_onsets" not in st.session_state:
                 st.session_state.selected_onsets = pd.DataFrame(columns=columns)
@@ -137,7 +137,7 @@ def eeg_visualization_dashboard():
                 col1, col2 = st.columns(2)
 
                 with col1: 
-                    tab1, tab2 = st.tabs(["Onsets", "ML Onsets"])
+                    tab1, tab2 = st.tabs(["Your Onsets", "ML Onsets"])
                     with tab1:
                         data_editor_table = st.data_editor(
                             st.session_state.get(
@@ -150,6 +150,12 @@ def eeg_visualization_dashboard():
                             use_container_width=True,
                             column_config = {
                                 "x": "Onset",
+                                "probability": st.column_config.ProgressColumn(
+                                    "Probability",
+                                    help="The probability of a seizure occurrence (shown as a percentage)",
+                                    min_value=0,
+                                    max_value=1,  # Assuming the probability is normalized between 0 and 1
+                                ),
                                 "curve_number": "Channel",
                                 "reference": "Montage",
                                 "point_x": "Timestamp",

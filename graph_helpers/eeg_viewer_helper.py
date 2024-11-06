@@ -22,19 +22,6 @@ def event_to_list(select_event=None):
         A formatted list of data from the click event.
     """
     
-    def convert_timestamp(timestamp):
-        # Parse the input timestamp
-        timestamp = timestamp.split(" ", 1)[1] if " " in timestamp else timestamp
-        
-        try: 
-            dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
-        except:
-            dt = datetime.strptime(timestamp, "%H:%M:%S")
-        
-        # Format as MM:SS
-        formatted_time = dt.strftime("%M:%S")
-        return formatted_time
-    
 
     if "current_montage" not in st.session_state:
         st.session_state.current_montage = "linked ears"
@@ -47,20 +34,63 @@ def event_to_list(select_event=None):
         ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
 
     onsets = select_event["selection"].get("points", None)
+    aea_df = st.session_state.aea[st.session_state.current_montage].copy()
+
     # Create a list with each row in the specified order
     selection_list = [
         [
             convert_timestamp(point['x']),
+            get_probability(point, aea_df),
             ordered_channels[point['curve_number']],
             st.session_state.ref_selectbox,
             point['x'],     
             st.session_state.user,
-
         ]
         for i, point in enumerate(onsets)
     ]
     
     return selection_list
+
+
+def convert_timestamp(timestamp):
+    # Parse the input timestamp
+    timestamp = timestamp.split(" ", 1)[1] if " " in timestamp else timestamp
+    
+    try: 
+        dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
+    except:
+        dt = datetime.strptime(timestamp, "%H:%M:%S")
+    
+    # Format as MM:SS
+    formatted_time = dt.strftime("%M:%S")
+    return formatted_time
+
+
+def round_down_millis(timestamp):
+    # Split the timestamp at the dot to separate the minutes/seconds from milliseconds
+    time_part, _ = timestamp.split('.')
+    
+    # Append '.000' to get the desired format
+    return f"{time_part}.000"
+
+
+def get_probability(point, aea_df=None):
+    # Parse the input timestamp
+    timestamp = point['x'].split(" ", 1)[1] if " " in point['x'] else point['x']
+    
+    # Convert to datetime
+    dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
+
+    # Get new format and round
+    formatted_time = round_down_millis(dt.strftime("%M:%S.%f"))
+
+    # Get probability value for the given aea_times value
+    probability = aea_df.loc[aea_df['aea_times'] == formatted_time, 'probability']
+
+    # If there is no corresponding aea_times value, set probability to 0.0
+    probability = probability.values[0] if not probability.empty else 0.0
+    
+    return probability
 
 
 
@@ -97,3 +127,5 @@ def add_list_to_df(df, row_list, sort=True):
         combined_df = combined_df.reset_index(drop=True)
     
     return combined_df
+
+
