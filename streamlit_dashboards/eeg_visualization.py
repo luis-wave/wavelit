@@ -5,14 +5,18 @@ from datetime import datetime
 import boto3
 import streamlit as st
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
-from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
-    SeizureDxPipeline
+from mywaveanalytics.pipelines.abnormality_detection_pipeline import SeizureDxPipeline
+
+from mywaveanalytics.utils.params import (
+    CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
+    CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL,
+    CHANNEL_ORDER_PERSYST,
+)
 
 import dsp.graph_preprocessing as waev
 import graph_helpers.eeg_viewer_helper as evh
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
-
 
 
 def eeg_visualization_dashboard():
@@ -35,8 +39,14 @@ def eeg_visualization_dashboard():
         # Check if `mw_object` is available
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
-            # mw_copy = mw_object.copy()
-            columns = ['x', 'probability', 'curve_number', 'reference', 'point_x', 'user']
+            columns = [
+                "x",
+                "probability",
+                "curve_number",
+                "reference",
+                "point_x",
+                "user",
+            ]
 
             if "selected_onsets" not in st.session_state:
                 st.session_state.selected_onsets = pd.DataFrame(columns=columns)
@@ -52,7 +62,7 @@ def eeg_visualization_dashboard():
 
                 # Override selected reference if necessary. For hyperlinks
                 query_params = st.query_params.to_dict()
-                
+
                 if "ref" in query_params:
                     selected_reference = query_params["ref"]
                 else:
@@ -65,7 +75,9 @@ def eeg_visualization_dashboard():
                                 "centroid",
                                 "bipolar longitudinal",
                             ],
-                            index=st.session_state.get("ref_index", 0),  # Default to 'linked ears'
+                            index=st.session_state.get(
+                                "ref_index", 0
+                            ),  # Default to 'linked ears'
                             label_visibility="collapsed",
                             key="ref_selectbox",
                         )
@@ -76,23 +88,26 @@ def eeg_visualization_dashboard():
                             "bipolar longitudinal": "bipolar_longitudinal",
                         }
 
-                        if selected_references[ref] is not st.session_state.get("current_montage", None):
+                        if selected_references[ref] is not st.session_state.get(
+                            "current_montage", None
+                        ):
                             st.session_state.current_montage = selected_references[ref]
                             st.session_state.ref_changed = True
-                        else: 
+                        else:
                             st.session_state.ref_changed = False
 
                         # If the reference's data is available, change the reference being used
-                        if selected_references[ref] in st.session_state.eeg_graph.keys():
+                        if (
+                            selected_references[ref]
+                            in st.session_state.eeg_graph.keys()
+                        ):
                             selected_reference = selected_references[ref]
-                        else: # change back to linked ears
+                        else:  # change back to linked ears
                             selected_reference = "linked_ears"
                             st.session_state.ref_selectbox = "linked_ears"
-                            
 
-                with col2: 
+                with col2:
                     pass
-
 
             with st.container():
                 # Create DataFrame from MyWaveAnalytics object
@@ -103,11 +118,20 @@ def eeg_visualization_dashboard():
                     with st.spinner("Scaling..."):
                         df = waev.scale_dataframe(df)
                     with st.spinner("Rendering..."):
-                        fig = draw_eeg_graph(df, selected_reference)
-    
+                        # Define the order of channels based on reference
+                        if selected_reference in ["linked_ears", "centroid"]:
+                            ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
+                        elif selected_reference in ["bipolar_longitudinal"]:
+                            # ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+                            ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
+
+                        fig = draw_eeg_graph(df, selected_reference, ordered_channels)
+
                     def select_event_callback():
                         # Turn the event into an ordered list
-                        selection_list = evh.event_to_list(st.session_state.plotly_select_event)
+                        selection_list = evh.event_to_list(
+                            st.session_state.plotly_select_event
+                        )
 
                         # Add selection list to existing df of selected onsets
                         selected_df = evh.add_list_to_df(
@@ -116,39 +140,34 @@ def eeg_visualization_dashboard():
                             sort=True,
                         )
                         # Save to session state the new collection of onsets
-                        st.session_state.selected_onsets = selected_df.reset_index(drop=True)
+                        st.session_state.selected_onsets = selected_df.reset_index(
+                            drop=True
+                        )
 
-                    # start_time = datetime.now()
                     # Display the Plotly figure
                     select_event = st.plotly_chart(
-                        fig, 
+                        fig,
                         use_container_width=True,
                         key="plotly_select_event",
                         # on_select="rerun",
                         on_select=select_event_callback,
                         selection_mode="points",
                     )
-                    # end_time = datetime.now()
-                    # print(f"GET PLOTLY CHART: {end_time - start_time}")
-                
-                    select_event
 
             with st.container():
                 col1, col2 = st.columns(2)
 
-                with col1: 
+                with col1:
                     tab1, tab2 = st.tabs(["Your Onsets", "ML Onsets"])
                     with tab1:
                         data_editor_table = st.data_editor(
                             st.session_state.get(
-                                "selected_onsets", pd.DataFrame(
-                                    columns=columns
-                                )
+                                "selected_onsets", pd.DataFrame(columns=columns)
                             ),
                             key="my_data",
                             num_rows="dynamic",
                             use_container_width=True,
-                            column_config = {
+                            column_config={
                                 "x": "Onset",
                                 "probability": st.column_config.ProgressColumn(
                                     "Probability",
@@ -163,7 +182,6 @@ def eeg_visualization_dashboard():
                             },
                         )
                         st.session_state.selected_onsets = data_editor_table
-
 
                         if st.button("Submit Onsets", type="primary"):
                             try:
@@ -196,19 +214,21 @@ def eeg_visualization_dashboard():
                                 st.error("Error: Incomplete credentials provided")
                             except Exception as e:
                                 st.error(f"Error: {e}")
-                    
+
                     with tab2:
                         # Retrieve aea from session state
                         aea = st.session_state.get("aea", None)
 
                         if aea is not None:
                             if not aea[selected_reference].empty:
-                                st.header("Edit AEA Predictions")
                                 with st.form("aea_data_editor_form", border=False):
-                                    editable_df = st.session_state.aea[selected_reference].copy()
+                                    editable_df = st.session_state.aea[
+                                        selected_reference
+                                    ].copy()
                                     editable_df["reviewer"] = st.session_state["user"]
                                     edited_df = st.data_editor(
                                         editable_df,
+                                        use_container_width=True,
                                         column_config={
                                             "probability": st.column_config.ProgressColumn(
                                                 "Probability",
@@ -245,31 +265,36 @@ def eeg_visualization_dashboard():
                                                 file_path,
                                                 ExtraArgs={
                                                     "Metadata": {
-                                                        "processed_date": str(processed_date),
+                                                        "processed_date": str(
+                                                            processed_date
+                                                        ),
                                                         "file_name": csv_file_name,
                                                     }
                                                 },
                                             )
                                             print("File uploaded successfully")
                                         except NoCredentialsError:
-                                            st.error("Error: Unable to locate credentials")
+                                            st.error(
+                                                "Error: Unable to locate credentials"
+                                            )
                                         except PartialCredentialsError:
-                                            st.error("Error: Incomplete credentials provided")
+                                            st.error(
+                                                "Error: Incomplete credentials provided"
+                                            )
                                         except Exception as e:
                                             st.error(f"Error: {e}")
-                
-                with col2: 
+
+                with col2:
+                    st.divider()
                     # Text area widget
                     onset_text = st.text_area(
-                        label="Onset List", 
-                        value=', '.join(data_editor_table['x'].astype(str)),
+                        label="Onset List",
+                        value=", ".join(data_editor_table["x"].astype(str)),
                         label_visibility="collapsed",
-                        height=400, 
+                        height=400,
                         key="onset_text_box",
                         disabled=True,
                     )
-
-                # st.write(st.session_state.aea[selected_reference])
 
         else:
             st.error(
