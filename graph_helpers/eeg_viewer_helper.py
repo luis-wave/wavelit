@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from mywaveanalytics.utils.params import (
     CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
@@ -44,13 +44,23 @@ def event_to_list(select_event=None):
             get_probability(point, aea_df),
             ordered_channels[point["curve_number"]],
             st.session_state.ref_selectbox,
-            point["x"],
+            convert_seconds_to_hhmmss(point["x"]),
             st.session_state.user,
         ]
         for i, point in enumerate(onsets)
     ]
 
     return selection_list
+
+
+def convert_seconds_to_hhmmss(seconds):
+    # Create a timedelta from seconds
+    td = timedelta(seconds=seconds)
+    # Get total hours, minutes, and seconds
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    milliseconds = td.microseconds // 1000
+    return f"{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
 
 
 def float_to_timestamp(seconds):
@@ -62,7 +72,6 @@ def float_to_timestamp(seconds):
 def convert_timestamp(timestamp):
     if isinstance(timestamp, float):
         formatted_time = float_to_timestamp(timestamp)
-
     else:
         try: 
             # Parse the input timestamp
@@ -76,7 +85,7 @@ def convert_timestamp(timestamp):
             # Format as MM:SS
             formatted_time = dt.strftime("%M:%S")
         except Exception as e:
-            print(f"CLICKED ONSET: {timestamp}")
+            print(f"CLICKED ONSET: {timestamp} of type: {type(timestamp)}")
             print(e)
 
 

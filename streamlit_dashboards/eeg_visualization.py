@@ -167,6 +167,7 @@ def eeg_visualization_dashboard():
                             key="my_data",
                             num_rows="dynamic",
                             use_container_width=True,
+                            height=800,
                             column_config={
                                 "x": "Onset",
                                 "probability": st.column_config.ProgressColumn(
@@ -229,6 +230,7 @@ def eeg_visualization_dashboard():
                                     edited_df = st.data_editor(
                                         editable_df,
                                         use_container_width=True,
+                                        height=800,
                                         column_config={
                                             "probability": st.column_config.ProgressColumn(
                                                 "Probability",

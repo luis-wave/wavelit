@@ -2,11 +2,6 @@ import pandas as pd
 import datetime
 import plotly.graph_objects as go
 import streamlit as st
-from mywaveanalytics.utils.params import (
-    CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
-    CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL,
-    CHANNEL_ORDER_PERSYST,
-)
 
 
 def draw_eeg_graph(df, ref, channels, sfreq=50, offset_value=1.0):
