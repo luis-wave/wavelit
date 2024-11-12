@@ -69,7 +69,7 @@ def eeg_visualization_dashboard():
                     with col1:
                         # Reference selection
                         ref = st.selectbox(
-                            "Choose EEG Reference",
+                            "Montage",
                             options=[
                                 "linked ears",
                                 "centroid",
@@ -78,7 +78,7 @@ def eeg_visualization_dashboard():
                             index=st.session_state.get(
                                 "ref_index", 0
                             ),  # Default to 'linked ears'
-                            label_visibility="collapsed",
+                            # label_visibility="collapsed",
                             key="ref_selectbox",
                         )
 
@@ -107,7 +107,12 @@ def eeg_visualization_dashboard():
                             st.session_state.ref_selectbox = "linked_ears"
 
                 with col2:
-                    pass
+                    cl_slider = st.slider(
+                        "ML Confidence Level Range Highlights", 
+                        0.0, 
+                        100.0, 
+                        (80.0, 100.0)
+                    )
 
             with st.container():
                 # Create DataFrame from MyWaveAnalytics object
