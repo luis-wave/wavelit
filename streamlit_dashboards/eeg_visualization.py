@@ -107,12 +107,14 @@ def eeg_visualization_dashboard():
                             st.session_state.ref_selectbox = "linked_ears"
 
                 with col2:
-                    cl_slider = st.slider(
-                        "ML Confidence Level Range Highlights", 
-                        0.0, 
-                        100.0, 
-                        (80.0, 100.0)
-                    )
+                    
+                    # cl_slider = st.slider(
+                    #     "ML Confidence Level Range Highlights", 
+                    #     0.0, 
+                    #     100.0, 
+                    #     (80.0, 100.0)
+                    # )
+                    pass
 
             with st.container():
                 # Create DataFrame from MyWaveAnalytics object
