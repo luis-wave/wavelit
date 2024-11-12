@@ -287,11 +287,13 @@ def eeg_visualization_dashboard():
                                             st.error(f"Error: {e}")
 
                 with col2:
-                    st.divider()
+                    st.subheader(" ")
                     # Text area widget
                     onset_text = st.text_area(
                         label="Onset List",
-                        value=", ".join(data_editor_table["x"].astype(str)),
+                        value=", ".join(
+                            data_editor_table["x"].astype(str).drop_duplicates()
+                        ),
                         label_visibility="collapsed",
                         height=400,
                         key="onset_text_box",

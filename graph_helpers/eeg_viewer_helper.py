@@ -144,8 +144,13 @@ def add_list_to_df(df, row_list, sort=True):
     # Convert the DataFrame to a list of lists
     df_as_list = df.values.tolist()
 
+    # Only add the selection if the onset 
+    onset_column = [row[0] for row in df_as_list]
+    channel_column = [row[2] for row in df_as_list]
     for row in row_list:
-        if row not in df_as_list:
+        if row[2] not in channel_column:
+            df_as_list.append(row)
+        elif row[0] not in onset_column:
             df_as_list.append(row)
 
     # Convert the combined list back to a DataFrame with the original columns
