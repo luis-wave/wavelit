@@ -44,6 +44,7 @@ def eeg_visualization_dashboard():
                 "probability",
                 "curve_number",
                 "reference",
+                "timestamp",
                 "point_x",
                 "user",
             ]
@@ -107,14 +108,21 @@ def eeg_visualization_dashboard():
                             st.session_state.ref_selectbox = "linked_ears"
 
                 with col2:
-                    
+                    highlight_your_onsets = st.toggle(
+                        "Highlight Your Onsets Purple",
+                        key="highlight_your_onsets",
+                    )
+                    highlight_ml_onsets = st.toggle(
+                        "Highlight ML Onsets Red",
+                        value=True,
+                        key="highlight_ml_onsets",
+                    )
                     # cl_slider = st.slider(
-                    #     "ML Confidence Level Range Highlights", 
-                    #     0.0, 
-                    #     100.0, 
+                    #     "ML Confidence Level Range Highlights",
+                    #     0.0,
+                    #     100.0,
                     #     (80.0, 100.0)
                     # )
-                    pass
 
             with st.container():
                 # Create DataFrame from MyWaveAnalytics object
@@ -130,7 +138,9 @@ def eeg_visualization_dashboard():
                             ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
                         elif selected_reference in ["bipolar_longitudinal"]:
                             # ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
-                            ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
+                            ordered_channels = (
+                                CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
+                            )
 
                         fig = draw_eeg_graph(df, selected_reference, ordered_channels)
 
@@ -185,7 +195,8 @@ def eeg_visualization_dashboard():
                                 ),
                                 "curve_number": "Channel",
                                 "reference": "Montage",
-                                "point_x": "Timestamp",
+                                "timestamp": "Timestamp",
+                                "point_x": "Seconds",
                                 "user": "Reviewer",
                             },
                         )

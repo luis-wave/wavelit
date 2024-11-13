@@ -45,6 +45,7 @@ def event_to_list(select_event=None):
             ordered_channels[point["curve_number"]],
             st.session_state.ref_selectbox,
             convert_seconds_to_hhmmss(point["x"]),
+            point["x"],
             st.session_state.user,
         ]
         for i, point in enumerate(onsets)
@@ -70,10 +71,12 @@ def float_to_timestamp(seconds):
 
 
 def convert_timestamp(timestamp):
-    if isinstance(timestamp, float):
+    if isinstance(timestamp, int):
+        formatted_time = float_to_timestamp(float(timestamp))
+    elif isinstance(timestamp, float):
         formatted_time = float_to_timestamp(timestamp)
     else:
-        try: 
+        try:
             # Parse the input timestamp
             timestamp = timestamp.split(" ", 1)[1] if " " in timestamp else timestamp
 
@@ -88,7 +91,6 @@ def convert_timestamp(timestamp):
             print(f"CLICKED ONSET: {timestamp} of type: {type(timestamp)}")
             print(e)
 
-
     return formatted_time
 
 
@@ -101,7 +103,10 @@ def round_down_millis(timestamp):
 
 
 def get_probability(point, aea_df=None):
-    if isinstance(point["x"], float):
+    if isinstance(point["x"], int):
+        timestamp = float_to_timestamp(float(point["x"]))
+        timestamp = "00:" + timestamp + ".000"
+    elif isinstance(point["x"], float):
         timestamp = float_to_timestamp(point["x"])
         timestamp = "00:" + timestamp + ".000"
     else:
@@ -144,7 +149,7 @@ def add_list_to_df(df, row_list, sort=True):
     # Convert the DataFrame to a list of lists
     df_as_list = df.values.tolist()
 
-    # Only add the selection if the onset 
+    # Only add the selection if the onset
     onset_column = [row[0] for row in df_as_list]
     channel_column = [row[2] for row in df_as_list]
     for row in row_list:
