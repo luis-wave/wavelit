@@ -3,48 +3,37 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 
-from mywaveanalytics.utils.params import (
-    CHANNEL_ORDER_BIPOLAR_LONGITUDINAL,
-    CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL,
-    CHANNEL_ORDER_PERSYST,
-)
 
-
-def event_to_list(select_event=None):
+def event_to_list(select_event=None, ordered_channels=None):
     """
-    Takes a plotly click event and turns it into a formatted list.
-    Formats the clicked timestamp to an onset in MM:SS.
+    Takes a plotly selection event and turns it into a formatted list 
+    of data for each onset.
 
     Parameters:
     - select_event: pandas.core.frame.DataFrame
         Selection data from plotly chart.
+    - ordered_channels: class 'list'
+        A list of channels for the montage.
 
     Returns:
     - selection_list: class 'list'
-        A formatted list of data from the click event.
+        A formatted list of data from the selection/click event.
     """
 
     if "current_montage" not in st.session_state:
         st.session_state.current_montage = "linked ears"
 
-    # Define the order of channels based on reference
-    if st.session_state.current_montage in ["linked_ears", "centroid"]:
-        ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
-    elif st.session_state.current_montage in ["bipolar_longitudinal"]:
-        # ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
-        ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
-
-    onsets = select_event["selection"].get("points", None)
+    onsets = select_event["selection"].get("points", [])
     aea_df = st.session_state.aea[st.session_state.current_montage].copy()
 
     # Create a list with each row in the specified order
     selection_list = [
         [
-            convert_timestamp(point["x"]),
-            get_probability(point, aea_df),
+            convert_point_to_timestamp(point["x"]),
+            get_probability(point["x"], aea_df),
             ordered_channels[point["curve_number"]],
             st.session_state.ref_selectbox,
-            convert_seconds_to_hhmmss(point["x"]),
+            float_to_full_timestamp(point["x"]),
             point["x"],
             st.session_state.user,
         ]
@@ -54,31 +43,27 @@ def event_to_list(select_event=None):
     return selection_list
 
 
-def convert_seconds_to_hhmmss(seconds):
-    # Create a timedelta from seconds
-    td = timedelta(seconds=seconds)
-    # Get total hours, minutes, and seconds
-    hours, remainder = divmod(td.seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    milliseconds = td.microseconds // 1000
-    return f"{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
+def convert_point_to_timestamp(point):
+    """
+    Take in the clicked x point and convert it to a MM:SS value.
 
+    Parameters:
+    - point: float
+        The selected point value.
 
-def float_to_timestamp(seconds):
-    minutes = int(seconds // 60)
-    remaining_seconds = int(seconds % 60)
-    return f"{minutes:02}:{remaining_seconds:02}"
-
-
-def convert_timestamp(timestamp):
-    if isinstance(timestamp, int):
-        formatted_time = float_to_timestamp(float(timestamp))
-    elif isinstance(timestamp, float):
-        formatted_time = float_to_timestamp(timestamp)
+    Returns:
+    - formatted_time: string
+        A timestamp represented by a MM:SS value.
+    """
+    if isinstance(point, int):
+        formatted_time = float_to_minute_timestamp(float(point))
+    elif isinstance(point, float):
+        formatted_time = float_to_minute_timestamp(point)
     else:
+        # For pandas datetime selection points
         try:
-            # Parse the input timestamp
-            timestamp = timestamp.split(" ", 1)[1] if " " in timestamp else timestamp
+            # Parse the x point from the plotly selection event to get the time only
+            timestamp = point.split(" ", 1)[1] if " " in point else point
 
             try:
                 dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
@@ -94,24 +79,32 @@ def convert_timestamp(timestamp):
     return formatted_time
 
 
-def round_down_millis(timestamp):
-    # Split the timestamp at the dot to separate the minutes/seconds from milliseconds
-    time_part, _ = timestamp.split(".")
-
-    # Append '.000' to get the desired format
-    return f"{time_part}.000"
-
-
 def get_probability(point, aea_df=None):
-    if isinstance(point["x"], int):
-        timestamp = float_to_timestamp(float(point["x"]))
+    """
+    Finds the probability that the selected point from the plotly graph is AEA by
+    referencing the machine learning AEA df. Odd numbered point values as of 
+    11/14/2024 dont have probabilities, so they are given a probability of zero. 
+
+    Parameters:
+    - point: float
+        The selected point value.
+    - aea_df: pandas.core.frame.DataFrame
+        Dataframe of AEA machine learning data for even numbered onsets of an EEG.
+
+    Returns:
+    - probability: float
+        The probability determined by the ML model that the onset contains AEA.
+    """
+
+    if isinstance(point, int):
+        timestamp = float_to_minute_timestamp(float(point))
         timestamp = "00:" + timestamp + ".000"
-    elif isinstance(point["x"], float):
-        timestamp = float_to_timestamp(point["x"])
+    elif isinstance(point, float):
+        timestamp = float_to_minute_timestamp(point)
         timestamp = "00:" + timestamp + ".000"
     else:
         # Parse the input timestamp
-        timestamp = point["x"].split(" ", 1)[1] if " " in point["x"] else point["x"]
+        timestamp = point.split(" ", 1)[1] if " " in point else point
 
     # Convert to datetime
     dt = datetime.strptime(timestamp, "%H:%M:%S.%f")
@@ -166,3 +159,29 @@ def add_list_to_df(df, row_list, sort=True):
         combined_df = combined_df.reset_index(drop=True)
 
     return combined_df
+
+
+def float_to_full_timestamp(seconds):
+    # Create a timedelta from seconds
+    td = timedelta(seconds=seconds)
+    # Get total hours, minutes, and seconds
+    hours, remainder = divmod(td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    milliseconds = td.microseconds // 1000
+    return f"{hours:02}:{minutes:02}:{seconds:02}.{milliseconds:03}"
+
+def float_to_minute_timestamp(seconds):
+    minutes = int(seconds // 60)
+    remaining_seconds = int(seconds % 60)
+    return f"{minutes:02}:{remaining_seconds:02}"
+
+def round_down_millis(timestamp):
+    try: 
+        # Split the timestamp at the dot to separate the minutes/seconds from milliseconds
+        time_part, _ = timestamp.split(".")
+
+        # Append '.000' to get the desired format
+        return f"{time_part}.000"
+    except Exception as e:
+        print("CHECK IF TIMESTAMP HAS MILLISECOND VALUE")
+        print(e)
