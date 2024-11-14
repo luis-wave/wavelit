@@ -30,12 +30,6 @@ credentials:
       password: $2b$12$6KU9dOLQcVTju4pwej/Hp.cLGni16oO4f2bI8/oErWz5CLR6jq7lC
       id: STF-934d6632-a17e-11ec-b364-0aa26dca46cb
       m2_username: jchong
-    nyu:
-      email: nicole@waveneuro.com
-      name: Nicole Yu
-      password: $2b$12$XWir/Spi.9ELDYlnJ92fNeV0RjSGfnnORaBXq1Db45NYKojhOibLW
-      id: STF-031845e2-b505-11ec-8b5d-0a86265d54df
-      m2_username: nyu_ea
     ble:
       email: ble@waveneuro.com
       name: Binh Le

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eeg-plot-streamlit-app"
-version = "2.6.0"
+version = "2.7.0"
 
 description = "EEG plot generator"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>"]
@@ -23,7 +23,7 @@ pydantic = "^2.9.1"
 pydantic-settings = "^2.5.2"
 bs4 = "^0.0.2"
 streamlit-pdf-viewer = "^0.0.18"
-mywaveanalytics = {path = "C:/Users/ppolk/Projects/Repos/wheels/mywaveanalytics-4.0.0-290MWP-py3-none-any.whl"}
+mywaveanalytics = { git = "https://github.com/waveneuroscience/MyWaveAnalytics.git", branch = "MWP-290" }
 
 
 
