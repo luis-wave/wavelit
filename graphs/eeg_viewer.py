@@ -113,6 +113,7 @@ def draw_eeg_graph(df, ref, channels, sfreq=50, offset_value=1.0):
             gridcolor="#bdbdbd",
             zeroline=False,
         ),
+
         yaxis={
             "tickvals": yticks,
             "ticktext": ytick_labels,

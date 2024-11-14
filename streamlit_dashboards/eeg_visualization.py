@@ -58,11 +58,11 @@ def eeg_visualization_dashboard():
                 st.session_state.ref_changed = None
 
             with st.container():
+
                 col1, col2 = st.columns(2)
 
                 # Override selected reference if necessary. For hyperlinks
                 query_params = st.query_params.to_dict()
-
                 if "ref" in query_params:
                     selected_reference = query_params["ref"]
                 else:
@@ -214,6 +214,7 @@ def eeg_visualization_dashboard():
                                 st.error("Error: Incomplete credentials provided")
                             except Exception as e:
                                 st.error(f"Error: {e}")
+
 
                     with tab2:
                         # Retrieve aea from session state
