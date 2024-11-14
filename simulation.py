@@ -12,7 +12,6 @@ from access_control import get_version_from_pyproject
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from streamlit_dashboards import eeg_visualization_dashboard
 
-# from dsp.graph_preprocessing import apply_fir_filter
 
 st.set_page_config(layout="wide")
 
