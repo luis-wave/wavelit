@@ -30,11 +30,12 @@ def event_to_list(select_event=None, ordered_channels=None):
     selection_list = [
         [
             convert_point_to_timestamp(point["x"]),
+            point["x"],
+            float_to_full_timestamp(point["x"]),
             get_probability(point["x"], aea_df),
             ordered_channels[point["curve_number"]],
             st.session_state.ref_selectbox,
-            float_to_full_timestamp(point["x"]),
-            point["x"],
+            "",
             st.session_state.user,
         ]
         for i, point in enumerate(onsets)
@@ -144,9 +145,9 @@ def add_list_to_df(df, row_list, sort=True):
 
     # Only add the selection if the onset
     onset_column = [row[0] for row in df_as_list]
-    channel_column = [row[2] for row in df_as_list]
+    channel_column = [row[3] for row in df_as_list]
     for row in row_list:
-        if row[2] not in channel_column:
+        if row[3] not in channel_column:
             df_as_list.append(row)
         elif row[0] not in onset_column:
             df_as_list.append(row)

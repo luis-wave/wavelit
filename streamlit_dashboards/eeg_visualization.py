@@ -41,11 +41,12 @@ def eeg_visualization_dashboard():
             mw_object = st.session_state.mw_object
             columns = [
                 "x",
+                "point_x",
+                "timestamp",
                 "probability",
                 "curve_number",
                 "reference",
-                "timestamp",
-                "point_x",
+                "comments",
                 "user",
             ]
 
@@ -214,6 +215,8 @@ def eeg_visualization_dashboard():
                             height=800,
                             column_config={
                                 "x": "Onset",
+                                "point_x": "Onset (s)",
+                                "timestamp": "Timestamp",
                                 "probability": st.column_config.ProgressColumn(
                                     "Probability",
                                     help="The probability of a seizure occurrence (shown as a percentage)",
@@ -222,10 +225,28 @@ def eeg_visualization_dashboard():
                                 ),
                                 "curve_number": "Channel",
                                 "reference": "Montage",
-                                "timestamp": "Timestamp",
-                                "point_x": "Seconds",
+                                "comments": st.column_config.TextColumn(
+                                    "Comments",
+                                    help="Add a note about this onset",
+                                    width="medium",
+                                ),
                                 "user": "Reviewer",
                             },
+                            column_order=(
+                                "x",
+                                "point_x",
+                                "probability",
+                                "curve_number",
+                                "reference",
+                                "comments",
+                            ),
+                            disabled=(
+                                "x",
+                                "point_x",
+                                "probability",
+                                "curve_number",
+                                "reference",
+                            )
                         )
                         st.session_state.selected_onsets = data_editor_table
 
