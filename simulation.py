@@ -37,7 +37,6 @@ def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=True):
 def main():
     # Example of loading real EEG data from an EDF file
     edf_file_path = "synthetic_data/synthetic_eeg.edf"
-    # edf_file_path = "synthetic_data/Chantiz, Kyle - 2024-11-04T19_40_47.519225Z.edf"
 
     if "mw_object" not in st.session_state:
         with open("synthetic_data/aea.json", "rb") as f:
