@@ -24,22 +24,40 @@ def event_to_list(select_event=None, ordered_channels=None):
         st.session_state.current_montage = "linked ears"
 
     onsets = select_event["selection"].get("points", [])
-    aea_df = st.session_state.aea[st.session_state.current_montage].copy()
+    aea = st.session_state.get("aea", None)
 
-    # Create a list with each row in the specified order
-    selection_list = [
-        [
-            convert_point_to_timestamp(point["x"]),
-            point["x"],
-            float_to_full_timestamp(point["x"]),
-            get_probability(point["x"], aea_df),
-            ordered_channels[point["curve_number"]],
-            st.session_state.ref_selectbox,
-            "",
-            st.session_state.user,
+    if aea is not None and not aea[st.session_state.current_montage].empty:
+        aea_df = aea[st.session_state.current_montage].copy()
+         
+        # Create a list with each row in the specified order
+        selection_list = [
+            [
+                convert_point_to_timestamp(point["x"]),
+                point["x"],
+                float_to_full_timestamp(point["x"]),
+                get_probability(point["x"], aea_df),
+                ordered_channels[point["curve_number"]],
+                st.session_state.ref_selectbox,
+                "",
+                st.session_state.user,
+            ]
+            for i, point in enumerate(onsets)
         ]
-        for i, point in enumerate(onsets)
-    ]
+    else:
+        # Create a list with each row in the specified order
+        selection_list = [
+            [
+                convert_point_to_timestamp(point["x"]),
+                point["x"],
+                float_to_full_timestamp(point["x"]),
+                0.0, # Since no ML AEA onsets provided
+                ordered_channels[point["curve_number"]],
+                st.session_state.ref_selectbox,
+                "",
+                st.session_state.user,
+            ]
+            for i, point in enumerate(onsets)
+        ]
 
     return selection_list
 
