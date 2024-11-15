@@ -39,8 +39,6 @@ protocol_obj = s3.get_object(Bucket=bucket_name, Key=protocol_file_path)
 report_df = convertLabel(pd.read_csv(report_obj["Body"]), "report", "wavelit")
 protocol_df = convertLabel(pd.read_csv(protocol_obj["Body"]), "protocol", "wavelit")
 
-report_df = convertLabel(pd.read_csv(report_file_path), "report", "wavelit")
-protocol_df = convertLabel(pd.read_csv(protocol_file_path), "protocol", "wavelit")
 edited_report = st.data_editor(
     data=report_df, disabled=("RowNumber", "Teammate"), hide_index=True
 )
