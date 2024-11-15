@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.0] - 2024-11-14
+### Changed
+- EEG Viewer UI/UX was updated once again, ML onset highlights, update table.
+- Annotation colors changed from red to purple for AEA, green to blue for Autoreject.
+- The scrollbar height was minimized, the X and Y axis borders were removed for a cleaner look.
+
+### Added
+- Brought back sensitivity slider.
+- New sigma dashboard, add table to send updates to the Databricks for shortened protocols.
+
+### Fixed
+- Converting points to datetime strings slowed EEG rendering, updated logic drastically improved render performance.
+
+
+
 ## [2.6.0] - 2024-10-25
 ### Changed
 - EEG Viewer UI/UX was updated.
