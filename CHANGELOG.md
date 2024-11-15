@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The scrollbar height was minimized, the X and Y axis borders were removed for a cleaner look.
 - Updated lockfile
 
+
 ### Added
 - Brought back sensitivity slider.
 - New sigma dashboard, add table to send updates to the Databricks for shortened protocols.
