@@ -12,12 +12,14 @@ from access_control import get_version_from_pyproject
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from streamlit_dashboards import eeg_visualization_dashboard
 
+
 st.set_page_config(layout="wide")
 
 
 def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=True):
     try:
         # Convert MyWaveObject MNE raw instance
+        filters.eeg_filter(mw_object, 1.5, None) # 1.9894
         raw = mw_object
 
         # Select channels based on EEG or ECG type
@@ -40,7 +42,6 @@ def main():
 
     if "mw_object" not in st.session_state:
         with open("synthetic_data/aea.json", "rb") as f:
-            print("OPENING FILE")
             aea = json.load(f)
             aea_data = {
                 "linked_ears": serialize_aea_to_pandas(
@@ -53,7 +54,6 @@ def main():
                     aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal"
                 ),
             }
-            print("DONE OPENING FILE")
 
         # Assigning real data to MockMyWaveAnalytics object
         mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)

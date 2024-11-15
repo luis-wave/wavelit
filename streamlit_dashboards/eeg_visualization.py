@@ -44,6 +44,7 @@ def eeg_visualization_dashboard():
                 "probability",
                 "curve_number",
                 "reference",
+                "timestamp",
                 "point_x",
                 "user",
             ]
@@ -67,47 +68,90 @@ def eeg_visualization_dashboard():
                     selected_reference = query_params["ref"]
                 else:
                     with col1:
-                        # Reference selection
-                        ref = st.selectbox(
-                            "Choose EEG Reference",
-                            options=[
-                                "linked ears",
-                                "centroid",
-                                "bipolar longitudinal",
-                            ],
-                            index=st.session_state.get(
-                                "ref_index", 0
-                            ),  # Default to 'linked ears'
-                            label_visibility="collapsed",
-                            key="ref_selectbox",
-                        )
+                        sub_col1, sub_col2 = st.columns(2)
+                        with sub_col1:
+                            # Reference selection
+                            ref = st.selectbox(
+                                "Montage",
+                                options=[
+                                    "linked ears",
+                                    "centroid",
+                                    "bipolar longitudinal",
+                                ],
+                                index=st.session_state.get(
+                                    "ref_index", 0
+                                ),  # Default to 'linked ears'
+                                # label_visibility="collapsed",
+                                key="ref_selectbox",
+                            )
 
-                        selected_references = {
-                            "linked ears": "linked_ears",
-                            "centroid": "centroid",
-                            "bipolar longitudinal": "bipolar_longitudinal",
-                        }
+                            selected_references = {
+                                "linked ears": "linked_ears",
+                                "centroid": "centroid",
+                                "bipolar longitudinal": "bipolar_longitudinal",
+                            }
 
-                        if selected_references[ref] is not st.session_state.get(
-                            "current_montage", None
-                        ):
-                            st.session_state.current_montage = selected_references[ref]
-                            st.session_state.ref_changed = True
-                        else:
-                            st.session_state.ref_changed = False
+                            if selected_references[ref] is not st.session_state.get(
+                                "current_montage", None
+                            ):
+                                st.session_state.current_montage = selected_references[ref]
+                                st.session_state.ref_changed = True
+                            else:
+                                st.session_state.ref_changed = False
 
-                        # If the reference's data is available, change the reference being used
-                        if (
-                            selected_references[ref]
-                            in st.session_state.eeg_graph.keys()
-                        ):
-                            selected_reference = selected_references[ref]
-                        else:  # change back to linked ears
-                            selected_reference = "linked_ears"
-                            st.session_state.ref_selectbox = "linked_ears"
+                            # If the reference's data is available, change the reference being used
+                            if (
+                                selected_references[ref]
+                                in st.session_state.eeg_graph.keys()
+                            ):
+                                selected_reference = selected_references[ref]
+                            else:  # change back to linked ears
+                                selected_reference = "linked_ears"
+                                st.session_state.ref_selectbox = "linked_ears"
+
+                        with sub_col2:
+                            sensitivity_options = [
+                                "0.01",
+                                "0.02",
+                                "0.05",
+                                "0.07",
+                                "0.1",
+                                "0.2",
+                                "0.3",
+                                "0.5",
+                                "0.7",
+                                "1.0",
+                                "2.0",
+                                "3.0",
+                                "5.0",
+                                "7.0",
+                                "10.0",
+                                "15.0",
+                                "20.0",
+                                "30.0",
+                                "50.0",
+                                "70.0",
+                                "100.0",
+                                "150.0",
+                                "200.0",
+                            ]
+                            sensitivity_slider = st.select_slider(
+                                "Sensitivity",
+                                options=sensitivity_options,
+                                value="1.0"
+                            )
 
                 with col2:
-                    pass
+                    highlight_your_onsets = st.toggle(
+                        "Highlight Your Onsets Purple",
+                        key="highlight_your_onsets",
+                    )
+                    highlight_ml_onsets = st.toggle(
+                        "Highlight ML Onsets Red",
+                        value=True,
+                        key="highlight_ml_onsets",
+                    )
+                    
 
             with st.container():
                 # Create DataFrame from MyWaveAnalytics object
@@ -116,21 +160,21 @@ def eeg_visualization_dashboard():
                 if df is not None:
                     # Generate the Plotly figure
                     with st.spinner("Scaling..."):
-                        df = waev.scale_dataframe(df)
+                        df = waev.scale_dataframe(df, float(sensitivity_slider))
                     with st.spinner("Rendering..."):
                         # Define the order of channels based on reference
                         if selected_reference in ["linked_ears", "centroid"]:
                             ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
                         elif selected_reference in ["bipolar_longitudinal"]:
-                            # ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
-                            ordered_channels = CHANNEL_ORDER_TEMPORAL_CENTRAL_PARASAGITTAL
+                            ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
 
                         fig = draw_eeg_graph(df, selected_reference, ordered_channels)
 
                     def select_event_callback():
                         # Turn the event into an ordered list
                         selection_list = evh.event_to_list(
-                            st.session_state.plotly_select_event
+                            st.session_state.plotly_select_event,
+                            ordered_channels,
                         )
 
                         # Add selection list to existing df of selected onsets
@@ -167,6 +211,7 @@ def eeg_visualization_dashboard():
                             key="my_data",
                             num_rows="dynamic",
                             use_container_width=True,
+                            height=800,
                             column_config={
                                 "x": "Onset",
                                 "probability": st.column_config.ProgressColumn(
@@ -177,7 +222,8 @@ def eeg_visualization_dashboard():
                                 ),
                                 "curve_number": "Channel",
                                 "reference": "Montage",
-                                "point_x": "Timestamp",
+                                "timestamp": "Timestamp",
+                                "point_x": "Seconds",
                                 "user": "Reviewer",
                             },
                         )
@@ -230,6 +276,7 @@ def eeg_visualization_dashboard():
                                     edited_df = st.data_editor(
                                         editable_df,
                                         use_container_width=True,
+                                        height=800,
                                         column_config={
                                             "probability": st.column_config.ProgressColumn(
                                                 "Probability",
@@ -286,11 +333,13 @@ def eeg_visualization_dashboard():
                                             st.error(f"Error: {e}")
 
                 with col2:
-                    st.divider()
+                    st.subheader(" ")
                     # Text area widget
                     onset_text = st.text_area(
                         label="Onset List",
-                        value=", ".join(data_editor_table["x"].astype(str)),
+                        value=", ".join(
+                            data_editor_table["x"].astype(str).drop_duplicates()
+                        ),
                         label_visibility="collapsed",
                         height=400,
                         key="onset_text_box",
