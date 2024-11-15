@@ -68,8 +68,6 @@ if not eeg_id:
 
     ecg_visualization_dashboard()
 
-    eeg_epoch_visualization_dashboard()
-
 else:
     asyncio.run(access_eeg_data(eeg_id))
 
@@ -81,7 +79,6 @@ else:
     else:
         eeg_visualization_dashboard()
         ecg_visualization_dashboard()
-        eeg_epoch_visualization_dashboard()
 
 
 # Footer section

@@ -27,8 +27,6 @@ class StandardPipeline:
         self.mw_object = mw_object.copy()
 
     def run(self):
-        with st.spinner("Calculate EEG Quality Index (EQI)..."):
-            self.calculate_eqi()
         with st.spinner("Calculate heart rate measures..."):
             self.calculate_heart_rate()
 

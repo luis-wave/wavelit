@@ -39,9 +39,6 @@ if __name__ == "__main__":
             "streamlit_apps/❤️ ecg.py", title="ECG", icon="❤️", url_path="/ecg"
         )
 
-        epoch_page = st.Page(
-            "streamlit_apps/🌊 epochs.py", title="Epochs", icon="🌊", url_path="/epochs"
-        )
 
         ngboost_page = st.Page(
             "streamlit_apps/ngboost.py",
