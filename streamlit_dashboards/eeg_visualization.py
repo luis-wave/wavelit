@@ -250,8 +250,6 @@ def eeg_visualization_dashboard():
                         )
                         st.session_state.selected_onsets = data_editor_table
 
-                        print(data_editor_table)
-
                         if st.button("Submit Onsets", type="primary"):
                             try:
                                 # Convert DataFrame to CSV and save it locally

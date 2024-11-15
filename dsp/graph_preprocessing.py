@@ -76,8 +76,6 @@ def scale_dataframe(df, sensitivity_slider=1.0):
 
     median_max, median_min, mean_max, mean_min = get_min_max_stats(eeg_columns, df)
 
-    print(f"MEDIANS: {median_min, median_max}    MEANS: {mean_min, mean_max}")
-
     # scale the EEG columns
     df_eeg = df[eeg_columns]
 
