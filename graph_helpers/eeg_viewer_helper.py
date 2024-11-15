@@ -28,7 +28,7 @@ def event_to_list(select_event=None, ordered_channels=None):
 
     if aea is not None and not aea[st.session_state.current_montage].empty:
         aea_df = aea[st.session_state.current_montage].copy()
-
+         
         # Create a list with each row in the specified order
         selection_list = [
             [
