@@ -6,25 +6,20 @@ import mne
 import pandas as pd
 import streamlit as st
 from mywaveanalytics.libraries import mywaveanalytics as mwa
+from mywaveanalytics.libraries import filters, references
 
 from access_control import get_version_from_pyproject
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from streamlit_dashboards import eeg_visualization_dashboard
 
+
 st.set_page_config(layout="wide")
 
-with open("synthetic_data/aea.json", "rb") as f:
-    aea = json.load(f)
-    aea_data = {
-        "linked_ears": serialize_aea_to_pandas(
-            aea.get("linked_ears"), ref="linked_ears"
-        )
-    }
 
-
-def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=False):
+def serialize_mw_to_df(mw_object, sample_rate=50, eeg=True, ecg=True):
     try:
         # Convert MyWaveObject MNE raw instance
+        filters.eeg_filter(mw_object, 1.5, None) # 1.9894
         raw = mw_object
 
         # Select channels based on EEG or ECG type
@@ -45,18 +40,37 @@ def main():
     # Example of loading real EEG data from an EDF file
     edf_file_path = "synthetic_data/synthetic_eeg.edf"
 
-    # Assigning real data to MockMyWaveAnalytics object
-    mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)
+    if "mw_object" not in st.session_state:
+        with open("synthetic_data/aea.json", "rb") as f:
+            aea = json.load(f)
+            aea_data = {
+                "linked_ears": serialize_aea_to_pandas(
+                    aea.get("linked_ears"), ref="linked_ears"
+                ),
+                "centroid": serialize_aea_to_pandas(
+                    aea.get("centroid"), ref="centroid"
+                ),
+                "bipolar_longitudinal": serialize_aea_to_pandas(
+                    aea.get("bipolar_longitudinal"), ref="bipolar_longitudinal"
+                ),
+            }
 
-    st.session_state.mw_object = mw_object
-    st.session_state.recording_date = datetime.now().strftime("%b %d, %Y")
-    st.session_state.filename = "Synthetic Oscillations"
-    st.session_state.eeg_id = "EEG-123456789"
-    st.session_state.eeg_graph = {
-        "linked_ears": serialize_mw_to_df(mw_object.eeg),
-    }
-    st.session_state.aea = aea_data
-    st.session_state.user = "Nicolas Cage"
+        # Assigning real data to MockMyWaveAnalytics object
+        mw_object = mwa.MyWaveAnalytics(edf_file_path, None, None, 10)
+
+        st.session_state.mw_object = mw_object
+        st.session_state.recording_date = datetime.now().strftime("%b %d, %Y")
+        st.session_state.filename = "Synthetic Oscillations"
+        st.session_state.eeg_id = "EEG-123456789"
+        st.session_state.eeg_graph = {
+            "linked_ears": serialize_mw_to_df(mw_object.eeg),
+            "centroid": serialize_mw_to_df(references.centroid(mw_object.copy().eeg)),
+            "bipolar_longitudinal": serialize_mw_to_df(
+                references.temporal_central_parasagittal(mw_object.copy().eeg)
+            ),
+        }
+        st.session_state.aea = aea_data
+        st.session_state.user = "Nicolas Cage"
 
     eeg_visualization_dashboard()
 

@@ -3,12 +3,14 @@ import pandas as pd
 import streamlit as st
 from scipy.signal import find_peaks
 
+from datetime import datetime
+
 
 @st.cache_data
-def scale_dataframe(df):
+def scale_dataframe(df, sensitivity_slider=1.0):
     """
     Scale a dataframe with EEG (+EKG) channels so the default "sensitivity" for
-    viewing means readable activity. The scaling expects a channel offset of 1.
+    viewing results in readable activity. The scaling expects a channel offset of 1.
 
     Parameters:
     - df: pandas.core.frame.DataFrame
@@ -80,7 +82,7 @@ def scale_dataframe(df):
     # new norm: scale to -1, 1 and then adjust it to a percentage of so clean waveforms
     #   arent reaching the bound (on average)
     bound = (median_max + abs(median_min)) / 2
-    scaled_eeg = (df_eeg / bound) * 0.25
+    scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_slider ###
 
     try:
         # scale ECG column(s) separately
@@ -90,7 +92,7 @@ def scale_dataframe(df):
 
         # new norm: scale to -1, 1 and then adjust it to a percentage of
         bound = (median_max + abs(median_min)) / 2
-        scaled_ecg = (df_ecg / bound) * 0.05
+        scaled_ecg = (df_ecg / bound) * 0.05 * sensitivity_slider ###
 
         # reattach the 'time' column and combine scaled columns
         try:
