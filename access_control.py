@@ -87,6 +87,7 @@ async def access_eeg_data(eeg_id=None):
                 try:
                     await eeg_manager.handle_downloaded_file(eeg_id)
                     await eeg_manager.fetch_additional_data(eeg_id)
+                    await eeg_manager.get_heart_rate_variables(eeg_id)
                 except Exception as e:
                     tb_exception = traceback.TracebackException.from_exception(e)
                     st.error(

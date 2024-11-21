@@ -92,6 +92,10 @@ class MyWavePlatformApi:
                     heart_rate = ecg_statistics.get("heartrate_bpm")
                     stdev_bpm = ecg_statistics.get("stdev_bpm")
 
+                    st.session_state.heart_rate = heart_rate
+                    st.session_state.heart_rate_std_dev = stdev_bpm
+
+
                     return heart_rate, stdev_bpm
         except aiohttp.ClientError as e:
             st.error(f"Error retrieving heart rate variables: {e}")
