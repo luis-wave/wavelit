@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.7.4] - 2024-11-20
+### Removed
+- Disabled heart rate calculation for now.
+
 ## [2.7.0] - 2024-11-14
 ### Changed
 - EEG Viewer UI/UX was updated once again, ML onset highlights, update table.
