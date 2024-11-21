@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.7.4] - 2024-11-20
+## [2.7.6] - 2024-11-20
+### Removed
+- Bring back heart rate calculation for uploaded eegs.
+
+## [2.7.5] - 2024-11-20
 ### Removed
 - Disabled heart rate calculation for now.
 

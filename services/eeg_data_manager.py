@@ -114,6 +114,8 @@ class EEGDataManager:
                 if mw_object:
                     st.success("EEG Data loaded successfully!")
                     self.save_eeg_data_to_session(mw_object, uploaded_file.name, None)
+                    pipeline = StandardPipeline(mw_object)
+                    pipeline.run()
 
 
     async def handle_downloaded_file(self, eeg_id):
