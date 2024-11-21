@@ -135,6 +135,8 @@ class EEGDataManager:
                 mw_object = self.load_mw_object(downloaded_path, eeg_type)
                 if mw_object:
                     self.save_eeg_data_to_session(mw_object, downloaded_path, eeg_id)
+                    pipeline = StandardPipeline(mw_object)
+                    pipeline.run()
                 st.success("Saved eeg data to session")
             try:
                 os.remove(downloaded_path)
