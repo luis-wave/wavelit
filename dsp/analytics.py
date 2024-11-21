@@ -43,6 +43,7 @@ class StandardPipeline:
     def calculate_heart_rate(self):
         try:
             hrv_statistics = ecg_statistics.hrv_analysis(self.mw_object.eeg, sampling_rate = self.mw_object.eeg.info['sfreq'])
+            print(hrv_statistics)
             st.session_state.heart_rate = hrv_statistics['mean_hr']
             st.session_state.heart_rate_std_dev = hrv_statistics['std_hr']
         except Exception as e:
