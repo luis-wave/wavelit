@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [2.7.7] - 2024-11-21
 ### Fixed
-- 1-25 Hz bandpass filter, resolve lead drift.
+- 1-25 Hz FIR bandpass filter.
 - Missing slider window variable in the eeg graph function.
 - EEG Viewer stand alone streamlit app now shows AEA for both linked ears and centroid when switching references.
+- Fix access control.
 
 ## [2.7.6] - 2024-11-20
 ### Removed
