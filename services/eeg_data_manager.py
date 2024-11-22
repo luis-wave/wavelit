@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from mywaveanalytics.libraries import mywaveanalytics
+from mywaveanalytics.libraries import mywaveanalytics, filters
 from mywaveanalytics.libraries.references import (bipolar_longitudinal_montage,
                                                   bipolar_transverse_montage,
                                                   centroid)
@@ -48,6 +48,10 @@ class EEGDataManager:
     def load_mw_object(self, path, eeg_type):
         try:
             mw_object = mywaveanalytics.MyWaveAnalytics(path, None, None, eeg_type)
+            filters.eeg_filter(mw_object, 1, 25)
+            filters.notch(
+                mw_object
+            )
             return mw_object
         except Exception as e:
             st.error(f"Loading failed for {path}: {e}")
@@ -86,9 +90,6 @@ class EEGDataManager:
         st.session_state.eeg_graph = {
             "linked_ears": self.serialize_mw_to_df(mw_copy.eeg),
             "centroid": self.serialize_mw_to_df(centroid(mw_copy.eeg)),
-            "bipolar_transverse": self.serialize_mw_to_df(
-                bipolar_transverse_montage(mw_copy.eeg)
-            ),
             "bipolar_longitudinal": self.serialize_mw_to_df(
                 bipolar_longitudinal_montage(mw_copy.eeg)
             ),
