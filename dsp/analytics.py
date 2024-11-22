@@ -42,12 +42,9 @@ class StandardPipeline:
 
     def calculate_heart_rate(self):
         try:
-            # Filter ECG signal before deriving heart rate measures
-            ecg_events_loc = filters.ecgfilter(self.mw_object)
-            # Find heart rate and its standard deviation
-            heart_rate_bpm, heart_rate_std_dev = ecg_statistics.ecg_bpm(ecg_events_loc)
-            st.session_state.heart_rate = heart_rate_bpm
-            st.session_state.heart_rate_std_dev = heart_rate_std_dev
+            hrv_statistics = ecg_statistics.hrv_analysis(self.mw_object.eeg, sampling_rate = self.mw_object.eeg.info['sfreq'])
+            st.session_state.heart_rate = hrv_statistics['mean_hr']
+            st.session_state.heart_rate_std_dev = hrv_statistics['std_hr']
         except Exception as e:
             st.error(f"Heart rate calculation failed for the following reason: {e}")
 
