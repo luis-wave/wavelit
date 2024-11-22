@@ -67,80 +67,81 @@ def eeg_visualization_dashboard():
                 query_params = st.query_params.to_dict()
                 if "ref" in query_params:
                     selected_reference = query_params["ref"]
-                else:
-                    with col1:
-                        sub_col1, sub_col2 = st.columns(2)
-                        with sub_col1:
-                            # Reference selection
-                            ref = st.selectbox(
-                                "Montage",
-                                options=[
-                                    "linked ears",
-                                    "centroid",
-                                    "bipolar longitudinal",
-                                ],
-                                index=st.session_state.get(
-                                    "ref_index", 0
-                                ),  # Default to 'linked ears'
-                                # label_visibility="collapsed",
-                                key="ref_selectbox",
+                with col1:
+                    sub_col1, sub_col2 = st.columns(2)
+                    with sub_col1:
+                        # Reference selection
+                        ref = st.selectbox(
+                            "Montage",
+                            options=[
+                                "linked ears",
+                                "centroid",
+                                "bipolar longitudinal",
+                            ],
+                            index=st.session_state.get("ref_index", 0),  # Default to linked ears
+                            key="ref_selectbox",
+                        )
+
+                        selected_references = {
+                            "linked ears": "linked_ears",
+                            "centroid": "centroid",
+                            "bipolar longitudinal": "bipolar_longitudinal",
+                        }
+
+                        # Map the selected label to the internal reference
+                        selected_reference = selected_references.get(ref)
+
+                        # Validate if the selected reference exists in the EEG graph
+                        if selected_reference in st.session_state.eeg_graph.keys():
+                            # Update session state for current montage and reference
+                            st.session_state.current_montage = selected_reference
+                            st.session_state.ref_changed = (
+                                selected_reference != st.session_state.get("current_montage", None)
                             )
+                        else:
+                            st.warning(f"'{ref}' reference is unavailable. Falling back to 'linked ears'.")
+                            st.session_state.ref_selectbox = "linked ears"
+                            st.session_state.current_montage = "linked_ears"
+                            st.session_state.ref_changed = True
+                            selected_reference = "linked_ears"
 
-                            selected_references = {
-                                "linked ears": "linked_ears",
-                                "centroid": "centroid",
-                                "bipolar longitudinal": "bipolar_longitudinal",
-                            }
+                    with sub_col2:
+                        sensitivity_options = [
+                            "0.01",
+                            "0.02",
+                            "0.05",
+                            "0.07",
+                            "0.1",
+                            "0.2",
+                            "0.3",
+                            "0.5",
+                            "0.7",
+                            "1.0",
+                            "2.0",
+                            "3.0",
+                            "5.0",
+                            "7.0",
+                            "10.0",
+                            "15.0",
+                            "20.0",
+                            "30.0",
+                            "50.0",
+                            "70.0",
+                            "100.0",
+                            "150.0",
+                            "200.0",
+                        ]
+                        # Initialize sensitivity in session state
+                        if "sensitivity" not in st.session_state:
+                            st.session_state.sensitivity = "1.0"  # Default value
 
-                            if selected_references[ref] is not st.session_state.get(
-                                "current_montage", None
-                            ):
-                                st.session_state.current_montage = selected_references[ref]
-                                st.session_state.ref_changed = True
-                            else:
-                                st.session_state.ref_changed = False
+                        # Sensitivity slider
+                        st.session_state.sensitivity = st.select_slider(
+                            "Sensitivity",
+                            options=sensitivity_options,
+                            value=st.session_state.sensitivity  # Persisted value
+                        )
 
-                            # If the reference's data is available, change the reference being used
-                            if (
-                                selected_references[ref]
-                                in st.session_state.eeg_graph.keys()
-                            ):
-                                selected_reference = selected_references[ref]
-                            else:  # change back to linked ears
-                                selected_reference = "linked_ears"
-                                st.session_state.ref_selectbox = "linked_ears"
-
-                        with sub_col2:
-                            sensitivity_options = [
-                                "0.01",
-                                "0.02",
-                                "0.05",
-                                "0.07",
-                                "0.1",
-                                "0.2",
-                                "0.3",
-                                "0.5",
-                                "0.7",
-                                "1.0",
-                                "2.0",
-                                "3.0",
-                                "5.0",
-                                "7.0",
-                                "10.0",
-                                "15.0",
-                                "20.0",
-                                "30.0",
-                                "50.0",
-                                "70.0",
-                                "100.0",
-                                "150.0",
-                                "200.0",
-                            ]
-                            sensitivity_slider = st.select_slider(
-                                "Sensitivity",
-                                options=sensitivity_options,
-                                value="1.0"
-                            )
 
                 with col2:
                     highlight_your_onsets = st.toggle(
@@ -152,52 +153,54 @@ def eeg_visualization_dashboard():
                         value=True,
                         key="highlight_ml_onsets",
                     )
-                    
 
-            with st.container():
-                # Create DataFrame from MyWaveAnalytics object
-                df = st.session_state.eeg_graph[selected_reference]
 
-                if df is not None:
-                    # Generate the Plotly figure
-                    with st.spinner("Scaling..."):
-                        df = waev.scale_dataframe(df, float(sensitivity_slider))
-                    with st.spinner("Rendering..."):
-                        # Define the order of channels based on reference
-                        if selected_reference in ["linked_ears", "centroid"]:
-                            ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
-                        elif selected_reference in ["bipolar_longitudinal"]:
-                            ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
+            # Create DataFrame from MyWaveAnalytics object
+            df = st.session_state.eeg_graph[selected_reference]
 
-                        fig = draw_eeg_graph(df, selected_reference, ordered_channels)
+            if df is not None:
+                # Convert the sensitivity value to float
+                sensitivity_value = float(st.session_state.sensitivity)
 
-                    def select_event_callback():
-                        # Turn the event into an ordered list
-                        selection_list = evh.event_to_list(
-                            st.session_state.plotly_select_event,
-                            ordered_channels,
-                        )
+                # Generate the Plotly figure
+                with st.spinner("Scaling..."):
+                    df = waev.scale_dataframe(df, sensitivity_value)
+                with st.spinner("Rendering..."):
+                    # Define the order of channels based on reference
+                    if selected_reference in ["linked_ears", "centroid"]:
+                        ordered_channels = CHANNEL_ORDER_PERSYST[:-2][::-1]
+                    elif selected_reference in ["bipolar_longitudinal"]:
+                        ordered_channels = CHANNEL_ORDER_BIPOLAR_LONGITUDINAL
 
-                        # Add selection list to existing df of selected onsets
-                        selected_df = evh.add_list_to_df(
-                            st.session_state.get("selected_onsets", pd.DataFrame()),
-                            selection_list,
-                            sort=True,
-                        )
-                        # Save to session state the new collection of onsets
-                        st.session_state.selected_onsets = selected_df.reset_index(
-                            drop=True
-                        )
+                    fig = draw_eeg_graph(df, selected_reference, ordered_channels)
 
-                    # Display the Plotly figure
-                    select_event = st.plotly_chart(
-                        fig,
-                        use_container_width=True,
-                        key="plotly_select_event",
-                        # on_select="rerun",
-                        on_select=select_event_callback,
-                        selection_mode="points",
+                def select_event_callback():
+                    # Turn the event into an ordered list
+                    selection_list = evh.event_to_list(
+                        st.session_state.plotly_select_event,
+                        ordered_channels,
                     )
+
+                    # Add selection list to existing df of selected onsets
+                    selected_df = evh.add_list_to_df(
+                        st.session_state.get("selected_onsets", pd.DataFrame()),
+                        selection_list,
+                        sort=True,
+                    )
+                    # Save to session state the new collection of onsets
+                    st.session_state.selected_onsets = selected_df.reset_index(
+                        drop=True
+                    )
+
+                # Display the Plotly figure
+                select_event = st.plotly_chart(
+                    fig,
+                    use_container_width=True,
+                    key="plotly_select_event",
+                    # on_select="rerun",
+                    on_select=select_event_callback,
+                    selection_mode="points",
+                )
 
             with st.container():
                 col1, col2 = st.columns(2)

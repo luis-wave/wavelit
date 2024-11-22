@@ -7,10 +7,14 @@ from streamlit_dashboards import eeg_visualization_dashboard
 
 if "eegid" in st.session_state:
     asyncio.run(access_eeg_data(st.session_state.eegid))
-else:
-    asyncio.run(access_eeg_data())
+    eeg_visualization_dashboard()
 
-eeg_visualization_dashboard()
+else:
+    eeg_id = st.text_input("Enter EEG ID")
+    if st.button("Download EEG Data"):
+        st.session_state["eegid"] = eeg_id
+        asyncio.run(access_eeg_data(st.session_state.eegid))
+        eeg_visualization_dashboard()
 
 # Footer section
 version = get_version_from_pyproject()
