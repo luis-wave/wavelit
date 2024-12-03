@@ -106,16 +106,33 @@ def eeg_visualization_dashboard():
                             selected_reference = "linked_ears"
 
                     with sub_col2:
+                        # sensitivity_options = [
+                        #     "0.01",
+                        #     "0.02",
+                        #     "0.05",
+                        #     "0.07",
+                        #     "0.1",
+                        #     "0.2",
+                        #     "0.3",
+                        #     "0.5",
+                        #     "0.7",
+                        #     "1.0",
+                        #     "2.0",
+                        #     "3.0",
+                        #     "5.0",
+                        #     "7.0",
+                        #     "10.0",
+                        #     "15.0",
+                        #     "20.0",
+                        #     "30.0",
+                        #     "50.0",
+                        #     "70.0",
+                        #     "100.0",
+                        #     "150.0",
+                        #     "200.0",
+                        # ]
+
                         sensitivity_options = [
-                            "0.01",
-                            "0.02",
-                            "0.05",
-                            "0.07",
-                            "0.1",
-                            "0.2",
-                            "0.3",
-                            "0.5",
-                            "0.7",
                             "1.0",
                             "2.0",
                             "3.0",
@@ -130,14 +147,20 @@ def eeg_visualization_dashboard():
                             "100.0",
                             "150.0",
                             "200.0",
+                            "300.0",
+                            "500.0",
+                            "700.0",
+                            "1000.0",
                         ]
+
+
                         # Initialize sensitivity in session state
                         if "sensitivity" not in st.session_state:
-                            st.session_state.sensitivity = "1.0"  # Default value
+                            st.session_state.sensitivity = "15.0"  # Default value
 
                         # Sensitivity slider
                         st.session_state.sensitivity = st.select_slider(
-                            "Sensitivity",
+                            "Sensitivity in uV",
                             options=sensitivity_options,
                             value=st.session_state.sensitivity  # Persisted value
                         )
@@ -164,7 +187,7 @@ def eeg_visualization_dashboard():
 
                 # Generate the Plotly figure
                 with st.spinner("Scaling..."):
-                    df = waev.scale_dataframe(df, sensitivity_value)
+                    df = waev.scale_dataframe(df, sensitivity_value, sensitivity_value)
                 with st.spinner("Rendering..."):
                     # Define the order of channels based on reference
                     if selected_reference in ["linked_ears", "centroid"]:

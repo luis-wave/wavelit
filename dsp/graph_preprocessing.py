@@ -6,8 +6,31 @@ from scipy.signal import find_peaks
 from datetime import datetime
 
 
+sensitivities = {
+    "1 uV": 1.0,
+    "2 uV": 2.0,
+    "3 uV": 3.0,
+    "5 uV": 5.0,
+    "7 uV": 7.0,
+    "10 uV": 10.0,
+    "15 uV": 15.0,
+    "20 uV": 20.0,
+    "30 uV": 30.0,
+    "50 uV": 50.0,
+    "70 uV": 70.0,
+    "100 uV": 100.0,
+    "150 uV": 150.0,
+    "200 uV": 200.0,
+    "300 uV": 300.0,
+    "500 uV": 500.0,
+    "700 uV": 700.0,
+    "1000 uV": 1000.0,
+}
+
+
+
 @st.cache_data
-def scale_dataframe(df, sensitivity_slider=1.0):
+def scale_dataframe(df, sensitivity_slider=1.0, sensitivity_slider_uv=15.0):
     """
     Scale a dataframe with EEG (+EKG) channels so the default "sensitivity" for
     viewing results in readable activity. The scaling expects a channel offset of 1.
@@ -82,7 +105,11 @@ def scale_dataframe(df, sensitivity_slider=1.0):
     # new norm: scale to -1, 1 and then adjust it to a percentage of so clean waveforms
     #   arent reaching the bound (on average)
     bound = (median_max + abs(median_min)) / 2
-    scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_slider ###
+    # scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_slider ###
+
+    # DODS-99 -->
+    scaled_eeg = (df_eeg / float(sensitivity_slider_uv)) * 0.25
+
 
     try:
         # scale ECG column(s) separately
