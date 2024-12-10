@@ -106,32 +106,6 @@ def eeg_visualization_dashboard():
                             selected_reference = "linked_ears"
 
                     with sub_col2:
-                        # sensitivity_options = [
-                        #     "0.01",
-                        #     "0.02",
-                        #     "0.05",
-                        #     "0.07",
-                        #     "0.1",
-                        #     "0.2",
-                        #     "0.3",
-                        #     "0.5",
-                        #     "0.7",
-                        #     "1.0",
-                        #     "2.0",
-                        #     "3.0",
-                        #     "5.0",
-                        #     "7.0",
-                        #     "10.0",
-                        #     "15.0",
-                        #     "20.0",
-                        #     "30.0",
-                        #     "50.0",
-                        #     "70.0",
-                        #     "100.0",
-                        #     "150.0",
-                        #     "200.0",
-                        # ]
-
                         sensitivity_options = [
                             "1.0",
                             "2.0",
@@ -159,12 +133,11 @@ def eeg_visualization_dashboard():
                             st.session_state.sensitivity = "15.0"  # Default value
 
                         # Sensitivity slider
-                        st.session_state.sensitivity = st.select_slider(
+                        st.session_state.sensitivity = st.selectbox(
                             "Sensitivity in uV",
                             options=sensitivity_options,
-                            value=st.session_state.sensitivity  # Persisted value
+                            index=6,  # Persisted value
                         )
-
 
                 with col2:
                     highlight_your_onsets = st.toggle(
