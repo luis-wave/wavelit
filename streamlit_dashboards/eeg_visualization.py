@@ -68,7 +68,7 @@ def eeg_visualization_dashboard():
                 if "ref" in query_params:
                     selected_reference = query_params["ref"]
                 with col1:
-                    sub_col1, sub_col2 = st.columns(2)
+                    sub_col1, sub_col2, sub_col3, sub_col4 = st.columns(4)
                     with sub_col1:
                         # Reference selection
                         ref = st.selectbox(
@@ -138,6 +138,12 @@ def eeg_visualization_dashboard():
                             options=sensitivity_options,
                             index=6,  # Persisted value
                         )
+                    
+                    with sub_col3:
+                        pass
+
+                    with sub_col4:
+                        pass
 
                 with col2:
                     highlight_your_onsets = st.toggle(
