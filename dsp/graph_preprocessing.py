@@ -108,7 +108,7 @@ def scale_dataframe(df, sensitivity_slider=1.0, sensitivity_slider_uv=15.0):
     # scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_slider ###
 
     # DODS-99 -->
-    scaled_eeg = (df_eeg / float(sensitivity_slider_uv)) * 0.25
+    scaled_eeg = (df_eeg / float(sensitivity_slider_uv)) * 0.1
 
 
     try:
