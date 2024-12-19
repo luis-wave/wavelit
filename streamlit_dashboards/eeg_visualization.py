@@ -106,7 +106,7 @@ def eeg_visualization_dashboard():
                             selected_reference = "linked_ears"
 
                     with sub_col2:
-                        sensitivity_options = [
+                        SENSITIVITY_OPTIONS = [
                             "1.0",
                             "2.0",
                             "3.0",
@@ -127,7 +127,6 @@ def eeg_visualization_dashboard():
                             "1000.0",
                         ]
 
-
                         # Initialize sensitivity in session state
                         if "sensitivity" not in st.session_state:
                             st.session_state.sensitivity = "15.0"  # Default value
@@ -135,15 +134,13 @@ def eeg_visualization_dashboard():
                         # Sensitivity slider
                         st.session_state.sensitivity = st.selectbox(
                             "Sensitivity in uV",
-                            options=sensitivity_options,
+                            options=SENSITIVITY_OPTIONS,
                             index=6,  # Persisted value
                         )
-                    
-                    with sub_col3:
-                        pass
-
-                    with sub_col4:
-                        pass
+                
+                    # Dummy columns to decrease the width of the dropdown widgets used
+                    with sub_col3: pass
+                    with sub_col4: pass
 
                 with col2:
                     highlight_your_onsets = st.toggle(
@@ -162,11 +159,11 @@ def eeg_visualization_dashboard():
 
             if df is not None:
                 # Convert the sensitivity value to float
-                sensitivity_value = float(st.session_state.sensitivity)
+                eeg_sensitivity_value = float(st.session_state.sensitivity)
 
                 # Generate the Plotly figure
                 with st.spinner("Scaling..."):
-                    df = waev.scale_dataframe(df, sensitivity_value, sensitivity_value)
+                    df = waev.scale_dataframe(df=df, eeg_sensitivity_uv=eeg_sensitivity_value)
                 with st.spinner("Rendering..."):
                     # Define the order of channels based on reference
                     if selected_reference in ["linked_ears", "centroid"]:

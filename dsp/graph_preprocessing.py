@@ -3,10 +3,7 @@ import pandas as pd
 import streamlit as st
 from scipy.signal import find_peaks
 
-from datetime import datetime
-
-
-sensitivities = {
+SENSITIVITIES = {
     "1 uV": 1.0,
     "2 uV": 2.0,
     "3 uV": 3.0,
@@ -30,18 +27,23 @@ sensitivities = {
 
 
 @st.cache_data
-def scale_dataframe(df, sensitivity_slider=1.0, sensitivity_slider_uv=15.0):
+def scale_dataframe(df, sensitivity_factor=1.0, eeg_sensitivity_uv=None):
     """
     Scale a dataframe with EEG (+EKG) channels so the default "sensitivity" for
-    viewing results in readable activity. The scaling expects a channel offset of 1.
+    viewing results in readable activity. This can be done by autoscaling or by a user 
+    passed in uV sensitivity value. The scaling expects a channel offset of 1.
 
     Parameters:
     - df: pandas.core.frame.DataFrame
         Containing channel names with their channel data.
+    - sensitivity_factor: float
+        The value used to adjust the auto-scaling
+    - eeg_sensitivity_uv: float
+        The value used to adjust via a uV sensitivity value passed in
 
     Returns:
     - scaled_df: pandas.core.frame.DataFrame
-        The same df just scaled to be readable for an offest between channels of 1.
+        The same df just scaled to be readable for a plotly graph with a trace offset of 1.
     """
 
     # separate the 'Time' column
@@ -97,29 +99,30 @@ def scale_dataframe(df, sensitivity_slider=1.0, sensitivity_slider_uv=15.0):
 
         return median_max, median_min, mean_max, mean_min
 
-    median_max, median_min, mean_max, mean_min = get_min_max_stats(eeg_columns, df)
-
-    # scale the EEG columns
+    median_max, median_min, _, _ = get_min_max_stats(eeg_columns, df)
     df_eeg = df[eeg_columns]
 
-    # new norm: scale to -1, 1 and then adjust it to a percentage of so clean waveforms
-    #   arent reaching the bound (on average)
-    bound = (median_max + abs(median_min)) / 2
-    # scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_slider ###
-
-    # DODS-99 -->
-    scaled_eeg = (df_eeg / float(sensitivity_slider_uv)) * 0.1
+    # If no uV value is provided, autoscale the eeg data, else use uV sensitivity value
+    if eeg_sensitivity_uv is None:
+        # new norm: scale to -1, 1 and then adjust it to a percentage of so clean waveforms
+        #   arent reaching the bound (on average)
+        bound = (median_max + abs(median_min)) / 2
+        scaled_eeg = (df_eeg / bound) * 0.25 * sensitivity_factor
+    else:
+        # Scale the EEG data based off the uV sensitivity
+        # Multiply by 0.1 to replicate how each sensitivity looks in Persyst Insight II
+        scaled_eeg = (df_eeg / float(eeg_sensitivity_uv)) * 0.1
 
 
     try:
         # scale ECG column(s) separately
-        median_max, median_min, mean_max, mean_min = get_min_max_stats(ecg_columns, df)
+        median_max, median_min, _, _ = get_min_max_stats(ecg_columns, df)
 
         df_ecg = df[ecg_columns]
 
         # new norm: scale to -1, 1 and then adjust it to a percentage of
         bound = (median_max + abs(median_min)) / 2
-        scaled_ecg = (df_ecg / bound) * 0.05 * sensitivity_slider ###
+        scaled_ecg = (df_ecg / bound) * 0.05 * sensitivity_factor
 
         # reattach the 'time' column and combine scaled columns
         try:
