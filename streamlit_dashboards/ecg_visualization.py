@@ -8,6 +8,8 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
+from mywavelab.libraries import mywavelab as mwl
+
 
 
 def ecg_visualization_dashboard():
@@ -39,6 +41,29 @@ def ecg_visualization_dashboard():
             col2.metric("Recording Date", st.session_state.recording_date)
 
             st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
+
+            # Display MWL HRV calculations 
+            if "hrv_stats" in st.session_state:
+
+                hrv_stats_str = ""
+                for montage, mdict in st.session_state.hrv_stats.items():
+                    if montage == 'a1a2': mon = 'A1A2'
+                    elif montage == 'cz': mon = 'Cz'
+
+                    hrv_stats_str = hrv_stats_str + mon + ": "
+                    for channel, ch_dict in mdict.items():
+                        if ch_dict['Reject']: no_hrv = " (No Hrv)"
+                        else: no_hrv = ""
+
+                        hrv_stats_str = hrv_stats_str + channel + no_hrv + " - "
+                        hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Average Heart Rate']) + "</b>" + " bpm&nbsp;&nbsp;"
+                        hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Heart Rate Standard Deviation']) + "</b>" + " sd "
+                        hrv_stats_str = hrv_stats_str + "&nbsp;" * 5
+
+                    hrv_stats_str = hrv_stats_str + "&nbsp;" * 8
+
+                st.markdown(f"{hrv_stats_str}", unsafe_allow_html=True)
+            
 
             # Check if `mw_object` is available
             if (
