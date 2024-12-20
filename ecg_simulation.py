@@ -16,14 +16,9 @@ from mywavelab.libraries import mywavelab as mwl
 st.set_page_config(layout="wide")
 
 def main():
-    eeg_file_path = input("Paste an edf or deymed file path -> ")
-
     # Assigning real data to MockMyWaveAnalytics object
     mw_object = mwa.MyWaveAnalytics("synthetic_data/synthetic_eeg.edf", None, None, 10)
-    mwl_object = mwl.MyWaveLab(eeg_file_path)
-    hrv = mwl_object.ecg_stats()
 
-    st.session_state['hrv_stats'] = hrv
     st.session_state['heart_rate'] = 000.00
     st.session_state['heart_rate_std_dev'] = 00.00
 
