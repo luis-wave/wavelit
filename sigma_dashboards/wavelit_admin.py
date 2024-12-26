@@ -25,6 +25,10 @@ def convertLabel(df, type, home):
             df["Protocol_Status"].replace("Unavailable", False, inplace=True)
     return df
 
+DODS_PATIENT_DASHBOARD = os.getenv("DODS_PATIENT_DASHBOARD")
+html = f'<iframe src="{DODS_PATIENT_DASHBOARD}" frameborder="0" width="100%" height="900px"></iframe>'
+components.html(html, height=1000, scrolling=False)
+
 st.title("Teammate Availability")
 
 # S3 client setup
