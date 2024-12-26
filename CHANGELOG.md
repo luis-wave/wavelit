@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.8.0] - 2024-12-26
+### Added
+- Patient dashboard for Alex.
+
+
+
 ## [2.7.7] - 2024-11-21
 ### Fixed
 - 1-25 Hz FIR bandpass filter.
