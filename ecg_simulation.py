@@ -11,7 +11,6 @@ from mywaveanalytics.libraries import mywaveanalytics as mwa
 from mywaveanalytics.libraries import filters, references
 from streamlit_dashboards import ecg_visualization_dashboard
 
-from mywavelab.libraries import mywavelab as mwl
 
 st.set_page_config(layout="wide")
 

@@ -8,7 +8,7 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
-from mywavelab.libraries import mywavelab as mwl
+from dsp.lab_ecg_stats import ecg_stats
 
 
 
@@ -51,8 +51,8 @@ def ecg_visualization_dashboard():
                 mw_object = st.session_state.mw_object
                 mw_copy = mw_object.copy()
 
-                mwl_object = mwl.MyWaveLab(with_eeg=mw_object.eeg)
-                hrv = mwl_object.ecg_stats()
+                hrv = ecg_stats(eeg=mw_object.eeg)
+
                 st.session_state['hrv_stats'] = hrv
 
                 # Display MWL HRV calculations 
