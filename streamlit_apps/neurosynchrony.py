@@ -17,6 +17,7 @@ from streamlit_apps.mert_components import (render_abnormalities,
                                             render_eeg_review, render_notes,
                                             render_protocol_page)
 from streamlit_dashboards import eeg_visualization_dashboard
+from streamlit_dashboards import ecg_visualization_dashboard
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -54,9 +55,9 @@ def delete_report(data_manager, report_id, ref="default"):
         st.rerun()
 
 
-tabs = ["Reports", "Protocols", "EEG"]
+tabs = ["Reports", "Protocols", "EEG", "ECG"]
 
-tab1, tab2, tab3 = st.tabs(tabs)
+tab1, tab2, tab3, tab4 = st.tabs(tabs)
 
 with tab1:
     # Start rendering the UI
@@ -198,3 +199,7 @@ with tab2:
 with tab3:
     asyncio.run(access_eeg_data(st.session_state["eegid"]))
     eeg_visualization_dashboard()
+
+with tab4:
+    asyncio.run(access_eeg_data(st.session_state["eegid"]))
+    ecg_visualization_dashboard()
