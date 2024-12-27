@@ -102,25 +102,41 @@ def reject_hrv(avg_hr, avg_sd):
     }
 
 
-def ecg_stats(eeg=None, store=True):
+def ecg_stats(eeg=None, refs=False, store=True):
     """
     Gets HRV statistic data for both Linked-ears and Cz referenced ECG data.
     """
+    try:
+        if refs: 
+            hrv_stats_dict = {
+                "a1a2": {}, "cz": {},
+            }
+
+            # For each montage/ key in hrv_stats_dict
+            for montage in hrv_stats_dict.keys():
+                temp_eeg = eeg.copy()
+                ecg_ch_names = temp_eeg.copy().pick_types(ecg=True).ch_names
+
+                mapping = {ch_name: 'eeg' for ch_name in ecg_ch_names}
+                temp_eeg.set_channel_types(mapping)
+
+                if montage == "cz": temp_eeg.set_eeg_reference(['Cz'])
+                ecg_chs_data = temp_eeg.get_data(picks=ecg_ch_names)
+
+                # For each available ECG channel
+                for i, each_ecg_array in enumerate(ecg_chs_data):
+                    ecg_data = calc_ecg_stats(
+                        each_ecg_array, 
+                        temp_eeg.info['sfreq'], 
+                        store, 
+                    ) 
+                    hrv_stats_dict[montage][ecg_ch_names[i]] = ecg_data
     
-    hrv_stats_dict = {
-        "a1a2": {}, "cz": {},
-    }
-
-    try: 
-        # For each montage/ key in hrv_stats_dict
-        for montage in hrv_stats_dict.keys():
+        else:
+            hrv_stats_dict = {}
+            
             temp_eeg = eeg.copy()
-            ecg_ch_names = temp_eeg.copy().pick_types(ecg=True).ch_names
-
-            mapping = {ch_name: 'eeg' for ch_name in ecg_ch_names}
-            temp_eeg.set_channel_types(mapping)
-
-            if montage == "cz": temp_eeg.set_eeg_reference(['Cz'])
+            ecg_ch_names = temp_eeg.pick_types(ecg=True).ch_names
             ecg_chs_data = temp_eeg.get_data(picks=ecg_ch_names)
 
             # For each available ECG channel
@@ -130,7 +146,8 @@ def ecg_stats(eeg=None, store=True):
                     temp_eeg.info['sfreq'], 
                     store, 
                 ) 
-                hrv_stats_dict[montage][ecg_ch_names[i]] = ecg_data
+                hrv_stats_dict[ecg_ch_names[i]] = ecg_data
+
 
         return hrv_stats_dict 
         

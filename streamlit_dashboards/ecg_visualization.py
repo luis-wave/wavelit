@@ -51,31 +51,22 @@ def ecg_visualization_dashboard():
                 mw_object = st.session_state.mw_object
                 mw_copy = mw_object.copy()
 
+                # Display an additional HRV analysis using Pan-Tompkins algorithm
                 hrv = ecg_stats(eeg=mw_object.eeg)
+                hrv_stats_str = "Alternate Calculation &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                for channel, ch_dict in hrv.items():
+                    if ch_dict['Reject']: no_hrv = " (No Hrv)"
+                    else: no_hrv = ""
 
-                st.session_state['hrv_stats'] = hrv
+                    hrv_stats_str = hrv_stats_str + channel + no_hrv + ":&nbsp;&nbsp;"
+                    hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Average Heart Rate']) + "</b>" + " BPM&nbsp;&nbsp;"
+                    hrv_stats_str = hrv_stats_str + " &plusmn; " + "<b>" + str(ch_dict['Heart Rate Standard Deviation']) + "</b>" + " SD "
+                    hrv_stats_str = hrv_stats_str + "&nbsp;" * 5
 
-                # Display MWL HRV calculations 
-                if "hrv_stats" in st.session_state:
+                hrv_stats_str = hrv_stats_str + "&nbsp;" * 8
 
-                    hrv_stats_str = ""
-                    for montage, mdict in st.session_state.hrv_stats.items():
-                        if montage == 'a1a2': mon = 'A1A2'
-                        elif montage == 'cz': mon = 'Cz'
+                st.markdown(f"{hrv_stats_str}", unsafe_allow_html=True)
 
-                        hrv_stats_str = hrv_stats_str + mon + ": "
-                        for channel, ch_dict in mdict.items():
-                            if ch_dict['Reject']: no_hrv = " (No Hrv)"
-                            else: no_hrv = ""
-
-                            hrv_stats_str = hrv_stats_str + channel + no_hrv + " - "
-                            hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Average Heart Rate']) + "</b>" + " bpm&nbsp;&nbsp;"
-                            hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Heart Rate Standard Deviation']) + "</b>" + " sd "
-                            hrv_stats_str = hrv_stats_str + "&nbsp;" * 5
-
-                        hrv_stats_str = hrv_stats_str + "&nbsp;" * 8
-
-                    st.markdown(f"{hrv_stats_str}", unsafe_allow_html=True)
 
                 # Offset value slider
                 offset_value = st.slider(
