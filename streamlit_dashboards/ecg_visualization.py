@@ -8,6 +8,8 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
+from dsp.lab_ecg_stats import ecg_stats
+
 
 
 def ecg_visualization_dashboard():
@@ -48,6 +50,23 @@ def ecg_visualization_dashboard():
             ):
                 mw_object = st.session_state.mw_object
                 mw_copy = mw_object.copy()
+
+                # Display an additional HRV analysis using Pan-Tompkins algorithm
+                hrv = ecg_stats(eeg=mw_object.eeg)
+                hrv_stats_str = "Alternate Calculation &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
+                for channel, ch_dict in hrv.items():
+                    if ch_dict['Reject']: no_hrv = " (No Hrv)"
+                    else: no_hrv = ""
+
+                    hrv_stats_str = hrv_stats_str + channel + no_hrv + ":&nbsp;&nbsp;"
+                    hrv_stats_str = hrv_stats_str + "<b>" + str(ch_dict['Average Heart Rate']) + "</b>" + " BPM&nbsp;&nbsp;"
+                    hrv_stats_str = hrv_stats_str + " &plusmn; " + "<b>" + str(ch_dict['Heart Rate Standard Deviation']) + "</b>" + " SD "
+                    hrv_stats_str = hrv_stats_str + "&nbsp;" * 5
+
+                hrv_stats_str = hrv_stats_str + "&nbsp;" * 8
+
+                st.markdown(f"{hrv_stats_str}", unsafe_allow_html=True)
+
 
                 # Offset value slider
                 offset_value = st.slider(
