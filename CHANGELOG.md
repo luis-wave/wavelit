@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [2.8.1] - 2024-12-26
+### Fixed
+- Clinical review status update workflow.
+
+
+
 ## [2.8.0] - 2024-12-26
 ### Added
 - Patient dashboard for Alex.

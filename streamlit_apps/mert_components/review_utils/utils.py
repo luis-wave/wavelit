@@ -30,8 +30,7 @@ def get_next_state(current_state: EEGReviewState) -> EEGReviewState:
     state_order = [
         EEGReviewState.PENDING,
         EEGReviewState.SECOND_REVIEW_NEEDED,
-        EEGReviewState.SECOND_REVIEW,
-        EEGReviewState.COMPLETED,
+        EEGReviewState.CLINIC_REVIEW,
     ]
     try:
         current_index = state_order.index(current_state)

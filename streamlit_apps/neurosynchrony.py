@@ -154,7 +154,7 @@ with tab1:
                 st.session_state.downloaded_neuroref_report
             ):
                 report, report_id = report_data
-                with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}"):
+                with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}", expanded=True):
                     pdf_viewer(report, height=700, key=f"linked_ears {idx}")
                     st.download_button(
                         label="Download Neuroref",
@@ -171,7 +171,7 @@ with tab1:
                 st.session_state.downloaded_neuroref_cz_report
             ):
                 report, report_id = report_data
-                with st.expander(label=f"Neurosynchrony - Centroid {report_id}"):
+                with st.expander(label=f"Neurosynchrony - Centroid {report_id}", expanded=True):
                     pdf_viewer(report, height=700, key=f"centroid {idx}")
                     st.download_button(
                         label="Download Neuroref Cz",

@@ -256,7 +256,7 @@ def render_protocol_page(data_manager):
             asyncio.run(
                 data_manager.update_eeg_review(
                     is_first_reviewer=(current_state == EEGReviewState.PENDING),
-                    state=EEGReviewState.CLINIC_REVIEW.name,
+                    state=EEGReviewState.COMPLETED.name,
                 )
             )
             st.success("Protocol updated successfully!")
