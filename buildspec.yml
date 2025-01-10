@@ -37,6 +37,7 @@ phases:
         --build-arg SIGMA_DODS_KPI_URL=$SIGMA_DODS_KPI_URL
         --build-arg SIGMA_DODS_CLINICS_URL=$SIGMA_DODS_CLINICS_URL
         --build-arg DODS_PATIENT_DASHBOARD=$DODS_PATIENT_DASHBOARD
+        --build-arg SIGMA_DODS_AB_DBOARD=$SIGMA_DODS_AB_DBOARD
         .
       - echo Tagging the Docker image...
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
