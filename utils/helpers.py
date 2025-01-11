@@ -3,6 +3,9 @@ A collection of helper function that can be used across the system.
 """
 
 import numpy as np
+import pytz
+from datetime import datetime, date
+
 
 
 def format_func(value, tick_number):
@@ -91,3 +94,40 @@ def grade_bads(bad_count):
         return "B"
     else:
         return "A"
+
+
+
+
+def calculate_age(date_string: str) -> int:
+    """
+    Calculate age (in years) from date string
+    Expected format: e.g. 'Tue May 09 2017'
+    """
+    birth_date = datetime.strptime(date_string, "%a %b %d %Y").date()
+
+    # Get today's date
+    today = date.today()
+
+    # Calculate the preliminary age
+    age = today.year - birth_date.year
+
+    # Adjust if the birthday hasn't occurred yet this year
+    if (today.month, today.day) < (birth_date.month, birth_date.day):
+        age -= 1
+
+    return age
+
+
+def format_datetime(date_str):
+    if not date_str:
+        return "Not reviewed yet"
+    try:
+        # Convert the input ISO format string to a datetime object in UTC
+        dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
+        # Define the Pacific Standard Time timezone
+        pst = pytz.timezone('America/Los_Angeles')
+        # Convert the datetime to PST
+        dt_pst = dt.astimezone(pst)
+        return dt_pst.strftime("%b %d, %Y at %I:%M %p %Z")
+    except Exception as e:
+        return f"Error parsing date: {e}"

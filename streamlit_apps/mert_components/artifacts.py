@@ -21,6 +21,8 @@ def get_artifact_map():
         "neckTension": "Neck tension",
         "possibleDrowsiness": "Possible drowsiness",
         "powerlineInterference": "Powerline interference",
+        "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.": "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.",
+        "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation.": "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation."
     }
 
 
@@ -55,28 +57,26 @@ def render_artifact_distortions(data_manager):
     else:
         st.write("No artifact data available.")
 
-    with st.popover("Add artifacts", use_container_width=True):
-        with st.form("add_artifact_form", border=False):
-            artifact_map = get_artifact_map()
-            reverse_artifact_map = {v: k for k, v in artifact_map.items()}
+    with st.form("add_artifact_form", border=True):
+        artifact_map = get_artifact_map()
+        reverse_artifact_map = {v: k for k, v in artifact_map.items()}
 
-            options = st.multiselect(
-                "Add artifact distortion", list(artifact_map.values()) + ["Other"]
-            )
-            other_input = None
-            if "Other" in options:
-                other_input = st.text_input("Please specify other artifact:")
+        options = st.multiselect(
+            "Add artifact distortion", list(artifact_map.values()) + ["Other"]
+        )
+        other_input = None
+        other_input = st.text_input("Please specify other artifact:")
 
-            submit_button = st.form_submit_button(label="Submit")
+        submit_button = st.form_submit_button(label="Submit")
 
-            if submit_button:
-                artifacts = [
-                    reverse_artifact_map.get(option, option)
-                    for option in options
-                    if option != "Other"
-                ]
-                if other_input:
-                    artifacts.append(other_input)
-                asyncio.run(data_manager.save_artifact_distortions(artifacts))
-                st.success("Artifacts saved successfully!")
-                st.rerun()
+        if submit_button:
+            artifacts = [
+                reverse_artifact_map.get(option, option)
+                for option in options
+                if option != "Other"
+            ]
+            if other_input:
+                artifacts.append(other_input)
+            asyncio.run(data_manager.save_artifact_distortions(artifacts))
+            st.success("Artifacts saved successfully!")
+            st.rerun()

@@ -3,6 +3,8 @@ from datetime import datetime
 
 import pandas as pd
 import streamlit as st
+import streamlit_shadcn_ui as ui
+
 
 from .review_utils import EEGReviewState, mert2_user
 
@@ -32,7 +34,7 @@ def render_protocol_page(data_manager):
         if "isRejected" in protocol_data:
             st.markdown("**Protocol is REJECTED**")
 
-        if "isRejected" not in protocol_data:
+        if "isRejected" not in protocol_data and ("approvedByName" not in protocol_data) :
             st.markdown("**Protocol is PENDING**")
     else:
         protocol_data = None
@@ -40,45 +42,27 @@ def render_protocol_page(data_manager):
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
-    if analysis_meta and "reviewerStaffId" in analysis_meta:
-        first_reviewer = mert2_user.get(analysis_meta["reviewerStaffId"], "N/A")
-    else:
-        first_reviewer = "N/A"
 
-    if analysis_meta and "secondReviewerStaffId" in analysis_meta:
-        second_reviewer = mert2_user.get(analysis_meta["secondReviewerStaffId"], "N/A")
-    else:
-        second_reviewer = "N/A"
 
     # Display metadata
-    st.subheader("Metadata")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
-        st.markdown(f"**Patient ID:** {data_manager.patient_id}")
-        st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
-    with col2:
-        st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
-        st.markdown(f"**Upload Date:** {eeg_info_data['uploadDateTime']}")
-        st.markdown(f"**Review State:** {analysis_meta['reviewState']}")
+    # Card for displaying metadata
+    with ui.card(key="metadata_card"):
+        # EEG ID
+        ui.element("span", children=["EEG ID"], className="text-gray-400 text-sm font-medium m-1", key="eeg_id_label")
+        ui.element("div", children=[f"{eeg_info_data['eegId']}"], className="text-base font-semibold m-1", key="eeg_id_value")
 
-    # Display doctor approval state
-    st.subheader("Doctor Approval State")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("**Clinician**")
-        st.markdown(f"Approved: {doctor_approval_state['clinician']['approved']}")
-        st.markdown(f"Date: {doctor_approval_state['clinician']['datetime'] or 'N/A'}")
-        st.markdown(
-            f"Name: {doctor_approval_state['clinician']['firstName'] or 'N/A'} {doctor_approval_state['clinician']['lastName'] or 'N/A'}"
-        )
-    with col2:
-        st.markdown("**Physician**")
-        st.markdown(f"Approved: {doctor_approval_state['physician']['approved']}")
-        st.markdown(f"Date: {doctor_approval_state['physician']['datetime'] or 'N/A'}")
-        st.markdown(
-            f"Name: {doctor_approval_state['physician']['firstName'] or 'N/A'} {doctor_approval_state['physician']['lastName'] or 'N/A'}"
-        )
+        # Patient ID
+        ui.element("span", children=["Patient ID"], className="text-gray-400 text-sm font-medium m-1", key="patient_id_label")
+        ui.element("div", children=[f"{data_manager.patient_id}"], className="text-base font-semibold m-1", key="patient_id_value")
+
+        # Clinic ID
+        ui.element("span", children=["Clinic ID"], className="text-gray-400 text-sm font-medium m-1", key="clinic_id_label")
+        ui.element("div", children=[f"{data_manager.clinic_id}"], className="text-base font-semibold m-1", key="clinic_id_value")
+
+        # Recording Date
+        ui.element("span", children=["Recording Date"], className="text-gray-400 text-sm font-medium m-1", key="recording_date_label")
+        ui.element("div", children=[f"{base_protocol['recordingDate']}"], className="text-base font-semibold m-1", key="recording_date_value")
+
 
     # Define the location options
     location_options = [
@@ -167,6 +151,16 @@ def render_protocol_page(data_manager):
         # Convert phase to DataFrame
         phase_df = pd.DataFrame([phase])
 
+        visible_columns = [
+            "frequency",
+            "interTrainInterval",
+            "location",
+            "phaseDuration",
+            "trainDuration",
+            "trainNumber",
+            "pulseMode",
+        ]
+
         # Create editable table for each phase - Added unique key
         edited_df = st.data_editor(
             phase_df,
@@ -174,6 +168,7 @@ def render_protocol_page(data_manager):
             use_container_width=True,
             key=f"phase_{i}_editor",  # Added unique key based on phase index
             disabled=["recordingDate"] if "recordingDate" in phase_df.columns else [],
+            column_order=visible_columns,
             column_config={
                 "pulseMode": st.column_config.SelectboxColumn(
                     "Pulse Mode", options=["Biphasic", "Monophasic"], required=True
@@ -305,18 +300,3 @@ def render_protocol_page(data_manager):
                 st.error(f"Failed to reject protocol: {str(e)}")
         else:
             st.warning("Please provide a rejection reason.")
-
-    # Display additional EEG information
-    st.subheader("Additional EEG Information")
-    st.markdown(f"**File Name:** {eeg_info_data['fileName']}")
-    st.markdown(f"**Is Import:** {'Yes' if eeg_info_data['isImport'] else 'No'}")
-    st.markdown(f"**Is Processed:** {'Yes' if eeg_info_data['isProcessed'] else 'No'}")
-    st.markdown(f"**Quality Status:** {eeg_info_data['qualityStatus'] or 'N/A'}")
-
-    # Display review information
-    st.subheader("Review Information")
-    st.markdown(f"**Review Deadline:** {analysis_meta['reviewDeadline']}")
-    st.markdown(f"**Reviewer:** {first_reviewer}")
-    st.markdown(f"**Review Date:** {analysis_meta['reviewDatetime']}")
-    st.markdown(f"**Second Reviewer:** {second_reviewer}")
-    st.markdown(f"**Second Review Date:** {analysis_meta['secondReviewDatetime'] or 'N/A'}")

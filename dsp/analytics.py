@@ -7,7 +7,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 from matplotlib.ticker import FuncFormatter
-from mywaveanalytics.libraries import ecg_statistics, filters, references
+from mywaveanalytics.libraries import filters, references, ecg_statistics
 from mywaveanalytics.pipelines import eqi_pipeline
 from mywaveanalytics.utils.params import (DEFAULT_RESAMPLING_FREQUENCY,
                                           ELECTRODE_GROUPING)
@@ -42,9 +42,14 @@ class StandardPipeline:
 
     def calculate_heart_rate(self):
         try:
-            hrv_statistics = ecg_statistics.hrv_analysis(self.mw_object.eeg, sampling_rate = self.mw_object.eeg.info['sfreq'])
-            st.session_state.heart_rate = hrv_statistics['mean_hr']
-            st.session_state.heart_rate_std_dev = hrv_statistics['std_hr']
+            ecg_events_loc = filters.ecgfilter(self.mw_object)
+
+            # Find heart rate
+            heart_rate_bpm, stdev_bpm = ecg_statistics.ecg_bpm(
+                ecg_events_loc
+            )
+            st.session_state.heart_rate = round(heart_rate_bpm)
+            st.session_state.heart_rate_std_dev = round(stdev_bpm, 2)
         except Exception as e:
             st.error(f"Heart rate calculation failed for the following reason: {e}")
 
