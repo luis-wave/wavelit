@@ -1,4 +1,5 @@
 import asyncio
+import pytz
 from datetime import datetime
 import streamlit as st
 import streamlit_shadcn_ui as ui
@@ -17,10 +18,15 @@ def format_datetime(date_str):
     if not date_str:
         return "Not reviewed yet"
     try:
+        # Convert the input ISO format string to a datetime object in UTC
         dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        return dt.strftime("%b %d, %Y at %I:%M %p")
-    except:
-        return date_str
+        # Define the Pacific Standard Time timezone
+        pst = pytz.timezone('America/Los_Angeles')
+        # Convert the datetime to PST
+        dt_pst = dt.astimezone(pst)
+        return dt_pst.strftime("%b %d, %Y at %I:%M %p %Z")
+    except Exception as e:
+        return f"Error parsing date: {e}"
 
 @st.cache_data(ttl=60)
 def get_eeg_info(_data_manager):
