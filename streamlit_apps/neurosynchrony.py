@@ -18,6 +18,8 @@ from streamlit_apps.mert_components import (render_abnormalities,
                                             render_protocol_page)
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
+from utils.helpers import calculate_age
+import streamlit_shadcn_ui as ui
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -74,6 +76,7 @@ with tab1:
         middle_name = patient_data["profileInfo"]["name"]["middle"]
         username = patient_data["profileInfo"]["username"]
         dob = patient_data["profileInfo"]["dateOfBirth"]
+        age = calculate_age(dob)
         sex = patient_data["profileInfo"]["sex"].capitalize()
         patient_id = patient_data["profileInfo"]["patientId"]
         primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
@@ -86,25 +89,90 @@ with tab1:
         else:
             treatment_count = 0
 
-        # Display patient data
-        st.header(f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}")
-        st.markdown(f"Username: **{username}**")
-        st.markdown(f"Sex: **{sex}**")
-        st.markdown(f"DOB: **{dob}**")
-        st.markdown(f"Seizure History: **{is_having_seizures}**")
-        st.markdown(f"Treatment Session Count: **{treatment_count}**")
-        st.markdown(f"PatientId: **{patient_id}**")
-        st.markdown(f"Primary Chief Complaint: **{primary_complaint}**")
+with col1:
+    patient_data = st.session_state.patient_data
+    clinic_info = st.session_state.clinic_info
 
-        st.divider()
+    first_name = patient_data["profileInfo"]["name"]["first"]
+    last_name = patient_data["profileInfo"]["name"]["last"]
+    middle_name = patient_data["profileInfo"]["name"]["middle"]
+    username = patient_data["profileInfo"]["username"]
+    dob = patient_data["profileInfo"]["dateOfBirth"]
+    age = calculate_age(dob)
+    sex = patient_data["profileInfo"]["sex"].capitalize()
+    patient_id = patient_data["profileInfo"]["patientId"]
+    primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
+    is_having_seizures = (
+        "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
+    )
 
-        # Clinic info
-        st.subheader(clinic_info["name"])
-        st.markdown(f"ClinicId: **{clinic_info['clinicId']}**")
-        st.markdown(f"Phone number: **{clinic_info['phone']}**")
-        st.markdown(f"City: **{clinic_info['address']['city']}**")
-        st.markdown(f"State: **{clinic_info['address']['state']}**")
-        st.markdown(f"Country: **{clinic_info['address']['country']}**")
+    if "CORTICAL" in st.session_state.treatment_count:
+        treatment_count = st.session_state.treatment_count["CORTICAL"]
+    else:
+        treatment_count = 0
+
+    with ui.card(key="patient_card"):
+        # Patient Name
+        ui.element("h2",
+                   children=[f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}"],
+                   className="text-2xl font-bold mb-4",
+                   key="name")
+
+        # Patient ID and Username
+        ui.element("span", children=["Patient ID"], className="text-gray-500 text-sm font-medium", key="id_label")
+        ui.element("div", children=[patient_id], className="mb-2", key="id_value")
+
+        ui.element("span", children=["Username"], className="text-gray-500 text-sm font-medium", key="username_label")
+        ui.element("div", children=[username], className="mb-4", key="username_value")
+
+        ui.element("hr", className="my-4", key="divider1")
+
+        # Demographics
+        ui.element("span", children=["Sex"], className="text-gray-500 text-sm font-medium", key="sex_label")
+        ui.element("div", children=[sex], className="mb-2", key="sex_value")
+
+        ui.element("span", children=["Date of Birth"], className="text-gray-500 text-sm font-medium", key="dob_label")
+        ui.element("div", children=[f"{dob}"], key="dob_value1")
+        ui.element("span", children=[f"{age} years old"], className="font-bold", key="age_value")
+        ui.element("div", children=[")"], className="mb-2", key="dob_value2")
+
+        ui.element("span", children=["Treatment Sessions"], className="text-gray-500 text-sm font-medium", key="sessions_label")
+        ui.element("div", children=[str(treatment_count)], className="mb-4", key="sessions_value")
+
+        # Seizure Status
+        if is_having_seizures == "Yes":
+            ui.element("div",
+                       children=["⚠️ Active Seizure History"],
+                       className="bg-red-100 text-red-700 p-2 rounded mb-4",
+                       key="seizure_status"
+                       )
+
+        # Primary Complaint
+        ui.element("h3", children=["Primary Complaint"], className="text-lg font-medium mb-2", key="complaint_header")
+        ui.element("div",
+                   children=[primary_complaint],
+                   className="bg-gray-50 p-3 rounded mb-4",
+                   key="complaint_value"
+                   )
+
+        ui.element("hr", className="my-4", key="divider2")
+
+        # Clinic Information
+        ui.element("h3", children=[clinic_info["name"]], className="text-lg font-medium mb-2", key="clinic_name")
+
+        ui.element("span", children=["Clinic ID"], className="text-gray-500 text-sm font-medium", key="clinic_id_label")
+        ui.element("div", children=[clinic_info['clinicId']], className="mb-2", key="clinic_id_value")
+
+        ui.element("span", children=["Phone"], className="text-gray-500 text-sm font-medium", key="phone_label")
+        ui.element("div", children=[clinic_info['phone']], className="mb-2", key="phone_value")
+
+        ui.element("span", children=["Location"], className="text-gray-500 text-sm font-medium", key="location_label")
+        ui.element("div",
+                   children=[f"{clinic_info['address']['city']}, {clinic_info['address']['state']}, {clinic_info['address']['country']}"],
+                   className="mb-2",
+                   key="location_value"
+                   )
+
 
     if "eegScientistPatientNotes" in patient_data:
         eeg_scientist_patient_notes = patient_data["eegScientistPatientNotes"]
@@ -114,40 +182,6 @@ with tab1:
     render_notes(data_manager, eeg_scientist_patient_notes)
 
     with col2:
-        render_eeg_review(data_manager)
-        eeg_history_df = st.session_state.eeg_history
-
-        with st.popover("Generate report"):
-            st.header("EEG History")
-            with st.form("data_editor_form", border=False):
-                edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-                regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
-                regenerate_neuroref_cz = st.form_submit_button(
-                    "Generate Neuroref Cz Report"
-                )
-
-            if regenerate_neuroref:
-                approved_eegs = edited_eeg_history_df[
-                    edited_eeg_history_df["include?"] == True
-                ]
-                asyncio.run(
-                    data_manager.update_neuroref_reports(
-                        approved_eegs["EEGId"].values.tolist()
-                    )
-                )
-                st.rerun()
-
-            if regenerate_neuroref_cz:
-                approved_eegs = edited_eeg_history_df[
-                    edited_eeg_history_df["include?"] == True
-                ]
-                asyncio.run(
-                    data_manager.update_neuroref_cz_reports(
-                        approved_eegs["EEGId"].values.tolist()
-                    )
-                )
-                st.rerun()
-
         st.subheader("Reports")
         if "downloaded_neuroref_report" in st.session_state:
             for idx, report_data in enumerate(
@@ -182,6 +216,41 @@ with tab1:
                     if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
                         delete_report(data_manager, report_id, ref="cz")
                         st.success(f"Neuroref Cz {report_id} successfully deleted!")
+
+        render_eeg_review(data_manager)
+        eeg_history_df = st.session_state.eeg_history
+
+        with st.popover("Generate report"):
+            st.header("EEG History")
+            with st.form("data_editor_form", border=False):
+                edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
+                regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
+                regenerate_neuroref_cz = st.form_submit_button(
+                    "Generate Neuroref Cz Report"
+                )
+
+            if regenerate_neuroref:
+                approved_eegs = edited_eeg_history_df[
+                    edited_eeg_history_df["include?"] == True
+                ]
+                asyncio.run(
+                    data_manager.update_neuroref_reports(
+                        approved_eegs["EEGId"].values.tolist()
+                    )
+                )
+                st.rerun()
+
+            if regenerate_neuroref_cz:
+                approved_eegs = edited_eeg_history_df[
+                    edited_eeg_history_df["include?"] == True
+                ]
+                asyncio.run(
+                    data_manager.update_neuroref_cz_reports(
+                        approved_eegs["EEGId"].values.tolist()
+                    )
+                )
+                st.rerun()
+
 
         render_documents(data_manager)
 

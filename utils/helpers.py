@@ -3,6 +3,8 @@ A collection of helper function that can be used across the system.
 """
 
 import numpy as np
+from datetime import datetime, date
+
 
 
 def format_func(value, tick_number):
@@ -91,3 +93,25 @@ def grade_bads(bad_count):
         return "B"
     else:
         return "A"
+
+
+
+
+def calculate_age(date_string: str) -> int:
+    """
+    Calculate age (in years) from date string
+    Expected format: e.g. 'Tue May 09 2017'
+    """
+    birth_date = datetime.strptime(date_string, "%a %b %d %Y").date()
+
+    # Get today's date
+    today = date.today()
+
+    # Calculate the preliminary age
+    age = today.year - birth_date.year
+
+    # Adjust if the birthday hasn't occurred yet this year
+    if (today.month, today.day) < (birth_date.month, birth_date.day):
+        age -= 1
+
+    return age
