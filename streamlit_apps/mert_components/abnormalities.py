@@ -53,7 +53,6 @@ def render_abnormalities(data_manager):
     else:
         st.write("No abnormality data available.")
 
-    #with st.popover("Add irregularities", use_container_width=True):
     with st.form("add_irregularity_form", border=True):
         options = st.multiselect(
             "Select irregularity", list(converter.keys()) + ["Other"]

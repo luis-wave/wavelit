@@ -57,7 +57,6 @@ def render_artifact_distortions(data_manager):
     else:
         st.write("No artifact data available.")
 
-    #with st.popover("Add artifacts", use_container_width=True):
     with st.form("add_artifact_form", border=True):
         artifact_map = get_artifact_map()
         reverse_artifact_map = {v: k for k, v in artifact_map.items()}

@@ -188,8 +188,6 @@ with col1:
 
         eeg_history_df = st.session_state.eeg_history
 
-        #with st.popover("Generate report", use_container_width=True):
-
         if "downloaded_neuroref_report" in st.session_state:
             for idx, report_data in enumerate(
                 st.session_state.downloaded_neuroref_report
