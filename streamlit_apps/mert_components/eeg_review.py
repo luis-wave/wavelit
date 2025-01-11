@@ -1,10 +1,9 @@
 import asyncio
-import pytz
-from datetime import datetime
 import streamlit as st
 import streamlit_shadcn_ui as ui
 
 from .review_utils import EEGReviewState, get_next_state, mert2_user
+from utils.helpers import format_datetime
 
 REJECTION_REASONS = {
     "possibleDrowsiness": "Possible Drowsiness",
@@ -14,21 +13,8 @@ REJECTION_REASONS = {
     "other": "Other",
 }
 
-def format_datetime(date_str):
-    if not date_str:
-        return "Not reviewed yet"
-    try:
-        # Convert the input ISO format string to a datetime object in UTC
-        dt = datetime.fromisoformat(date_str.replace('Z', '+00:00'))
-        # Define the Pacific Standard Time timezone
-        pst = pytz.timezone('America/Los_Angeles')
-        # Convert the datetime to PST
-        dt_pst = dt.astimezone(pst)
-        return dt_pst.strftime("%b %d, %Y at %I:%M %p %Z")
-    except Exception as e:
-        return f"Error parsing date: {e}"
 
-@st.cache_data(ttl=60)
+
 def get_eeg_info(_data_manager):
     return asyncio.run(_data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
 
@@ -88,12 +74,19 @@ def render_eeg_review(data_manager):
     first_reviewer = mert2_user.get(analysis_meta.get("reviewerStaffId"), "N/A")
     second_reviewer = mert2_user.get(analysis_meta.get("secondReviewerStaffId"), "N/A")
 
+    current_state_name = current_state.name.replace('_', ' ')
+
     # Main Review Card
     with ui.card(key="eeg_review"):
         # Header Section
         ui.element("h3", children=["EEG Review Status"], className="text-xl font-bold mb-4", key="header_title")
-        ui.element("div", children=[f"Status: {current_state.name.replace('_', ' ')}"],
-                   className="bg-blue-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
+
+        if current_state_name != 'REJECTED':
+            ui.element("div", children=[f"Status: {current_state_name}"],
+                    className="bg-blue-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
+        else:
+            ui.element("div", children=[f"Status: {current_state_name}"],
+                   className="bg-red-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
 
         # First Review Section
         ui.element("h4", children=["First Review"], className="text-lg font-semibold mb-2", key="first_review_title")

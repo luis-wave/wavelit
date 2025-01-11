@@ -8,6 +8,8 @@ from datetime import datetime
 
 import streamlit as st
 
+from utils.helpers import format_datetime
+
 
 @st.fragment
 def render_notes(data_manager, eeg_scientist_patient_notes):
@@ -32,6 +34,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                 ),
                 "subject": subject,
                 "content": content,
+                "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             try:
                 asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note))
@@ -46,21 +49,35 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         st.write("No notes available.")
         return
 
-    # Sort notes by date (newest first)
-    sorted_notes = sorted(
-        eeg_scientist_patient_notes.items(), key=lambda x: x[0], reverse=True
-    )
+    # Consolidate notes by recording date
+    consolidated_notes = {}
+    for date_key, note in eeg_scientist_patient_notes.items():
+        # Convert to PST
+        note["dateEdited"] = format_datetime(note["dateEdited"])
+        recording_date = note["recordingDate"]
+        if recording_date not in consolidated_notes:
+            consolidated_notes[recording_date] = []
+        consolidated_notes[recording_date].append(note)
 
-    for date, note in sorted_notes:
-        st.markdown(f"### {note['subject']} - {note['recordingDate']}")
-        st.write(f"**Date Edited:** {note['dateEdited']}")
-        st.write(f"**Recording Date:** {note['recordingDate']}")
-        st.write(f"**Subject:** {note['subject']}")
-        st.write("**Content:**")
-
-        # Display content in a text area
-        st.text_area(
-            "", value=note["content"], height=150, key=f"note_{date}", disabled=True
+    # Sort notes within each recording date by time of edit (newest last)
+    for recording_date in consolidated_notes:
+        consolidated_notes[recording_date] = sorted(
+            consolidated_notes[recording_date],
+            key=lambda n: n["dateEdited"],
+            reverse=False,
         )
 
+    # Display consolidated notes
+    for recording_date, notes in consolidated_notes.items():
+        st.markdown(f"## Notes from {recording_date}")
+        for idx, note in enumerate(notes, start=1):
+            st.write(f"**{note['subject']}**")
+            st.write(f"**{note['dateEdited']}**")
+            st.text_area(
+                f"Note {idx} Content",
+                value=note["content"],
+                height=150,
+                key=f"note_{recording_date}_{idx}",
+                disabled=True,
+            )
         st.divider()
