@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "Wavelit"
-version = "2.9.0"
+version = "2.10.0"
 
-description = "Irregular EEG Dashboard"
+description = "A set of tools and dashboards for enhance EEG review for Wave Neuro's EEG lab"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>", "Joseph Chong <joseph@waveneuro.com>"]
 license = "Proprietary"
 readme = "README.md"
