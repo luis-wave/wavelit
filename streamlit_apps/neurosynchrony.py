@@ -182,7 +182,43 @@ with col1:
     render_notes(data_manager, eeg_scientist_patient_notes)
 
     with col2:
+        render_eeg_review(data_manager)
+
         st.subheader("Reports")
+
+        eeg_history_df = st.session_state.eeg_history
+
+        with st.popover("Generate report", use_container_width=True):
+            st.header("EEG History")
+            with st.form("data_editor_form", border=False):
+                edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
+                regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
+                regenerate_neuroref_cz = st.form_submit_button(
+                    "Generate Neuroref Cz Report"
+                )
+
+            if regenerate_neuroref:
+                approved_eegs = edited_eeg_history_df[
+                    edited_eeg_history_df["include?"] == True
+                ]
+                asyncio.run(
+                    data_manager.update_neuroref_reports(
+                        approved_eegs["EEGId"].values.tolist()
+                    )
+                )
+                st.rerun()
+
+            if regenerate_neuroref_cz:
+                approved_eegs = edited_eeg_history_df[
+                    edited_eeg_history_df["include?"] == True
+                ]
+                asyncio.run(
+                    data_manager.update_neuroref_cz_reports(
+                        approved_eegs["EEGId"].values.tolist()
+                    )
+                )
+                st.rerun()
+
         if "downloaded_neuroref_report" in st.session_state:
             for idx, report_data in enumerate(
                 st.session_state.downloaded_neuroref_report
@@ -217,39 +253,7 @@ with col1:
                         delete_report(data_manager, report_id, ref="cz")
                         st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        render_eeg_review(data_manager)
-        eeg_history_df = st.session_state.eeg_history
 
-        with st.popover("Generate report"):
-            st.header("EEG History")
-            with st.form("data_editor_form", border=False):
-                edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
-                regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
-                regenerate_neuroref_cz = st.form_submit_button(
-                    "Generate Neuroref Cz Report"
-                )
-
-            if regenerate_neuroref:
-                approved_eegs = edited_eeg_history_df[
-                    edited_eeg_history_df["include?"] == True
-                ]
-                asyncio.run(
-                    data_manager.update_neuroref_reports(
-                        approved_eegs["EEGId"].values.tolist()
-                    )
-                )
-                st.rerun()
-
-            if regenerate_neuroref_cz:
-                approved_eegs = edited_eeg_history_df[
-                    edited_eeg_history_df["include?"] == True
-                ]
-                asyncio.run(
-                    data_manager.update_neuroref_cz_reports(
-                        approved_eegs["EEGId"].values.tolist()
-                    )
-                )
-                st.rerun()
 
 
         render_documents(data_manager)
