@@ -7,10 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-
-## [2.8.1] - 2024-12-26
-### Fixed
-- Clinical review status update workflow.
+## [2.9.0] - 2025-01-10
+### Added
+- Irregular EEG dashboard for Alex.
+- EEG Download button for Alex.
 
 
 

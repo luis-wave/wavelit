@@ -9,25 +9,24 @@ from streamlit_dashboards import (ecg_visualization_dashboard,
                                   eeg_epoch_visualization_dashboard,
                                   eeg_visualization_dashboard)
 
+
 SIGMA_REPORT_LOGS_URL = os.getenv("SIGMA_REPORT_LOGS_URL")
 SIGMA_DODS_KPI_URL = os.getenv("SIGMA_DODS_KPI_URL")
+SIGMA_DODS_AB_DBOARD = os.getenv("SIGMA_DODS_AB_DBOARD")
 
-# Title
+
+st.title("Irregular EEG Dashboard")
+html = f'<iframe src="{SIGMA_DODS_AB_DBOARD}" frameborder="0" width="100%" height="900px"></iframe>'
+components.html(html, height=1000, scrolling=False)
+
+
 st.title("Report Log Dashboard")
-
-
 html = f'<iframe src="{SIGMA_REPORT_LOGS_URL}" frameborder="0" width="100%" height="900px"></iframe>'
-
-
 components.html(html, height=1000, scrolling=False)
 
 
 st.title("DoDS KPI  Dashboard")
-
-
 html = f'<iframe src="{SIGMA_DODS_KPI_URL}" frameborder="0" width="100%" height="900px"></iframe>'
-
-
 components.html(html, height=1000, scrolling=False)
 
 
