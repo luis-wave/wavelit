@@ -53,16 +53,16 @@ def render_documents(data_manager):
     else:
         st.write("No document data available.")
 
-    with st.popover("Add documents", use_container_width=True):
-        uploaded_file = st.file_uploader("Upload a Persyst report", type="pdf")
+    # with st.popover("Add documents", use_container_width=True):
+    uploaded_file = st.file_uploader("Upload a Persyst report", type="pdf")
 
-        if uploaded_file is not None:
-            if st.button("Submit Document"):
-                try:
-                    document_id = asyncio.run(data_manager.save_document(uploaded_file))
-                    st.success(
-                        f"Document uploaded successfully! Document ID: {document_id}"
-                    )
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to upload document. Error: {str(e)}")
+    if uploaded_file is not None:
+        if st.button("Submit Document"):
+            try:
+                document_id = asyncio.run(data_manager.save_document(uploaded_file))
+                st.success(
+                    f"Document uploaded successfully! Document ID: {document_id}"
+                )
+                st.rerun()
+            except Exception as e:
+                st.error(f"Failed to upload document. Error: {str(e)}")
