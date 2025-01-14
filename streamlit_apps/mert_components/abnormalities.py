@@ -12,8 +12,10 @@ def render_abnormalities(data_manager):
     st.subheader("Abnormalities")
 
     converter = {
-        "Irregular EEG Activity (AEA)": "aea",
-        "Irregular Heart Rhythm (AHR)": "ahr",
+        "Possible Irregular EEG Activity (AEA)": "Possible irregular EEG Activity (AEA)",
+        "Possible Irregular Heart Rhythm (AHR)": "Possible irregular Heart Rhythm (AHR)",
+        "Possible MTHFR": "Possible MTHFR",
+        "Heart Rate": "Heart Rate"
     }
     reverse_converter = {v: k for k, v in converter.items()}
 
@@ -51,26 +53,23 @@ def render_abnormalities(data_manager):
     else:
         st.write("No abnormality data available.")
 
-    with st.popover("Add irregularities", use_container_width=True):
-        with st.form("add_irregularity_form", border=False):
-            options = st.multiselect(
-                "Select irregularity", list(converter.keys()) + ["Other"]
-            )
-            other_input = None
-            if "Other" in options:
-                other_input = st.text_input("Please specify other irregularity:")
+    with st.form("add_irregularity_form", border=True):
+        options = st.multiselect(
+            "Select irregularity", list(converter.keys()) + ["Other"]
+        )
+        other_input = None
+        other_input = st.text_input("Please specify other irregularity:")
+        submit_button = st.form_submit_button(label="Add")
 
-            submit_button = st.form_submit_button(label="Add")
+        if submit_button:
+            converted_options = [
+                converter.get(option, option)
+                for option in options
+                if option != "Other"
+            ]
+            if other_input:
+                converted_options.append(other_input)
 
-            if submit_button:
-                converted_options = [
-                    converter.get(option, option)
-                    for option in options
-                    if option != "Other"
-                ]
-                if other_input:
-                    converted_options.append(other_input)
-
-                asyncio.run(data_manager.save_abnormalities(converted_options))
-                st.success("Irregularities added successfully!")
-                st.rerun()
+            asyncio.run(data_manager.save_abnormalities(converted_options))
+            st.success("Irregularities added successfully!")
+            st.rerun()
