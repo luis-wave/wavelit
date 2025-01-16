@@ -101,7 +101,7 @@ with col1:
     age = calculate_age(dob)
     sex = patient_data["profileInfo"]["sex"].capitalize()
     patient_id = patient_data["profileInfo"]["patientId"]
-    primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
+    primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"] or "-"
     is_having_seizures = (
         "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
     )
