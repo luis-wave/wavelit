@@ -147,7 +147,7 @@ def eeg_visualization_dashboard():
                         st.session_state.sensitivity = st.selectbox(
                             "Sensitivity in uV",
                             options=SENSITIVITY_OPTIONS,
-                            index=6,  # Persisted value
+                            index=3,  # Persisted value
                         )
 
                     # Dummy columns to decrease the width of the dropdown widgets used
