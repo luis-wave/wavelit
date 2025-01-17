@@ -51,6 +51,8 @@ class StandardPipeline:
             st.session_state.heart_rate = round(heart_rate_bpm)
             st.session_state.heart_rate_std_dev = round(stdev_bpm, 2)
         except Exception as e:
+            st.session_state.heart_rate = 0
+            st.session_state.heart_rate_std_dev = 0
             st.error(f"Heart rate calculation failed for the following reason: {e}")
 
 

@@ -66,21 +66,21 @@ def eeg_visualization_dashboard():
                 # Override selected reference if necessary. For hyperlinks
                 query_params = st.query_params.to_dict()
                 if "ref" in query_params:
-                    ref = query_params["ref"]
+                    ref_param = query_params["ref"]
                 else:
-                    ref = None
+                    ref_param = None
                 with col1:
                     sub_col1, sub_col2, sub_col3, sub_col4 = st.columns(4)
                     with sub_col1:
 
                         default_ref_index= 0
 
-                        if ref == 'le':
-                            default_ref_index = 0
-                        if ref == 'cz':
-                            default_ref_index = 1
-                        if ref == 'bpt':
-                            default_ref_index = 2
+                        if ref_param == 'le':
+                            st.session_state.ref_index = 0
+                        if ref_param == 'cz':
+                            st.session_state.ref_index = 1
+                        if ref_param == 'bpt':
+                            st.session_state.ref_index = 2
 
                         # Reference selection
                         ref = st.selectbox(
@@ -90,7 +90,7 @@ def eeg_visualization_dashboard():
                                 "centroid",
                                 "bipolar longitudinal",
                             ],
-                            index=st.session_state.get("ref_index", default_ref_index),  # Default to linked ears
+                            index=st.session_state.get("ref_index", 0),  # Default to linked ears
                             key="ref_selectbox",
                         )
 
