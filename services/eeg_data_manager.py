@@ -81,9 +81,13 @@ class EEGDataManager:
 
     def save_eeg_data_to_session(self, mw_object, filename, eeg_id):
         st.session_state.mw_object = mw_object
-        st.session_state.recording_date = datetime.strptime(
-            mw_object.recording_date, "%Y-%m-%d"
-        ).strftime("%b %d, %Y")
+        try:
+            st.session_state.recording_date = datetime.strptime(
+                mw_object.recording_date, "%Y-%m-%d"
+            ).strftime("%b %d, %Y")
+        except (ValueError, TypeError):
+            # If parsing fails, default to Jan 01, 2020
+            st.session_state.recording_date = "Jan 01, 2020"
         st.session_state.filename = filename
         st.session_state.eeg_id = eeg_id
         mw_copy = mw_object.copy()
