@@ -106,6 +106,8 @@ class EEGDataManager:
                 if uploaded_file.name.lower().endswith(".dat")
                 else 10
                 if uploaded_file.name.lower().endswith(".edf")
+                else 6
+                if uploaded_file.name.lower().endswith(".401")
                 else None
             )
             if eeg_type is None:
