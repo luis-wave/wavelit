@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.11.0] - 2025-01-29
+### Fixed
+- Review button disappears when review is complete.
+
+### Changed
+- Notes have been redesigned to be more compact. Ordered in descending order.
+
+### Added
+- Brought back the epoch generator to automate Persyst style graphs. Automated graph selection.
+
+
+
+## [2.10.2] - 2025-01-16
+### Fixed
+- Missing primary complaint key.
+- Hyperlinks for eeg viewer
+
+
+
 ## [2.10.1] - 2025-01-16
 ### Fixed
 - Missing primary complaint key.

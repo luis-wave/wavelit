@@ -5,6 +5,7 @@ A collection of helper function that can be used across the system.
 import numpy as np
 import pytz
 from datetime import datetime, date
+import re
 
 
 
@@ -131,3 +132,19 @@ def format_datetime(date_str):
         return dt_pst.strftime("%b %d, %Y at %I:%M %p %Z")
     except Exception as e:
         return f"Error parsing date: {e}"
+
+
+def parse_recording_date(date_str):
+    """
+    Removes 'st', 'nd', 'rd', 'th' from the day and converts 'am'/'pm' to uppercase,
+    then parses the cleaned string with strptime.
+    """
+    # 1. Remove 'st', 'nd', 'rd', 'th' from day
+    date_str = re.sub(r'(\d+)(st|nd|rd|th)', r'\1', date_str)
+
+    # 2. Convert 'am'/'pm' to 'AM'/'PM'
+    date_str = re.sub(r'\bam\b', 'AM', date_str)
+    date_str = re.sub(r'\bpm\b', 'PM', date_str)
+
+    # 3. Parse with the desired format
+    return datetime.strptime(date_str, "%a, %B %d %Y, %I:%M:%S %p")
