@@ -8,7 +8,7 @@ from datetime import datetime
 
 import streamlit as st
 
-from utils.helpers import format_datetime
+from utils.helpers import format_datetime, parse_recording_date
 
 
 @st.fragment
@@ -64,20 +64,37 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         consolidated_notes[recording_date] = sorted(
             consolidated_notes[recording_date],
             key=lambda n: n["dateEdited"],
-            reverse=False,
+            reverse=True,
         )
 
-    # Display consolidated notes
-    for recording_date, notes in consolidated_notes.items():
-        st.markdown(f"## Notes from {recording_date}")
+
+
+
+    # Sort the recording dates (keys) in descending order by date
+    sorted_recording_dates = sorted(
+        consolidated_notes.keys(),
+        key=lambda d: parse_recording_date(d),
+        reverse=True  # True -> most recent first
+    )
+
+    # Now iterate over the sorted dates
+    for recording_date in sorted_recording_dates:
+        notes = consolidated_notes[recording_date]
+
+        st.markdown(f"### Notes from {recording_date}")
         for idx, note in enumerate(notes, start=1):
-            st.write(f"**{note['subject']}**")
-            st.write(f"**{note['dateEdited']}**")
-            st.text_area(
-                f"Note {idx} Content",
-                value=note["content"],
-                height=150,
-                key=f"note_{recording_date}_{idx}",
-                disabled=True,
+            st.markdown(
+                f"""
+                <div style="background-color: #f9f9f9;
+                            padding: 10px;
+                            margin-bottom: 10px;
+                            border-radius: 5px;">
+                    <strong>{note['subject']}</strong><br />
+                    <em>Edited on: {note['dateEdited']}</em><br /><br />
+                    {note['content']}
+                </div>
+                """,
+                unsafe_allow_html=True
             )
         st.divider()
+
