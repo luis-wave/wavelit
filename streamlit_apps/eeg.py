@@ -11,7 +11,7 @@ if "eegid" in st.session_state and ("hyperlink_id" not in st.session_state ):
     eeg_visualization_dashboard()
 
 else:
-    uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf"])
+    uploaded_file = st.file_uploader("Upload an EEG file", type=["dat", "edf", "401"])
     eeg_id = st.text_input("Enter EEG ID", key="entry")
 
     if uploaded_file:

@@ -111,7 +111,7 @@ def render_eeg_review(data_manager):
         analysis_meta.get("secondReviewerStaffId"),
     ]
 
-    if can_review and current_state != EEGReviewState.REJECTED:
+    if (can_review and current_state != EEGReviewState.REJECTED and current_state != EEGReviewState.CLINIC_REVIEW and EEGReviewState.COMPLETED):
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Approve Review", type="primary", key="approve_btn"):
