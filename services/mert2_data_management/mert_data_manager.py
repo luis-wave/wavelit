@@ -301,6 +301,19 @@ class MeRTDataManager:
             logger.error(f"Failed to save EEG scientist patient note: {str(e)}")
             raise
 
+    async def get_protocol_review_default_values(
+        self
+    ) -> Dict[str, Any]:
+        try:
+            result = await self.api.get_protocol_review_default_values()
+            logger.info(
+                f"EEG presets retrieved successfully for patient ID: {self.patient_id}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to save EEG presets: {str(e)}")
+            raise
+
     @staticmethod
     def parse_eeg_data_extended(data):
         rows = []
