@@ -139,9 +139,6 @@ def render_protocol_page(data_manager):
         base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
         phases = [base_protocol]
 
-    st.json(preset_phases)
-    st.divider()
-    st.json(phases)
 
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
