@@ -331,3 +331,15 @@ class MeRTDataManager:
         df = df.sort_values(by="RecordingDate", ascending=False)
         df["include?"] = True
         return df
+
+
+    async def add_report_addendum(self):
+        try:
+            response = await self.api.add_report_addendum()
+            eeg_id = response["addendumId"]
+            logger.info(f"Addendum eeg id {eeg_id} successfully generated.")
+
+            return eeg_id
+        except Exception as e:
+            logger.error(f"Failed to generate addendum: {str(e)}")
+            raise

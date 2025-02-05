@@ -15,7 +15,8 @@ from streamlit_apps.mert_components import (render_abnormalities,
                                             render_artifact_distortions,
                                             render_documents,
                                             render_eeg_review, render_notes,
-                                            render_protocol_page)
+                                            render_protocol_page,
+                                            get_report_addendum_eeg_id)
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
@@ -185,6 +186,15 @@ with col1:
         render_eeg_review(data_manager)
 
         st.subheader("Reports")
+
+        if st.button(label="Add addendum", key="addendum"):
+            eeg_id = get_report_addendum_eeg_id(data_manager)
+            patient_id = st.session_state["pid"]
+            clinic_id = st.session_state["clinicid"]
+            url=f"http://0.0.0.0:8501?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}"
+
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
+
 
         eeg_history_df = st.session_state.eeg_history
 

@@ -552,3 +552,16 @@ class MeRTApi:
             "GET",
             "get_protocol_review_default_values",
         )
+
+
+    async def add_report_addendum(self) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/add_report_addendum",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+            },
+        )
+
