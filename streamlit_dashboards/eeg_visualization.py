@@ -141,7 +141,7 @@ def eeg_visualization_dashboard():
 
                         # Initialize sensitivity in session state
                         if "sensitivity" not in st.session_state:
-                            st.session_state.sensitivity = "5.0"  # Default value
+                            st.session_state.sensitivity = "10.0"  # Default value
 
                         # Sensitivity slider
                         st.session_state.sensitivity = st.selectbox(
