@@ -126,3 +126,6 @@ def render_eeg_review(data_manager):
                 )
                 if st.form_submit_button("Reject Review"):
                     handle_reject(data_manager, current_state, selected_reasons)
+
+def get_report_addendum_eeg_id(data_manager):
+    return asyncio.run(data_manager.add_report_addendum())
