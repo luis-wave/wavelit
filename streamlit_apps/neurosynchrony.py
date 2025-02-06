@@ -61,6 +61,22 @@ tabs = ["Reports", "Protocols", "EEG", "ECG"]
 
 tab1, tab2, tab3, tab4 = st.tabs(tabs)
 
+query = st.query_params.to_dict()
+try:
+    if "tab" in query:
+        tab_name = query["tab"]
+        if tab_name in tabs:
+            index_tab = tabs.index(tab_name)
+            js = f"""
+            <script>
+                var tab = window.parent.document.getElementById('tabs-bui2-tab-{index_tab}');
+                tab.click();
+            </script>
+            """
+            components.html(js)
+except ValueError:
+    pass
+
 with tab1:
     # Start rendering the UI
     st.title("NeuroSynchrony Review")
