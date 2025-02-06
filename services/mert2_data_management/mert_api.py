@@ -32,6 +32,10 @@ class MacroServiceConfig(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="APP_MACRO_SERVICE_")
     url: str
 
+class NeuralinkServiceConfig(BaseSettings):
+    model_config = SettingsConfigDict(env_prefix="APP_NEURALINK_SERVICE_")
+    url: str
+
 
 class DefaultValues(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DEFAULT_")
@@ -47,6 +51,7 @@ class DefaultValues(BaseSettings):
 class Config(BaseSettings):
     cybermed: CybermedConfig = Field(default_factory=CybermedConfig)
     macro: MacroServiceConfig = Field(default_factory=MacroServiceConfig)
+    neuralink: NeuralinkServiceConfig = Field(default_factory=NeuralinkServiceConfig)
     approval: DefaultValues = Field(default_factory=DefaultValues)
     target_clinic_id: uuid.UUID = Field(default="TARGET_CLINIC_ID")
     delay: float = Field(default=0.3)
@@ -105,6 +110,26 @@ class MeRTApi:
                 url,
                 headers=self._get_headers(),
                 json=data,
+                timeout=self.config.timeout,
+            ) as response:
+                response.raise_for_status()
+                if "text/html" in response.headers.get("Content-Type", ""):
+                    return await self._parse_html_response(response)
+                else:
+                    return await response.json()
+
+    async def _make_neuralink_request(
+        self, method: str, endpoint: str
+    ) -> Dict[str, Any]:
+        eeg_id = self.eeg_id.replace("EEG-","")
+        patient_id = self.patient_id.replace("PAT-","")
+
+        url = urljoin(self.config.neuralink.url, f"{endpoint}?usergroup={self.clinic_id}&eeg_id={eeg_id}&patient_id={patient_id}")
+        async with aiohttp.ClientSession() as session:
+            async with session.request(
+                method,
+                url,
+                headers=self._get_headers(),
                 timeout=self.config.timeout,
             ) as response:
                 response.raise_for_status()
@@ -521,3 +546,22 @@ class MeRTApi:
                 },
             },
         )
+
+    async def get_protocol_review_default_values(self) -> Dict[str, Any]:
+        return await self._make_neuralink_request(
+            "GET",
+            "get_protocol_review_default_values",
+        )
+
+
+    async def add_report_addendum(self) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/report_management/add_report_addendum",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+            },
+        )
+

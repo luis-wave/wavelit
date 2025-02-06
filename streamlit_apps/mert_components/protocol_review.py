@@ -8,6 +8,37 @@ import streamlit_shadcn_ui as ui
 
 from .review_utils import EEGReviewState, mert2_user
 
+def map_preset_to_phases(preset_phases):
+    mapping = {
+        "frequency": "frequency",
+        "location": "location",
+        "pulse_phase": "pulseParameters",
+        "burst_duration": "burstDuration",
+        "burst_frequency": "burstFrequency",
+        "burst_number": "burstNumber",
+        "inter_train_interval": "interTrainInterval",
+        "inter_burst_interval": "interBurstInterval",
+        "train_duration": "trainDuration",
+        "train_number": "trainNumber"
+    }
+
+    mapped_phases = []
+    for phase in preset_phases:
+        mapped_phase = {
+            mapping[key]: value for key, value in phase.items() if key in mapping
+        }
+        # Handling nested pulseParameters
+        if "pulse_phase" in phase:
+            mapped_phase["pulseParameters"] = {"phase": phase["pulse_phase"]}
+
+        mapped_phases.append(mapped_phase)
+
+    return mapped_phases
+
+
+
+
+
 @st.fragment
 def render_protocol_page(data_manager):
     st.title("EEG Protocol")
@@ -63,6 +94,7 @@ def render_protocol_page(data_manager):
         ui.element("span", children=["Recording Date"], className="text-gray-400 text-sm font-medium m-1", key="recording_date_label")
         ui.element("div", children=[f"{base_protocol['recordingDate']}"], className="text-base font-semibold m-1", key="recording_date_value")
 
+    presets = asyncio.run(data_manager.get_protocol_review_default_values())
 
     # Define the location options
     location_options = [
@@ -94,14 +126,19 @@ def render_protocol_page(data_manager):
         "PO4-O2-PO8",
     ]
 
+    preset_phases={}
     # Create multiple protocol phase tables
     if protocol_data and "phases" in protocol_data:
         phases = protocol_data["phases"]
+        if presets and "phases" in presets:
+            preset_phases = presets["phases"]
+            phases = map_preset_to_phases(preset_phases)
     else:
         # If no protocol data, create a single phase from base protocol
         base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
         base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
         phases = [base_protocol]
+
 
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):

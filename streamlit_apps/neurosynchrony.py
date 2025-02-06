@@ -15,7 +15,8 @@ from streamlit_apps.mert_components import (render_abnormalities,
                                             render_artifact_distortions,
                                             render_documents,
                                             render_eeg_review, render_notes,
-                                            render_protocol_page)
+                                            render_protocol_page,
+                                            get_report_addendum_eeg_id)
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
@@ -186,6 +187,20 @@ with col1:
 
         st.subheader("Reports")
 
+        if st.button(label="Add addendum", key="appended"):
+            eeg_id = get_report_addendum_eeg_id(data_manager)
+            st.session_state["addendum"] = True
+            patient_id = st.session_state["pid"]
+            clinic_id = st.session_state["clinicid"]
+            url=f"http://0.0.0.0:8501?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}"
+
+            st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
+        else:
+            st.session_state["addendum"] = False
+
+        addendum = st.session_state["addendum"]
+
+
         eeg_history_df = st.session_state.eeg_history
 
         if "downloaded_neuroref_report" in st.session_state:
@@ -231,7 +246,7 @@ with col1:
                 "Generate Neuroref Cz Report"
             )
 
-        if regenerate_neuroref:
+        if regenerate_neuroref or addendum:
             approved_eegs = edited_eeg_history_df[
                 edited_eeg_history_df["include?"] == True
             ]
@@ -268,6 +283,8 @@ with col1:
 
 
 with tab2:
+    if addendum:
+        st.write("Protocol page is not available for addendum report.")
     render_protocol_page(data_manager)
     st.title("Protocol Queue")
     html = f'<iframe src="https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5" frameborder="0" width="100%" height="900px"></iframe>'

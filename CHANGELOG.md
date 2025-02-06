@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [2.12.0] - 2025-02-06
+
+### Added
+- Protocol presets
+- Addendums.
+
+### Changed
+- EEG viewer default scale set to 10 microvolts. (Leslie's default)
+- Protocol dashboard redirects directly to Protocol review page.
+
+
+
+
 ## [2.11.0] - 2025-01-29
 ### Fixed
 - Review button disappears when review is complete.
