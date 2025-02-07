@@ -127,8 +127,6 @@ def render_protocol_page(data_manager):
         "PO4-O2-PO8",
     ]
 
-
-    st.json(protocol_data["phases"])
     preset_phases={}
     # Create multiple protocol phase tables
     if protocol_data and "phases" in protocol_data:
@@ -299,8 +297,6 @@ def render_protocol_page(data_manager):
                 "totalDuration": sum(phase.get("totalDuration", 0) for phase in edited_phases),
                 "type": "TREATMENT",
             }
-
-            st.json(protocol)
 
             # Save the protocol
             asyncio.run(data_manager.save_protocol(protocol))
