@@ -252,8 +252,6 @@ def render_protocol_page(data_manager):
         # Convert the edited DataFrame back to a list of dicts
         edited_phases = edited_df.to_dict(orient="records")
 
-
-
         for idx,  phase_dict in enumerate(edited_phases):
             phase_dict.pop("Phase", None)
             if phase_dict["pulseMode"] == "Monophasic":
@@ -315,21 +313,38 @@ def render_protocol_page(data_manager):
     # Create a separate form for actions
     with st.form("protocol_actions_form"):
         rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
-
-        # Add form submit buttons
-        col1, col2 = st.columns(2)
-        with col1:
-            save_submitted = st.form_submit_button("Save Protocol Changes")
-        with col2:
-            reject_submitted = st.form_submit_button("Reject Protocol")
+        reject_submitted = st.form_submit_button("Reject Protocol")
 
     # Handle form submissions
-    #if save_submitted:
-
 
     if reject_submitted:
         if rejection_reason:
             try:
+                # Convert the edited DataFrame back to a list of dicts
+                edited_phases = edited_df.to_dict(orient="records")
+
+                for idx,  phase_dict in enumerate(edited_phases):
+                    phase_dict.pop("Phase", None)
+                    if phase_dict["pulseMode"] == "Monophasic":
+                        phase_dict["pulseMode"] = "MONO"
+                    elif phase_dict["pulseMode"] == "Biphasic":
+                        phase_dict["pulseMode"] = "BIPHASIC"
+
+                    for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
+                        if phase_dict[param] == 0:
+                            phase_dict[param] = None
+
+                        # Ensure NaN values are explicitly converted to None
+                        if pd.isna(phase_dict[param]):
+                            phase_dict[param] = None
+
+                    phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
+
+                    if phase_dict["pulseMode"] == "MONO":
+                        phase_dict["pulseParameters"]["phase"] = "MONO"
+                    elif phase_dict["pulseMode"] == "BIPHASIC":
+                        phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+
                 protocol = {
                     "acknowledgeState": {"clinician": "", "physician": ""},
                     "approvedByName": "",
@@ -339,25 +354,7 @@ def render_protocol_page(data_manager):
                     "eegId": data_manager.eeg_id,
                     "numPhases": len(edited_phases),
                     "patientId": data_manager.patient_id,
-                    "phases": [
-                        {
-                            "location": phase["location"],
-                            "goalIntensity": phase.get("goalIntensity", 0),
-                            "pulseParameters": {
-                                "phase": "MONO" if phase["pulseMode"] == "Monophasic" else "BIPHASIC"
-                            },
-                            "frequency": phase["frequency"],
-                            "burstDuration": 0,
-                            "burstFrequency": 0,
-                            "burstNumber": 0,
-                            "interBurstInterval": 0,
-                            "interTrainInterval": phase["interTrainInterval"],
-                            "phaseDuration": phase.get("phaseDuration", 0),
-                            "trainDuration": phase["trainDuration"],
-                            "trainNumber": phase["trainNumber"],
-                        }
-                        for phase in edited_phases
-                    ],
+                    "phases": edited_phases,
                     "subtype": "CORTICAL",
                     "totalDuration": 0,
                     "type": "TREATMENT",
