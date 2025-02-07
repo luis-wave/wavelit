@@ -171,7 +171,6 @@ def render_protocol_page(data_manager):
     for i, phase_dict in enumerate(phases):
         if "pulseParameters" in phase_dict:
             raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
-            st.write(raw_phase.upper())
             # If it contains "MONO", classify as "Monophasic", else "Biphasic"
             if "MONO" in raw_phase.upper():
                 phase_dict["pulseMode"] = "Monophasic"
