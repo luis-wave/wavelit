@@ -94,7 +94,7 @@ def render_protocol_page(data_manager):
         ui.element("span", children=["Recording Date"], className="text-gray-400 text-sm font-medium m-1", key="recording_date_label")
         ui.element("div", children=[f"{base_protocol['recordingDate']}"], className="text-base font-semibold m-1", key="recording_date_value")
 
-    presets = asyncio.run(data_manager.get_protocol_review_default_values())
+
 
     # Define the location options
     location_options = [
@@ -130,6 +130,11 @@ def render_protocol_page(data_manager):
     # Create multiple protocol phase tables
     if protocol_data and "phases" in protocol_data:
         phases = protocol_data["phases"]
+
+        n_phases = len(protocol_data["phases"])
+
+        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+
         if presets and "phases" in presets:
             preset_phases = presets["phases"]
             phases = map_preset_to_phases(preset_phases)
@@ -142,9 +147,13 @@ def render_protocol_page(data_manager):
 
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
+        current_n_phases = len(phases)
         try:
-            # Create a new phase based on the last phase's data
-            last_phase = phases[-1].copy()
+            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases+1))
+
+            if presets and "phases" in presets:
+                preset_phases = presets["phases"]
+                phases = map_preset_to_phases(preset_phases)
 
             # Prepare the protocol object with the additional phase
             current_protocol = {
@@ -157,16 +166,16 @@ def render_protocol_page(data_manager):
                 "createdByName": st.session_state["name"],
                 "createdDate": datetime.utcnow().isoformat() + "Z",
                 "eegId": data_manager.eeg_id,
-                "numPhases": len(phases) + 1,
+                "numPhases": phases,
                 "patientId": data_manager.patient_id,
-                "phases": [*phases, last_phase],
+                "phases": [phases],
                 "subtype": "CORTICAL",
                 "type": "TREATMENT",
             }
 
             # Save the protocol with the new phase
             asyncio.run(data_manager.save_protocol(current_protocol))
-            asyncio.run(data_manager.save_protocol(current_protocol))  # Run twice as per original code
+            #asyncio.run(data_manager.save_protocol(current_protocol))  # Run twice as per original code
 
             # Refresh the page to show the new phase
             st.rerun()
@@ -174,6 +183,8 @@ def render_protocol_page(data_manager):
             st.error(f"Failed to add new phase: {str(e)}")
 
     edited_phases = []
+
+    st.json(phases)
 
     # Display each phase's data editor
     for i, phase in enumerate(phases):
