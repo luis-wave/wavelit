@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.12.1] - 2025-02-06
 ### Fixed
 - Query parameter feature for protocol review page did not redirect user to correct tab.
+### Added
+- Protocol link within Protocol Dashboard now filters the sigma dashboard via query parameters in the URL.
 
 
 ## [2.12.0] - 2025-02-05

@@ -70,7 +70,9 @@ if "tab" in query:
         with tab1:
             render_protocol_page(data_manager)
             st.title("Protocol Queue")
-            html = f'<iframe src="https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5" frameborder="0" width="100%" height="900px"></iframe>'
+            pid = st.session_state["pid"]
+            base = "https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5"+f"?c_protocol_Patient-Id-1={pid}"
+            html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
             components.html(html, height=1000, scrolling=False)
 
         with tab2:
@@ -696,7 +698,9 @@ if "tab" in query:
         with tab2:
             render_protocol_page(data_manager)
             st.title("Protocol Queue")
-            html = f'<iframe src="https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5" frameborder="0" width="100%" height="900px"></iframe>'
+            pid = st.session_state["pid"]
+            base = "https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5"+f"?c_protocol_Patient-Id-1={pid}"
+            html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
             components.html(html, height=1000, scrolling=False)
 
         with tab3:
