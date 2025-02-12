@@ -302,10 +302,10 @@ class MeRTDataManager:
             raise
 
     async def get_protocol_review_default_values(
-        self, n_phases=1
+        self
     ) -> Dict[str, Any]:
         try:
-            result = await self.api.get_protocol_review_default_values(n_phases=n_phases)
+            result = await self.api.get_protocol_review_default_values()
             logger.info(
                 f"EEG presets retrieved successfully for patient ID: {self.patient_id}"
             )
