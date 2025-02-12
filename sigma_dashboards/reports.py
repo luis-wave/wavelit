@@ -49,6 +49,8 @@ if eegid and clinicid and pid:
     st.session_state["eegid"] = eegid
     st.session_state["pid"] = pid
     st.session_state["clinicid"] = clinicid
+    if "tab" in query_params:
+        st.session_state['tab'] = query_params["tab"]
     st.switch_page("streamlit_apps/neurosynchrony.py")
 
 
