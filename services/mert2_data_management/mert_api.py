@@ -119,12 +119,16 @@ class MeRTApi:
                     return await response.json()
 
     async def _make_neuralink_request(
-        self, method: str, endpoint: str
+        self, method: str, endpoint: str, n_phases: Optional[int]
     ) -> Dict[str, Any]:
         eeg_id = self.eeg_id.replace("EEG-","")
         patient_id = self.patient_id.replace("PAT-","")
 
-        url = urljoin(self.config.neuralink.url, f"{endpoint}?usergroup={self.clinic_id}&eeg_id={eeg_id}&patient_id={patient_id}")
+        if n_phases > 1:
+            url = urljoin(self.config.neuralink.url, f"{endpoint}?usergroup={self.clinic_id}&eeg_id={eeg_id}&patient_id={patient_id}&number_of_phases={n_phases}")
+        else:
+            url = urljoin(self.config.neuralink.url, f"{endpoint}?usergroup={self.clinic_id}&eeg_id={eeg_id}&patient_id={patient_id}")
+
         async with aiohttp.ClientSession() as session:
             async with session.request(
                 method,
@@ -547,10 +551,11 @@ class MeRTApi:
             },
         )
 
-    async def get_protocol_review_default_values(self) -> Dict[str, Any]:
+    async def get_protocol_review_default_values(self, n_phases=1) -> Dict[str, Any]:
         return await self._make_neuralink_request(
             "GET",
             "get_protocol_review_default_values",
+            n_phases=n_phases
         )
 
 

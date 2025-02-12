@@ -1,3 +1,4 @@
+import ast
 import asyncio
 from datetime import datetime
 
@@ -94,7 +95,7 @@ def render_protocol_page(data_manager):
         ui.element("span", children=["Recording Date"], className="text-gray-400 text-sm font-medium m-1", key="recording_date_label")
         ui.element("div", children=[f"{base_protocol['recordingDate']}"], className="text-base font-semibold m-1", key="recording_date_value")
 
-    presets = asyncio.run(data_manager.get_protocol_review_default_values())
+
 
     # Define the location options
     location_options = [
@@ -130,6 +131,11 @@ def render_protocol_page(data_manager):
     # Create multiple protocol phase tables
     if protocol_data and "phases" in protocol_data:
         phases = protocol_data["phases"]
+
+        n_phases = len(protocol_data["phases"])
+
+        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+
         if presets and "phases" in presets:
             preset_phases = presets["phases"]
             phases = map_preset_to_phases(preset_phases)
@@ -139,71 +145,77 @@ def render_protocol_page(data_manager):
         base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
         phases = [base_protocol]
 
-
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
+        current_n_phases = len(phases)
         try:
-            # Create a new phase based on the last phase's data
-            last_phase = phases[-1].copy()
+            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases+1))
 
-            # Prepare the protocol object with the additional phase
-            current_protocol = {
-                "acknowledgeState": {
-                    "clinician": doctor_approval_state["clinician"],
-                    "physician": doctor_approval_state["physician"],
-                },
-                "approvedByName": st.session_state["name"],
-                "approvedDate": datetime.utcnow().isoformat() + "Z",
-                "createdByName": st.session_state["name"],
-                "createdDate": datetime.utcnow().isoformat() + "Z",
-                "eegId": data_manager.eeg_id,
-                "numPhases": len(phases) + 1,
-                "patientId": data_manager.patient_id,
-                "phases": [*phases, last_phase],
-                "subtype": "CORTICAL",
-                "type": "TREATMENT",
-            }
+            if presets and "phases" in presets:
+                preset_phases = presets["phases"]
+                st.session_state["phases"] = map_preset_to_phases(preset_phases)
 
-            # Save the protocol with the new phase
-            asyncio.run(data_manager.save_protocol(current_protocol))
-            asyncio.run(data_manager.save_protocol(current_protocol))  # Run twice as per original code
-
-            # Refresh the page to show the new phase
-            st.rerun()
         except Exception as e:
             st.error(f"Failed to add new phase: {str(e)}")
 
-    edited_phases = []
+    if "phases" in st.session_state:
+        phases = st.session_state["phases"]
 
-    # Display each phase's data editor
-    for i, phase in enumerate(phases):
-        st.subheader(f"Phase {i + 1}")
+        for i, phase_dict in enumerate(protocol_data["phases"]):
+            phases[i] = phase_dict
 
-        # Add pulseMode to phase data
-        if "pulseParameters" in phase:
-            phase["pulseMode"] = "Monophasic" if "MONO" in phase["pulseParameters"]["phase"] else "Biphasic"
+    if len(protocol_data["phases"]) > 1:
+        for i, phase_dict in enumerate(protocol_data["phases"]):
+            phases[i] = phase_dict
+
+    for i, phase_dict in enumerate(phases):
+        if "pulseParameters" in phase_dict:
+            raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
+            # If it contains "MONO", classify as "Monophasic", else "Biphasic"
+            if "MONO" in raw_phase.upper():
+                phase_dict["pulseMode"] = "Monophasic"
+            else:
+                phase_dict["pulseMode"] = "Biphasic"
         else:
-            phase["pulseMode"] = "Biphasic"
+            # Default to Biphasic if pulseParameters missing
+            phase_dict["pulseMode"] = "Biphasic"
 
-        # Convert phase to DataFrame
-        phase_df = pd.DataFrame([phase])
+        n_submitted_protocols = len(protocol_data["phases"])
 
-        visible_columns = [
-            "frequency",
-            "interTrainInterval",
-            "location",
-            "phaseDuration",
-            "trainDuration",
-            "trainNumber",
-            "pulseMode",
-        ]
+        # If the
+        if n_submitted_protocols > 1:
+            if i < n_submitted_protocols:
+                phase_dict["frequency"] = protocol_data["phases"][i]["frequency"]
+
+
+    # Convert phase to DataFrame
+    phase_df = pd.DataFrame(phases)
+
+    phase_df.insert(0, "Phase", phase_df.index + 1)
+
+    phase_df["include"] = True
+
+    visible_columns = [
+        "Phase",
+        "frequency",
+        "interTrainInterval",
+        "location",
+        "phaseDuration",
+        "trainDuration",
+        "trainNumber",
+        "pulseMode",
+        "include"
+    ]
+
+
+    with st.form("additional_phases_form"):
 
         # Create editable table for each phase - Added unique key
         edited_df = st.data_editor(
             phase_df,
             num_rows="fixed",
             use_container_width=True,
-            key=f"phase_{i}_editor",  # Added unique key based on phase index
+            key=f"phase_editor",  # Added unique key based on phase index
             disabled=["recordingDate"] if "recordingDate" in phase_df.columns else [],
             column_order=visible_columns,
             column_config={
@@ -228,21 +240,41 @@ def render_protocol_page(data_manager):
             },
             hide_index=True,
         )
-        edited_phases.append(edited_df.iloc[0].to_dict())
 
-    # Create a separate form for actions
-    with st.form("protocol_actions_form"):
-        rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
+        edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
 
-        # Add form submit buttons
-        col1, col2 = st.columns(2)
-        with col1:
-            save_submitted = st.form_submit_button("Save Protocol Changes")
-        with col2:
-            reject_submitted = st.form_submit_button("Reject Protocol")
+        edited_df = edited_df[edited_df["include"]].reset_index(drop=True).drop(columns=["include"])
 
-    # Handle form submissions
-    if save_submitted:
+        save_phases = st.form_submit_button("Save protocol")
+
+    if save_phases:
+        # Convert the edited DataFrame back to a list of dicts
+        edited_phases = edited_df.to_dict(orient="records")
+
+        for idx,  phase_dict in enumerate(edited_phases):
+            phase_dict.pop("Phase", None)
+            if phase_dict["pulseMode"] == "Monophasic":
+                phase_dict["pulseMode"] = "MONO"
+            elif phase_dict["pulseMode"] == "Biphasic":
+                phase_dict["pulseMode"] = "BIPHASIC"
+
+            for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
+                if phase_dict[param] == 0:
+                    phase_dict[param] = None
+
+                # Ensure NaN values are explicitly converted to None
+                if pd.isna(phase_dict[param]):
+                    phase_dict[param] = None
+
+            phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
+
+            if phase_dict["pulseMode"] == "MONO":
+                phase_dict["pulseParameters"]["phase"] = "MONO"
+            elif phase_dict["pulseMode"] == "BIPHASIC":
+                phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+
+
+
         try:
             # Prepare the protocol object with multiple phases
             protocol = {
@@ -257,25 +289,7 @@ def render_protocol_page(data_manager):
                 "eegId": data_manager.eeg_id,
                 "numPhases": len(edited_phases),
                 "patientId": data_manager.patient_id,
-                "phases": [
-                    {
-                        "location": phase["location"],
-                        "goalIntensity": phase.get("goalIntensity", 0),
-                        "pulseParameters": {
-                            "phase": "MONO" if phase["pulseMode"] == "Monophasic" else "BIPHASIC"
-                        },
-                        "frequency": phase["frequency"],
-                        "burstDuration": phase.get("burstDuration", 0),
-                        "burstFrequency": phase.get("burstFrequency", 0),
-                        "burstNumber": phase.get("burstNumber", 0),
-                        "interBurstInterval": phase.get("interBurstInterval", 0),
-                        "interTrainInterval": phase["interTrainInterval"],
-                        "phaseDuration": phase.get("phaseDuration", 0),
-                        "trainDuration": phase["trainDuration"],
-                        "trainNumber": phase["trainNumber"],
-                    }
-                    for phase in edited_phases
-                ],
+                "phases": edited_phases,
                 "subtype": "CORTICAL",
                 "totalDuration": sum(phase.get("totalDuration", 0) for phase in edited_phases),
                 "type": "TREATMENT",
@@ -295,9 +309,41 @@ def render_protocol_page(data_manager):
         except Exception as e:
             st.error(f"Failed to update protocol: {str(e)}")
 
+    # Create a separate form for actions
+    with st.form("protocol_actions_form"):
+        rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
+        reject_submitted = st.form_submit_button("Reject Protocol")
+
+    # Handle form submissions
+
     if reject_submitted:
         if rejection_reason:
             try:
+                # Convert the edited DataFrame back to a list of dicts
+                edited_phases = edited_df.to_dict(orient="records")
+
+                for idx,  phase_dict in enumerate(edited_phases):
+                    phase_dict.pop("Phase", None)
+                    if phase_dict["pulseMode"] == "Monophasic":
+                        phase_dict["pulseMode"] = "MONO"
+                    elif phase_dict["pulseMode"] == "Biphasic":
+                        phase_dict["pulseMode"] = "BIPHASIC"
+
+                    for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
+                        if phase_dict[param] == 0:
+                            phase_dict[param] = None
+
+                        # Ensure NaN values are explicitly converted to None
+                        if pd.isna(phase_dict[param]):
+                            phase_dict[param] = None
+
+                    phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
+
+                    if phase_dict["pulseMode"] == "MONO":
+                        phase_dict["pulseParameters"]["phase"] = "MONO"
+                    elif phase_dict["pulseMode"] == "BIPHASIC":
+                        phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+
                 protocol = {
                     "acknowledgeState": {"clinician": "", "physician": ""},
                     "approvedByName": "",
@@ -307,25 +353,7 @@ def render_protocol_page(data_manager):
                     "eegId": data_manager.eeg_id,
                     "numPhases": len(edited_phases),
                     "patientId": data_manager.patient_id,
-                    "phases": [
-                        {
-                            "location": phase["location"],
-                            "goalIntensity": phase.get("goalIntensity", 0),
-                            "pulseParameters": {
-                                "phase": "MONO" if phase["pulseMode"] == "Monophasic" else "BIPHASIC"
-                            },
-                            "frequency": phase["frequency"],
-                            "burstDuration": 0,
-                            "burstFrequency": 0,
-                            "burstNumber": 0,
-                            "interBurstInterval": 0,
-                            "interTrainInterval": phase["interTrainInterval"],
-                            "phaseDuration": phase.get("phaseDuration", 0),
-                            "trainDuration": phase["trainDuration"],
-                            "trainNumber": phase["trainNumber"],
-                        }
-                        for phase in edited_phases
-                    ],
+                    "phases": edited_phases,
                     "subtype": "CORTICAL",
                     "totalDuration": 0,
                     "type": "TREATMENT",
