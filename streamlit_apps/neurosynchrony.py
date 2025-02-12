@@ -60,14 +60,13 @@ def delete_report(data_manager, report_id, ref="default"):
         st.rerun()
 
 
-query = st.query_params.to_dict()
-
-if "tab" in query:
-    tabs = ["Protocols", "Reports", "EEG", "ECG"]
-    tab1, tab2, tab3, tab4 = st.tabs(tabs)
-    tab_name = query["tab"]
-    if tab_name == "Protocols":
+if "tab" in st.session_state:
+    if st.session_state['tab'] == "Protocols":
+        tabs = ["Protocols", "Reports", "EEG", "ECG"]
+        tab1, tab2, tab3, tab4 = st.tabs(tabs)
         with tab1:
+            if addendum:
+                st.write("Protocol page is not available for addendum report.")
             render_protocol_page(data_manager)
             st.title("Protocol Queue")
             pid = st.session_state["pid"]
@@ -597,6 +596,8 @@ else:
     
     
     with tab2:
+        if addendum:
+            st.write("Protocol page is not available for addendum report.")
         render_protocol_page(data_manager)
         st.title("Protocol Queue")
         pid = st.session_state["pid"]
