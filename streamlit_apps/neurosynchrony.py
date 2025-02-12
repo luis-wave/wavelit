@@ -317,7 +317,8 @@ else:
             age = calculate_age(dob)
             sex = patient_data["profileInfo"]["sex"].capitalize()
             patient_id = patient_data["profileInfo"]["patientId"]
-            primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
+            primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "Not Provided")
+
             is_having_seizures = (
                 "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
             )
@@ -517,8 +518,8 @@ else:
             st.divider()
 
             render_abnormalities(data_manager)
-        
-        
+
+
     with tab2:
         if addendum:
             st.write("Protocol page is not available for addendum report.")
@@ -528,11 +529,11 @@ else:
         base = "https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5"+f"?c_protocol_Patient-Id-1={pid}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
         components.html(html, height=1000, scrolling=False)
-    
+
     with tab3:
         asyncio.run(access_eeg_data(st.session_state["eegid"]))
         eeg_visualization_dashboard()
-    
+
     with tab4:
         asyncio.run(access_eeg_data(st.session_state["eegid"]))
         ecg_visualization_dashboard()
