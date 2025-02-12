@@ -88,7 +88,7 @@ if "tab" in st.session_state:
                 age = calculate_age(dob)
                 sex = patient_data["profileInfo"]["sex"].capitalize()
                 patient_id = patient_data["profileInfo"]["patientId"]
-                primary_complaint = patient_data["clinicalInfo"]["primaryComplaint"]
+                primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "Not Provided")
                 is_having_seizures = (
                     "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
                 )
@@ -110,7 +110,7 @@ if "tab" in st.session_state:
             age = calculate_age(dob)
             sex = patient_data["profileInfo"]["sex"].capitalize()
             patient_id = patient_data["profileInfo"]["patientId"]
-            primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "-")
+            primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "Not Provided")
             is_having_seizures = (
                 "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
             )
