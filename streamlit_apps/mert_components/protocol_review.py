@@ -141,9 +141,15 @@ def render_protocol_page(data_manager):
             phases = map_preset_to_phases(preset_phases)
     else:
         # If no protocol data, create a single phase from base protocol
-        base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
-        base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
-        phases = [base_protocol]
+        # base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
+        # base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
+        # phases = [base_protocol]
+        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
+
+        if presets and "phases" in presets:
+            preset_phases = presets["phases"]
+            phases = map_preset_to_phases(preset_phases)
+        protocol_data = {"phases": phases}
 
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
@@ -164,11 +170,6 @@ def render_protocol_page(data_manager):
         for i, phase_dict in enumerate(protocol_data["phases"]):
             phases[i] = phase_dict
 
-    if not protocol_data:
-        protocol_data = {"phases": [base_protocol]}
-        base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
-        base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
-        phases = [base_protocol]
 
     if len(protocol_data["phases"]) > 1:
         for i, phase_dict in enumerate(protocol_data["phases"]):
