@@ -164,6 +164,12 @@ def render_protocol_page(data_manager):
         for i, phase_dict in enumerate(protocol_data["phases"]):
             phases[i] = phase_dict
 
+    if not protocol_data:
+        protocol_data = {"phases": [base_protocol]}
+        base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
+        base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
+        phases = [base_protocol]
+
     if len(protocol_data["phases"]) > 1:
         for i, phase_dict in enumerate(protocol_data["phases"]):
             phases[i] = phase_dict
