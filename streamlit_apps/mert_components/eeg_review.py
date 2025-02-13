@@ -15,8 +15,8 @@ REJECTION_REASONS = {
 
 
 
-def get_eeg_info(_data_manager):
-    return asyncio.run(_data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+def get_eeg_info(data_manager):
+    return asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
 
 def handle_approve(data_manager, current_state):
     next_state = get_next_state(current_state)
@@ -56,10 +56,6 @@ def handle_reject(data_manager, current_state, reasons):
 def render_eeg_review(data_manager):
     """Render the EEG review UI with explicit and clean structure."""
     if 'needs_refresh' not in st.session_state:
-        st.session_state.needs_refresh = False
-
-    if st.session_state.get('needs_refresh', False):
-        get_eeg_info.clear()
         st.session_state.needs_refresh = False
 
     eeg_info = get_eeg_info(data_manager)

@@ -12,8 +12,8 @@ def render_abnormalities(data_manager):
     st.subheader("Abnormalities")
 
     converter = {
-        "Possible Irregular EEG Activity (AEA)": "Possible irregular EEG Activity (AEA)",
-        "Possible Irregular Heart Rhythm (AHR)": "Possible irregular Heart Rhythm (AHR)",
+        "Possible Irregular EEG Activity (AEA)": "Possible Irregular EEG Activity",
+        "Possible Irregular Heart Rhythm (AHR)": "Possible Irregular Heart Rhythm",
         "Possible MTHFR": "Possible MTHFR",
         "Heart Rate": "Heart Rate"
     }

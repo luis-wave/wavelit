@@ -1,11 +1,6 @@
-"""
-Renders the notes from MeRT 2. Once notes are submitted, they can't be edited or deleted.
-Do not alter this functionality.
-"""
-
 import asyncio
 from datetime import datetime
-
+import html
 import streamlit as st
 
 from utils.helpers import format_datetime, parse_recording_date
@@ -52,7 +47,6 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Consolidate notes by recording date
     consolidated_notes = {}
     for date_key, note in eeg_scientist_patient_notes.items():
-        # Convert to PST
         note["dateEdited"] = format_datetime(note["dateEdited"])
         recording_date = note["recordingDate"]
         if recording_date not in consolidated_notes:
@@ -67,34 +61,38 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
             reverse=True,
         )
 
-
-
-
-    # Sort the recording dates (keys) in descending order by date
+    # Sort recording dates in descending order
     sorted_recording_dates = sorted(
         consolidated_notes.keys(),
         key=lambda d: parse_recording_date(d),
-        reverse=True  # True -> most recent first
+        reverse=True
     )
 
-    # Now iterate over the sorted dates
+    # Render notes with preserved formatting
     for recording_date in sorted_recording_dates:
         notes = consolidated_notes[recording_date]
 
-        st.markdown(f"### Notes from {recording_date}")
-        for idx, note in enumerate(notes, start=1):
+        st.markdown(f"### Notes from {recording_date}", help="Recording date of the EEG session")
+        for note in notes:
+            # Escape HTML special characters and preserve line breaks
+            safe_content = html.escape(note['content'])
+            formatted_content = safe_content.replace('\n', '<br>')
+
             st.markdown(
                 f"""
                 <div style="background-color: #f9f9f9;
                             padding: 10px;
-                            margin-bottom: 10px;
-                            border-radius: 5px;">
-                    <strong>{note['subject']}</strong><br />
-                    <em>Edited on: {note['dateEdited']}</em><br /><br />
-                    {note['content']}
+                            margin-bottom: 8px;
+                            border-radius: 5px;
+                            white-space: pre-wrap;
+                            font-family: inherit;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
+                        <strong>{html.escape(note['subject'])}</strong>
+                        <em style="font-size: 0.9em;">Edited: {note['dateEdited']}</em>
+                    </div>
+                    <div style="white-space: pre-wrap; margin-top: 4px;">{formatted_content}</div>
                 </div>
                 """,
                 unsafe_allow_html=True
             )
         st.divider()
-

@@ -216,34 +216,32 @@ if "tab" in st.session_state:
                         st.session_state.downloaded_neuroref_report
                     ):
                         report, report_id = report_data
-                        with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}", expanded=True):
-                            pdf_viewer(report, height=700, key=f"linked_ears {idx}")
-                            st.download_button(
-                                label="Download Neuroref",
-                                data=report,
-                                file_name=f"Neurosynchrony-{report_id}.pdf",
-                                key=f"download-{report_id}",
-                            )
-                            if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
-                                delete_report(data_manager, report_id)
-                                st.success(f"Neuroref {report_id} successfully deleted!")
+                        pdf_viewer(report, height=700, width=950, key=f"linked_ears {idx}")
+                        st.download_button(
+                            label="Download Neuroref",
+                            data=report,
+                            file_name=f"Neurosynchrony-{report_id}.pdf",
+                            key=f"download-{report_id}",
+                        )
+                        if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
+                            delete_report(data_manager, report_id)
+                            st.success(f"Neuroref {report_id} successfully deleted!")
 
                 if "downloaded_neuroref_cz_report" in st.session_state:
                     for idx, report_data in enumerate(
                         st.session_state.downloaded_neuroref_cz_report
                     ):
                         report, report_id = report_data
-                        with st.expander(label=f"Neurosynchrony - Centroid {report_id}", expanded=True):
-                            pdf_viewer(report, height=700, key=f"centroid {idx}")
-                            st.download_button(
-                                label="Download Neuroref Cz",
-                                data=report,
-                                file_name=f"Neurosynchrony-Cz-{report_id}.pdf",
-                                key=f"download-cz-{report_id}",
-                            )
-                            if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
-                                delete_report(data_manager, report_id, ref="cz")
-                                st.success(f"Neuroref Cz {report_id} successfully deleted!")
+                        pdf_viewer(report, height=700,width=950, key=f"centroid {idx}")
+                        st.download_button(
+                            label="Download Neuroref Cz",
+                            data=report,
+                            file_name=f"Neurosynchrony-Cz-{report_id}.pdf",
+                            key=f"download-cz-{report_id}",
+                        )
+                        if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
+                            delete_report(data_manager, report_id, ref="cz")
+                            st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
 
                 st.header("EEG History")
@@ -446,34 +444,32 @@ else:
                     st.session_state.downloaded_neuroref_report
                 ):
                     report, report_id = report_data
-                    with st.expander(label=f"Neurosynchrony - Linked Ears {report_id}", expanded=True):
-                        pdf_viewer(report, height=700, key=f"linked_ears {idx}")
-                        st.download_button(
-                            label="Download Neuroref",
-                            data=report,
-                            file_name=f"Neurosynchrony-{report_id}.pdf",
-                            key=f"download-{report_id}",
-                        )
-                        if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
-                            delete_report(data_manager, report_id)
-                            st.success(f"Neuroref {report_id} successfully deleted!")
+                    pdf_viewer(report, height=700, width=950, key=f"linked_ears {idx}")
+                    st.download_button(
+                        label="Download Neuroref",
+                        data=report,
+                        file_name=f"Neurosynchrony-{report_id}.pdf",
+                        key=f"download-{report_id}",
+                    )
+                    if st.button(label="Delete", key=f"Neurosynchrony-{report_id}"):
+                        delete_report(data_manager, report_id)
+                        st.success(f"Neuroref {report_id} successfully deleted!")
 
             if "downloaded_neuroref_cz_report" in st.session_state:
                 for idx, report_data in enumerate(
                     st.session_state.downloaded_neuroref_cz_report
                 ):
                     report, report_id = report_data
-                    with st.expander(label=f"Neurosynchrony - Centroid {report_id}", expanded=True):
-                        pdf_viewer(report, height=700, key=f"centroid {idx}")
-                        st.download_button(
-                            label="Download Neuroref Cz",
-                            data=report,
-                            file_name=f"Neurosynchrony-Cz-{report_id}.pdf",
-                            key=f"download-cz-{report_id}",
-                        )
-                        if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
-                            delete_report(data_manager, report_id, ref="cz")
-                            st.success(f"Neuroref Cz {report_id} successfully deleted!")
+                    pdf_viewer(report,height=700, width=950, key=f"centroid {idx}")
+                    st.download_button(
+                        label="Download Neuroref Cz",
+                        data=report,
+                        file_name=f"Neurosynchrony-Cz-{report_id}.pdf",
+                        key=f"download-cz-{report_id}",
+                    )
+                    if st.button(label="Delete", key=f"Neurosynchrony-cz-{report_id}"):
+                        delete_report(data_manager, report_id, ref="cz")
+                        st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
 
             st.header("EEG History")
@@ -523,6 +519,7 @@ else:
     with tab2:
         if addendum:
             st.write("Protocol page is not available for addendum report.")
+
         render_protocol_page(data_manager)
         st.title("Protocol Queue")
         pid = st.session_state["pid"]

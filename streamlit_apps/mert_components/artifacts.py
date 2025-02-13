@@ -9,6 +9,8 @@ import streamlit as st
 
 def get_artifact_map():
     return {
+        "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.": "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.",
+        "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation.": "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation.",
         "ecg": "Electrocardiographic interference (ECG)",
         "excessiveMuscleTension": "Excessive muscle tension (EMG)",
         "eyeWandering": "Eye wandering",
@@ -21,8 +23,6 @@ def get_artifact_map():
         "neckTension": "Neck tension",
         "possibleDrowsiness": "Possible drowsiness",
         "powerlineInterference": "Powerline interference",
-        "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.": "Please note that possible artifact distortion may be present due to the following reasons: potential drowsiness, poor EEG setup, and/or noncompliance.",
-        "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation.": "Please note that possible artifact distortion may be present due to a flat channel(s) that may be a consequence of EEG setup, maintenance, or instrumentation."
     }
 
 

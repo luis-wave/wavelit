@@ -25,7 +25,7 @@ def serialize_ahr_to_pandas(predictions, confidence_threshold=0.9, epoch_length=
             is_arrhythmia.append(True)
         else:
             # Append data for all lists even if they do not meet the threshold
-            onsets.append(index * epoch_length)
+            onsets.append(r_peaks[index])
             confidences.append(probability)
             is_arrhythmia.append(False)
 

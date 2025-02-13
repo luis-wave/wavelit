@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.2] - 2025-02-13
+### Fixed
+- Note format.
+- ECG onsets.
+- Artifact/abnormality statements.
+
+### Changed
+- Increased pdf report size.
+- Added chief complaint to protocol page.
+
+
 
 ## [2.12.1] - 2025-02-06
 ### Fixed

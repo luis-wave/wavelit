@@ -5,6 +5,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import streamlit_shadcn_ui as ui
+from utils.helpers import calculate_age
 
 
 from .review_utils import EEGReviewState, mert2_user
@@ -44,6 +45,27 @@ def map_preset_to_phases(preset_phases):
 def render_protocol_page(data_manager):
     st.title("EEG Protocol")
 
+    patient_data = st.session_state.patient_data
+    clinic_info = st.session_state.clinic_info
+
+    first_name = patient_data["profileInfo"]["name"]["first"]
+    last_name = patient_data["profileInfo"]["name"]["last"]
+    middle_name = patient_data["profileInfo"]["name"]["middle"]
+    username = patient_data["profileInfo"]["username"]
+    dob = patient_data["profileInfo"]["dateOfBirth"]
+    age = calculate_age(dob)
+    sex = patient_data["profileInfo"]["sex"].capitalize()
+    patient_id = patient_data["profileInfo"]["patientId"]
+    primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "-")
+    is_having_seizures = (
+        "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
+    )
+
+    if "CORTICAL" in st.session_state.treatment_count:
+        treatment_count = st.session_state.treatment_count["CORTICAL"]
+    else:
+        treatment_count = 0
+
     # Fetch EEG info
     eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
     base_protocol = eeg_info["baseProtocol"]
@@ -74,26 +96,15 @@ def render_protocol_page(data_manager):
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
+    # Display primary details
+    st.markdown(f"**{first_name} {last_name}**")
+    st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
+    st.markdown(f"**Primary Complaint:** {primary_complaint}")
+    st.markdown(f"**Treatment Count:** {treatment_count}")
 
-
-    # Display metadata
-    # Card for displaying metadata
-    with ui.card(key="metadata_card"):
-        # EEG ID
-        ui.element("span", children=["EEG ID"], className="text-gray-400 text-sm font-medium m-1", key="eeg_id_label")
-        ui.element("div", children=[f"{eeg_info_data['eegId']}"], className="text-base font-semibold m-1", key="eeg_id_value")
-
-        # Patient ID
-        ui.element("span", children=["Patient ID"], className="text-gray-400 text-sm font-medium m-1", key="patient_id_label")
-        ui.element("div", children=[f"{data_manager.patient_id}"], className="text-base font-semibold m-1", key="patient_id_value")
-
-        # Clinic ID
-        ui.element("span", children=["Clinic ID"], className="text-gray-400 text-sm font-medium m-1", key="clinic_id_label")
-        ui.element("div", children=[f"{data_manager.clinic_id}"], className="text-base font-semibold m-1", key="clinic_id_value")
-
-        # Recording Date
-        ui.element("span", children=["Recording Date"], className="text-gray-400 text-sm font-medium m-1", key="recording_date_label")
-        ui.element("div", children=[f"{base_protocol['recordingDate']}"], className="text-base font-semibold m-1", key="recording_date_value")
+    st.markdown(f"**Patient ID:** {data_manager.patient_id}")
+    st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
+    st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
 
 
 
@@ -140,10 +151,6 @@ def render_protocol_page(data_manager):
             preset_phases = presets["phases"]
             phases = map_preset_to_phases(preset_phases)
     else:
-        # If no protocol data, create a single phase from base protocol
-        # base_protocol["pulseMode"] = base_protocol.get("pulseMode", "Biphasic")
-        # base_protocol["location"] = base_protocol.get("location", "F1-FZ-F2")
-        # phases = [base_protocol]
         presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
 
         if presets and "phases" in presets:
@@ -279,8 +286,6 @@ def render_protocol_page(data_manager):
                 phase_dict["pulseParameters"]["phase"] = "MONO"
             elif phase_dict["pulseMode"] == "BIPHASIC":
                 phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
-
-
 
         try:
             # Prepare the protocol object with multiple phases
