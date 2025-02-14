@@ -216,7 +216,7 @@ if "tab" in st.session_state:
                         st.session_state.downloaded_neuroref_report
                     ):
                         report, report_id = report_data
-                        pdf_viewer(report, height=700, width=950, key=f"linked_ears {idx}")
+                        pdf_viewer(report, height=1000, width=990, key=f"linked_ears {idx}")
                         st.download_button(
                             label="Download Neuroref",
                             data=report,
@@ -232,7 +232,7 @@ if "tab" in st.session_state:
                         st.session_state.downloaded_neuroref_cz_report
                     ):
                         report, report_id = report_data
-                        pdf_viewer(report, height=700,width=950, key=f"centroid {idx}")
+                        pdf_viewer(report, height=1000,width=990, key=f"centroid {idx}")
                         st.download_button(
                             label="Download Neuroref Cz",
                             data=report,
@@ -444,7 +444,7 @@ else:
                     st.session_state.downloaded_neuroref_report
                 ):
                     report, report_id = report_data
-                    pdf_viewer(report, height=700, width=950, key=f"linked_ears {idx}")
+                    pdf_viewer(report, height=1000, width=990, key=f"linked_ears {idx}")
                     st.download_button(
                         label="Download Neuroref",
                         data=report,
@@ -460,7 +460,7 @@ else:
                     st.session_state.downloaded_neuroref_cz_report
                 ):
                     report, report_id = report_data
-                    pdf_viewer(report,height=700, width=950, key=f"centroid {idx}")
+                    pdf_viewer(report,height=1000, width=990, key=f"centroid {idx}")
                     st.download_button(
                         label="Download Neuroref Cz",
                         data=report,
