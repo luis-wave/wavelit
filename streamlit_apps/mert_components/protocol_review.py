@@ -44,7 +44,7 @@ def map_preset_to_phases(preset_phases):
 
 @st.fragment
 def render_protocol_page(data_manager):
-    st.title("EEG Protocol")
+    st.title("Protocol Reviews")
 
     patient_data = st.session_state.patient_data
     clinic_info = st.session_state.clinic_info
@@ -96,16 +96,6 @@ def render_protocol_page(data_manager):
 
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
-
-    # Display primary details
-    # st.markdown(f"**{first_name} {last_name}**")
-    # st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
-    # st.markdown(f"**Primary Complaint:** {primary_complaint}")
-    # st.markdown(f"**Treatment Count:** {treatment_count}")
-
-    # st.markdown(f"**Patient ID:** {data_manager.patient_id}")
-    # st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
-    # st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
 
     col1, col2 = st.columns(2)
 
@@ -219,6 +209,8 @@ def render_protocol_page(data_manager):
             ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
             ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
             ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
+
+    st.header("Protocol Editor")
 
 
     # Define the location options

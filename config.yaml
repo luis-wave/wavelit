@@ -86,6 +86,12 @@ credentials:
       password: $2b$12$tIuCKsYP2/KBd1F..e/NKOODF8CsiODCSPQ4tSHjp5.2rnxW9NjV.
       id: STF-8b4db98a-8657-11ef-9d8b-020ab1ebdc67
       m2_username: uatscientist4
+    jcheng:
+      email: jcheng@waveneuro.com
+      name: Jason Cheng
+      password: $2b$12$BtCgkkpOH1jAWRtN2kogeOxKC31KbhSy8NoImwULR0SjdMy38Bh3S
+      id: STF-61788d46-eb07-11ef-9a16-0a311438920d
+      m2_username: jcheng
 preauthorized:
   emails:
   - sneiley@waveneuro.com
