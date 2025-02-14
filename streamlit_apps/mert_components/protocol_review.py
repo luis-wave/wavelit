@@ -5,7 +5,8 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import streamlit_shadcn_ui as ui
-from utils.helpers import calculate_age
+from utils.helpers import calculate_age, format_datetime
+
 
 
 from .review_utils import EEGReviewState, mert2_user
@@ -97,15 +98,127 @@ def render_protocol_page(data_manager):
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
     # Display primary details
-    st.markdown(f"**{first_name} {last_name}**")
-    st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
-    st.markdown(f"**Primary Complaint:** {primary_complaint}")
-    st.markdown(f"**Treatment Count:** {treatment_count}")
+    # st.markdown(f"**{first_name} {last_name}**")
+    # st.markdown(f"**Recording Date:** {base_protocol['recordingDate']}")
+    # st.markdown(f"**Primary Complaint:** {primary_complaint}")
+    # st.markdown(f"**Treatment Count:** {treatment_count}")
 
-    st.markdown(f"**Patient ID:** {data_manager.patient_id}")
-    st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
-    st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
+    # st.markdown(f"**Patient ID:** {data_manager.patient_id}")
+    # st.markdown(f"**EEG ID:** {eeg_info_data['eegId']}")
+    # st.markdown(f"**Clinic ID:** {data_manager.clinic_id}")
 
+    col1, col2 = st.columns(2)
+
+    with col1:
+        patient_data = st.session_state.patient_data
+        clinic_info = st.session_state.clinic_info
+
+        first_name = patient_data["profileInfo"]["name"]["first"]
+        last_name = patient_data["profileInfo"]["name"]["last"]
+        middle_name = patient_data["profileInfo"]["name"]["middle"]
+        dob = patient_data["profileInfo"]["dateOfBirth"]
+        age = calculate_age(dob)
+        patient_id = patient_data["profileInfo"]["patientId"]
+        primary_complaint = patient_data.get("clinicalInfo", {}).get("primaryComplaint", "Not Provided")
+
+        is_having_seizures = (
+            "Yes" if patient_data["clinicalInfo"]["isHavingSeizures"] else "No"
+        )
+
+        if "CORTICAL" in st.session_state.treatment_count:
+            treatment_count = st.session_state.treatment_count["CORTICAL"]
+        else:
+            treatment_count = 0
+
+        with ui.card(key="protocol_patient_card"):
+            # Patient Name
+            ui.element("h2",
+                    children=[f"{first_name} {middle_name + ' ' if middle_name else ''}{last_name}"],
+                    className="text-2xl font-bold mb-4",
+                    key="name")
+
+            ui.element("hr", className="my-4", key="divider1")
+            # Demographics
+            ui.element("span", children=["Age"], className="text-gray-500 text-sm font-medium", key="dob_label")
+            ui.element("div", children=[f"{age} years old"], className="mb-2", key="dob_value2")
+
+            ui.element("span", children=["Treatment Sessions"], className="text-gray-500 text-sm font-medium", key="sessions_label")
+            ui.element("div", children=[str(treatment_count)], className="mb-4", key="sessions_value")
+
+            # Seizure Status
+            if is_having_seizures == "Yes":
+                ui.element("div",
+                        children=["⚠️ Active Seizure History"],
+                        className="bg-red-100 text-red-700 p-2 rounded mb-4",
+                        key="seizure_status"
+                        )
+
+            # Primary Complaint
+            ui.element("h3", children=["Primary Complaint"], className="text-lg font-medium mb-2", key="complaint_header")
+            ui.element("div",
+                    children=[primary_complaint],
+                    className="bg-gray-50 p-3 rounded mb-4",
+                    key="complaint_value"
+                    )
+
+            ui.element("hr", className="my-4", key="divider2")
+
+            # Clinic Information
+            ui.element("h3", children=[clinic_info["name"]], className="text-lg font-medium mb-2", key="clinic_name")
+
+            ui.element("span", children=["Clinic ID"], className="text-gray-500 text-sm font-medium", key="clinic_id_label")
+            ui.element("div", children=[clinic_info['clinicId']], className="mb-2", key="clinic_id_value")
+
+            ui.element("span", children=["Patient ID"], className="text-gray-500 text-sm font-medium", key="patient_id_label")
+            ui.element("div", children=[data_manager.patient_id], className="mb-2", key="eeg_id_value")
+
+            ui.element("span", children=["EEG ID"], className="text-gray-500 text-sm font-medium", key="eeg_id_label")
+            ui.element("div", children=[eeg_info_data['eegId']], className="mb-2", key="eeg_id_value")
+
+
+
+    with col2:
+        analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+
+        current_state = (
+            EEGReviewState[analysis_meta["reviewState"]]
+            if analysis_meta["reviewState"]
+            else EEGReviewState.PENDING
+        )
+
+        first_reviewer = mert2_user.get(analysis_meta.get("reviewerStaffId"), "N/A")
+        second_reviewer = mert2_user.get(analysis_meta.get("secondReviewerStaffId"), "N/A")
+
+        current_state_name = current_state.name.replace('_', ' ')
+
+        # Main Review Card
+        with ui.card(key="protocol_eeg_review"):
+            # Header Section
+            ui.element("h3", children=["EEG Review Status"], className="text-xl font-bold mb-4", key="header_title")
+
+            if current_state_name != 'REJECTED':
+                ui.element("div", children=[f"Status: {current_state_name}"],
+                        className="bg-blue-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
+            else:
+                ui.element("div", children=[f"Status: {current_state_name}"],
+                    className="bg-red-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
+
+            # First Review Section
+            ui.element("h4", children=["First Review"], className="text-lg font-semibold mb-2", key="first_review_title")
+            ui.element("span", children=["Review Date:"], className="text-gray-500 text-sm font-medium", key="first_review_date_label")
+            ui.element("div", children=[format_datetime(analysis_meta.get('reviewDatetime'))], className="mb-2", key="first_review_date")
+            ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="first_reviewer_label")
+            ui.element("div", children=[first_reviewer], className="mb-4", key="first_reviewer_value")
+
+            # Divider
+            ui.element("hr", className="my-4", key="divider1")
+
+            # Second Review Section
+            ui.element("h4", children=["Second Review"], className="text-lg font-semibold mb-2", key="second_review_title")
+            ui.element("span", children=["Review Date:"], className="text-gray-500 text-sm font-medium", key="second_review_date_label")
+            ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
+            ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
+            ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
 
 
     # Define the location options
