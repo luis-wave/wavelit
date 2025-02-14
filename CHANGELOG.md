@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.3] - 2025-02-14
+### Fixed
+- Deleting phase. It only takes once click now.
+
 ## [2.12.2] - 2025-02-13
 ### Fixed
 - Note format.
