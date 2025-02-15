@@ -74,18 +74,24 @@ credentials:
       email: bliang@waveneuro.com
       name: Bo Liang
       password: $2b$12$3dbjix4NX8Ab4a6BSBGmH.vjK.wEcnhCk3G3f65oEIRYPXGEgNQw6
-    uma:
-      email: uma@waveneuro.com
-      name: Uma Gokhale
+    jvu:
+      email: jvu@waveneuro.com
+      name: Johnny Vu
       password: $2b$12$mjF5B3Y7STWn9im.CFYhI.4aGewjVvOAwrY0yToMgC6kQd0Yze85O
       id: STF-143c1a12-8657-11ef-8e6a-020ab1ebdc67
       m2_username: uatscientist3
-    uma2:
-      email: uma@waveneuro.com
-      name: Uma2 Gokhale
+    jvu2:
+      email: jvu@waveneuro.com
+      name: Johnny Vu
       password: $2b$12$tIuCKsYP2/KBd1F..e/NKOODF8CsiODCSPQ4tSHjp5.2rnxW9NjV.
       id: STF-8b4db98a-8657-11ef-9d8b-020ab1ebdc67
       m2_username: uatscientist4
+    jcheng:
+      email: jcheng@waveneuro.com
+      name: Jason Cheng
+      password: $2b$12$BtCgkkpOH1jAWRtN2kogeOxKC31KbhSy8NoImwULR0SjdMy38Bh3S
+      id: STF-61788d46-eb07-11ef-9a16-0a311438920d
+      m2_username: jcheng
 preauthorized:
   emails:
   - sneiley@waveneuro.com

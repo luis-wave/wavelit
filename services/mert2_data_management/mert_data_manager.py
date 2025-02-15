@@ -301,6 +301,19 @@ class MeRTDataManager:
             logger.error(f"Failed to save EEG scientist patient note: {str(e)}")
             raise
 
+    async def get_protocol_review_default_values(
+        self, n_phases=1
+    ) -> Dict[str, Any]:
+        try:
+            result = await self.api.get_protocol_review_default_values(n_phases=n_phases)
+            logger.info(
+                f"EEG presets retrieved successfully for patient ID: {self.patient_id}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to save EEG presets: {str(e)}")
+            raise
+
     @staticmethod
     def parse_eeg_data_extended(data):
         rows = []
@@ -318,3 +331,15 @@ class MeRTDataManager:
         df = df.sort_values(by="RecordingDate", ascending=False)
         df["include?"] = True
         return df
+
+
+    async def add_report_addendum(self):
+        try:
+            response = await self.api.add_report_addendum()
+            eeg_id = response["addendumId"]
+            logger.info(f"Addendum eeg id {eeg_id} successfully generated.")
+
+            return eeg_id
+        except Exception as e:
+            logger.error(f"Failed to generate addendum: {str(e)}")
+            raise
