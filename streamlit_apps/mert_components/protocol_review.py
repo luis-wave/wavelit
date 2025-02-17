@@ -360,15 +360,19 @@ def render_protocol_page(data_manager):
             hide_index=True,
         )
 
-        edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
+        if "include" in edited_df.columns:
+            edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
+            edited_df = edited_df.drop(columns=["include"])
 
-        edited_df = edited_df[edited_df["include"]].reset_index(drop=True).drop(columns=["include"])
+        # Validate that only existing columns are checked
+        existing_columns = [col for col in visible_columns if col in edited_df.columns]
+
 
         save_phases = st.form_submit_button("Save protocol")
 
         if save_phases:
             # Validate that no visible column has null values
-            if edited_df[visible_columns].isnull().any().any():
+            if edited_df[existing_columns].isnull().any().any():
                 st.error("Error: One or more required fields contain null values. Please fill all fields before saving.")
             else:
                 # Convert the edited DataFrame back to a list of dicts
