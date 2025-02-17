@@ -360,72 +360,80 @@ def render_protocol_page(data_manager):
             hide_index=True,
         )
 
-        edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
+        if "include" in edited_df.columns:
+            edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
+            edited_df = edited_df.drop(columns=["include"])
 
-        edited_df = edited_df[edited_df["include"]].reset_index(drop=True).drop(columns=["include"])
+        # Validate that only existing columns are checked
+        existing_columns = [col for col in visible_columns if col in edited_df.columns]
+
 
         save_phases = st.form_submit_button("Save protocol")
 
         if save_phases:
-            # Convert the edited DataFrame back to a list of dicts
-            edited_phases = edited_df.to_dict(orient="records")
+            # Validate that no visible column has null values
+            if edited_df[existing_columns].isnull().any().any():
+                st.error("Error: One or more required fields contain null values. Please fill all fields before saving.")
+            else:
+                # Convert the edited DataFrame back to a list of dicts
+                edited_phases = edited_df.to_dict(orient="records")
 
-            for idx,  phase_dict in enumerate(edited_phases):
-                phase_dict.pop("Phase", None)
-                if phase_dict["pulseMode"] == "Monophasic":
-                    phase_dict["pulseMode"] = "MONO"
-                elif phase_dict["pulseMode"] == "Biphasic":
-                    phase_dict["pulseMode"] = "BIPHASIC"
+                for idx,  phase_dict in enumerate(edited_phases):
+                    phase_dict.pop("Phase", None)
+                    if phase_dict["pulseMode"] == "Monophasic":
+                        phase_dict["pulseMode"] = "MONO"
+                    elif phase_dict["pulseMode"] == "Biphasic":
+                        phase_dict["pulseMode"] = "BIPHASIC"
 
-                for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
-                    if phase_dict[param] == 0:
-                        phase_dict[param] = None
+                    for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
+                        if phase_dict[param] == 0:
+                            phase_dict[param] = None
 
-                    # Ensure NaN values are explicitly converted to None
-                    if pd.isna(phase_dict[param]):
-                        phase_dict[param] = None
+                        # Ensure NaN values are explicitly converted to None
+                        if pd.isna(phase_dict[param]):
+                            phase_dict[param] = None
 
-                phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
+                    phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
 
-                if phase_dict["pulseMode"] == "MONO":
-                    phase_dict["pulseParameters"]["phase"] = "MONO"
-                elif phase_dict["pulseMode"] == "BIPHASIC":
-                    phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+                    if phase_dict["pulseMode"] == "MONO":
+                        phase_dict["pulseParameters"]["phase"] = "MONO"
+                    elif phase_dict["pulseMode"] == "BIPHASIC":
+                        phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
 
-            try:
-                # Prepare the protocol object with multiple phases
-                protocol = {
-                    "acknowledgeState": {
-                        "clinician": doctor_approval_state["clinician"],
-                        "physician": doctor_approval_state["physician"],
-                    },
-                    "approvedByName": st.session_state["name"],
-                    "approvedDate": datetime.utcnow().isoformat() + "Z",
-                    "createdByName": st.session_state["name"],
-                    "createdDate": datetime.utcnow().isoformat() + "Z",
-                    "eegId": data_manager.eeg_id,
-                    "numPhases": len(edited_phases),
-                    "patientId": data_manager.patient_id,
-                    "phases": edited_phases,
-                    "subtype": "CORTICAL",
-                    "totalDuration": sum(phase.get("totalDuration", 0) for phase in edited_phases),
-                    "type": "TREATMENT",
-                }
+                try:
+                    # Prepare the protocol object with multiple phases
+                    protocol = {
+                        "acknowledgeState": {
+                            "clinician": doctor_approval_state["clinician"],
+                            "physician": doctor_approval_state["physician"],
+                        },
+                        "approvedByName": st.session_state["name"],
+                        "approvedDate": datetime.utcnow().isoformat() + "Z",
+                        "createdByName": st.session_state["name"],
+                        "createdDate": datetime.utcnow().isoformat() + "Z",
+                        "eegId": data_manager.eeg_id,
+                        "numPhases": len(edited_phases),
+                        "patientId": data_manager.patient_id,
+                        "phases": edited_phases,
+                        "subtype": "CORTICAL",
+                        "totalDuration": sum(phase.get("totalDuration", 0) for phase in edited_phases),
+                        "type": "TREATMENT",
+                    }
 
-                # Save the protocol
-                asyncio.run(data_manager.save_protocol(protocol))
-                asyncio.run(data_manager.save_protocol(protocol))
+                    # Save the protocol
+                    asyncio.run(data_manager.save_protocol(protocol))
+                    asyncio.run(data_manager.save_protocol(protocol))
 
-                asyncio.run(
-                    data_manager.update_eeg_review(
-                        is_first_reviewer=(current_state == EEGReviewState.PENDING),
-                        state=EEGReviewState.COMPLETED.name,
+                    asyncio.run(
+                        data_manager.update_eeg_review(
+                            is_first_reviewer=(current_state == EEGReviewState.PENDING),
+                            state=EEGReviewState.COMPLETED.name,
+                        )
                     )
-                )
-                st.success("Protocol updated successfully!")
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to update protocol: {str(e)}")
+                    st.success("Protocol updated successfully!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to update protocol: {str(e)}")
 
     # Create a separate form for actions
     with st.form("protocol_actions_form"):

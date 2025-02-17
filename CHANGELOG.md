@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.12.4] - 2025-02-17
+### Fixed
+- Prevent user from saving null values in the protocol editor.
+
+
+
 ## [2.12.3] - 2025-02-14
 ### Fixed
 - Deleting phase. It only takes once click now.
