@@ -387,11 +387,14 @@ def render_protocol_page(data_manager):
 
                     for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
                         if phase_dict[param] == 0:
-                            phase_dict[param] = None
+                            phase_dict[param] = 0
 
                         # Ensure NaN values are explicitly converted to None
                         if pd.isna(phase_dict[param]):
                             phase_dict[param] = None
+
+                    # this field is added programmatically in MeRT 2
+                    phase_dict["phaseDuration"] = 0
 
                     phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
 
