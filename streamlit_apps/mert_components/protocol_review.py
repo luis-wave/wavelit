@@ -393,8 +393,9 @@ def render_protocol_page(data_manager):
                         if pd.isna(phase_dict[param]):
                             phase_dict[param] = None
 
-                    # this field is added programmatically in MeRT 2
+                    # these field(s) are added programmatically in MeRT 2
                     phase_dict["phaseDuration"] = 0
+                    phase_dict["goalIntensity"] = 0
 
                     phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
 
