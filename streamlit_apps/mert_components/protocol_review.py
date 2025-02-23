@@ -281,16 +281,9 @@ def render_protocol_page(data_manager):
         except Exception as e:
             st.error(f"Failed to add new phase: {str(e)}")
 
+
     if "phases" in st.session_state:
         phases = st.session_state["phases"]
-
-        for i, phase_dict in enumerate(protocol_data["phases"]):
-            phases[i] = phase_dict
-
-
-    if len(protocol_data["phases"]) > 1:
-        for i, phase_dict in enumerate(protocol_data["phases"]):
-            phases[i] = phase_dict
 
     for i, phase_dict in enumerate(phases):
         if "pulseParameters" in phase_dict:
