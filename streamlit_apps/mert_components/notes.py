@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 import html
 import streamlit as st
 
@@ -17,19 +17,23 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         eeg_info_data = eeg_info["eegInfo"]
         dateTime = eeg_info_data["dateTime"]
         recording_dateTime = datetime.strptime(dateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
-        st.date_input("Recording Date", value=recording_dateTime, disabled=True)
+
+        # Convert to PST by subtracting 8 hours
+        recording_dateTime_pst = recording_dateTime - timedelta(hours=8)
+
+        st.date_input("Recording Date", value=recording_dateTime_pst, disabled=True)
         subject = st.text_input("Subject")
         content = st.text_area("Content")
         submitted = st.form_submit_button("Submit Note")
 
         if submitted:
             new_note = {
-                "recordingDate": recording_dateTime.strftime(
+                "recordingDate": recording_dateTime_pst.strftime(
                     "%a, %B %d %Y, %I:%M:%S %p"
                 ),
                 "subject": subject,
                 "content": content,
-                "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "dateEdited": recording_dateTime_pst,
             }
             try:
                 asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note))
