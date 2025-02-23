@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+
+## [2.12.6] - 2025-02-21
+### Changed
+- Additional column in protocol review page; protocol history now also at the top of the page adjacent to the other patient metadata.
+- Protocols presets logic resets to previous business logic.
+
+
+
 ## [2.12.5] - 2025-02-18
 ### Fixed
 - Set other fields to be explicitly 0 after approval.
