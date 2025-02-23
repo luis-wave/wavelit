@@ -97,7 +97,7 @@ def render_protocol_page(data_manager):
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
 
     with col1:
         patient_data = st.session_state.patient_data
@@ -209,6 +209,11 @@ def render_protocol_page(data_manager):
             ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
             ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
             ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
+    
+    with col3:
+        base = "https://app.sigmacomputing.com/embed/1-67yhEkvTMIWzfdYA5dOrEl"+f"?Patient-Id-1={patient_id}"
+        html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
+        st.components.v1.html(html, height=1000, scrolling=False)
 
     st.header("Protocol Editor")
 
