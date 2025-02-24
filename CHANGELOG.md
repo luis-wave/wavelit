@@ -7,11 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.0] - 2025-02-23
+### Added
+- Shareable url
+
+### Fixed
+- Removed quotes from uploaded report files.
+- Note date logic
 
 ## [2.12.6] - 2025-02-21
 ### Changed
 - Additional column in protocol review page; protocol history now also at the top of the page adjacent to the other patient metadata.
 - Protocols presets logic resets to previous business logic.
+
 
 
 

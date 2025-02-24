@@ -8,6 +8,8 @@ import dotenv
 import streamlit as st
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from zoneinfo import ZoneInfo
+
 
 
 class Credentials(BaseSettings):
@@ -434,12 +436,11 @@ class MeRTApi:
         )
 
         # Create a multipart form data
-        form_data = aiohttp.FormData()
+        form_data = aiohttp.FormData(quote_fields=False)
         form_data.add_field("userGroupId", self.clinic_id)
         form_data.add_field("patientId", self.patient_id)
         form_data.add_field("eegId", self.eeg_id)
 
-        # Add the file as a separate part
         form_data.add_field(
             "file", file.getvalue(), filename=file.name, content_type=file.type
         )
@@ -541,12 +542,12 @@ class MeRTApi:
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
-                "noteCreationDate": datetime.utcnow().isoformat() + "Z",
+                "noteCreationDate": datetime.utcnow().replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("America/Los_Angeles")).isoformat()+ "Z",
                 "eegScientistPatientNote": {
                     "recordingDate": note["recordingDate"],
                     "subject": note["subject"],
                     "content": note["content"],
-                    "dateEdited": datetime.utcnow().isoformat() + "Z",
+                    "dateEdited": datetime.utcnow().replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("America/Los_Angeles")).isoformat() + "Z",
                 },
             },
         )
