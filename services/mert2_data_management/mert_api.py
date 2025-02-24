@@ -436,12 +436,11 @@ class MeRTApi:
         )
 
         # Create a multipart form data
-        form_data = aiohttp.FormData()
+        form_data = aiohttp.FormData(quote_fields=False)
         form_data.add_field("userGroupId", self.clinic_id)
         form_data.add_field("patientId", self.patient_id)
         form_data.add_field("eegId", self.eeg_id)
 
-        # Add the file as a separate part
         form_data.add_field(
             "file", file.getvalue(), filename=file.name, content_type=file.type
         )
