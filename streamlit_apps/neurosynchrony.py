@@ -4,6 +4,7 @@ Set up the primary UI for eeg report and protocol review.
 
 import asyncio
 import logging
+import os
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -22,6 +23,8 @@ from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
 import streamlit_shadcn_ui as ui
 
+SIGMA_PROTOCOLS_URL = os.getenv("SIGMA_PROTOCOLS_URL")
+
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
@@ -30,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 data_manager = None
+base_url=None
 
 if (
     ("eegid" in st.session_state)
@@ -45,6 +49,13 @@ if (
 
     # Load all data into session state
     asyncio.run(data_manager.load_all_data())
+
+    base_url = "https://lab.wavesynchrony.com"
+    base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
+
+
+
+
 
 
 def delete_report(data_manager, report_id, ref="default"):
@@ -66,13 +77,20 @@ if "tab" in st.session_state:
             render_protocol_page(data_manager)
             st.title("Protocol Queue")
             pid = st.session_state["pid"]
-            base = "https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5"+f"?c_protocol_Patient-Id-1={pid}"
+            base = SIGMA_PROTOCOLS_URL+f"?c_protocol_Patient-Id-1={pid}"
             html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
             components.html(html, height=1000, scrolling=False)
 
         with tab2:
             # Start rendering the UI
             st.title("NeuroSynchrony Review")
+
+            if base_url:
+                # Display the copy button
+                st.write("Copy URL:")
+                full_url = f'''{base_url}'''
+                st.code(full_url, language="python", wrap_lines=True)
+
 
             col1, col2 = st.columns(2)
 
@@ -300,6 +318,12 @@ else:
     with tab1:
         # Start rendering the UI
         st.title("NeuroSynchrony Review")
+
+        if base_url:
+            # Display the copy button
+            st.write("Copy URL:")
+            full_url = f'''{base_url}'''
+            st.code(full_url, language="python", wrap_lines=True)
 
         col1, col2 = st.columns(2)
 

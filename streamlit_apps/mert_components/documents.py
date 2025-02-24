@@ -66,3 +66,4 @@ def render_documents(data_manager):
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed to upload document. Error: {str(e)}")
+
