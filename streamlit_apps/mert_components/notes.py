@@ -33,7 +33,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                 ),
                 "subject": subject,
                 "content": content,
-                "dateEdited": recording_dateTime_pst,
+                "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             try:
                 asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note))
@@ -41,6 +41,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                 st.rerun()  # Rerun the app to refresh the notes list
             except Exception as e:
                 st.error(f"Failed to add note: {str(e)}")
+
 
     st.divider()
 
@@ -92,7 +93,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                             font-family: inherit;">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px;">
                         <strong>{html.escape(note['subject'])}</strong>
-                        <em style="font-size: 0.9em;">Edited: {note['dateEdited']}</em>
+                        <em style="font-size: 0.9em;">Edited: {note["dateEdited"]}</em>
                     </div>
                     <div style="white-space: pre-wrap; margin-top: 4px;">{formatted_content}</div>
                 </div>

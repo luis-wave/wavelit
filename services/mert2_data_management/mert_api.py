@@ -542,12 +542,12 @@ class MeRTApi:
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
-                "noteCreationDate": datetime.utcnow().replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("America/Los_Angeles")).isoformat()+ "Z",
+                "noteCreationDate": datetime.utcnow().isoformat() + "Z",
                 "eegScientistPatientNote": {
                     "recordingDate": note["recordingDate"],
                     "subject": note["subject"],
                     "content": note["content"],
-                    "dateEdited": datetime.utcnow().replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("America/Los_Angeles")).isoformat() + "Z",
+                    "dateEdited": note["dateEdited"],
                 },
             },
         )
