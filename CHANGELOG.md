@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.13.1] - 2025-02-25
 ### Fixed
 - Unbound protocol frequency range, allow train number to be a float.
+- Adding a third phase
 
 ## [2.13.0] - 2025-02-23
 ### Added

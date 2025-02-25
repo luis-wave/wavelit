@@ -268,15 +268,23 @@ def render_protocol_page(data_manager):
             phases = map_preset_to_phases(preset_phases)
         protocol_data = {"phases": phases}
 
+
+    if "add_phase_count" not in st.session_state:
+        st.session_state["add_phase_count"] = 1
+
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
         current_n_phases = len(phases)
         try:
-            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases+1))
+            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases + st.session_state["add_phase_count"]))
 
             if presets and "phases" in presets:
                 preset_phases = presets["phases"]
                 st.session_state["phases"] = map_preset_to_phases(preset_phases)
+
+
+            # Increase the count so that next time more phases are added
+            st.session_state["add_phase_count"] += 1
 
         except Exception as e:
             st.error(f"Failed to add new phase: {str(e)}")
@@ -285,14 +293,18 @@ def render_protocol_page(data_manager):
     if "phases" in st.session_state:
         phases = st.session_state["phases"]
 
+    st.json(phases)
+
     for i, phase_dict in enumerate(phases):
         if "pulseParameters" in phase_dict:
             raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
-            # If it contains "MONO", classify as "Monophasic", else "Biphasic"
-            if "MONO" in raw_phase.upper():
-                phase_dict["pulseMode"] = "Monophasic"
-            else:
-                phase_dict["pulseMode"] = "Biphasic"
+
+            if raw_phase:
+                # If it contains "MONO", classify as "Monophasic", else "Biphasic"
+                if "MONO" in raw_phase.upper():
+                    phase_dict["pulseMode"] = "Monophasic"
+                else:
+                    phase_dict["pulseMode"] = "Biphasic"
         else:
             # Default to Biphasic if pulseParameters missing
             phase_dict["pulseMode"] = "Biphasic"
