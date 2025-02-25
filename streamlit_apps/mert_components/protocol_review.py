@@ -364,7 +364,7 @@ def render_protocol_page(data_manager):
                     "Train Number", min_value=1, step=1
                 ),
                 "interTrainInterval": st.column_config.NumberColumn(
-                    "Inter-Train Interval (s)", min_value=1, step=1
+                    "Inter-Train Interval (s)", min_value=1, step=0.1
                 ),
             },
             hide_index=True,
