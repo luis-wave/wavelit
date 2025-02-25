@@ -293,8 +293,6 @@ def render_protocol_page(data_manager):
     if "phases" in st.session_state:
         phases = st.session_state["phases"]
 
-    st.json(phases)
-
     for i, phase_dict in enumerate(phases):
         if "pulseParameters" in phase_dict:
             raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
@@ -305,6 +303,8 @@ def render_protocol_page(data_manager):
                     phase_dict["pulseMode"] = "Monophasic"
                 else:
                     phase_dict["pulseMode"] = "Biphasic"
+            else:
+                phase_dict["pulseMode"] = "Biphasic"
         else:
             # Default to Biphasic if pulseParameters missing
             phase_dict["pulseMode"] = "Biphasic"
