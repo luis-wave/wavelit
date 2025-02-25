@@ -209,7 +209,7 @@ def render_protocol_page(data_manager):
             ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
             ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
             ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
-    
+
     with col3:
         base = "https://app.sigmacomputing.com/embed/1-67yhEkvTMIWzfdYA5dOrEl"+f"?Patient-Id-1={patient_id}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
@@ -343,10 +343,10 @@ def render_protocol_page(data_manager):
                     "Location", options=location_options, required=True
                 ),
                 "frequency": st.column_config.NumberColumn(
-                    "Frequency (Hz)", min_value=8, max_value=13, step=0.1
+                    "Frequency (Hz)", min_value=0.1, max_value=100, step=0.1
                 ),
                 "trainDuration": st.column_config.NumberColumn(
-                    "Train Duration (s)", min_value=1, step=1
+                    "Train Duration (s)", min_value=1, step=0.1
                 ),
                 "trainNumber": st.column_config.NumberColumn(
                     "Train Number", min_value=1, step=1
