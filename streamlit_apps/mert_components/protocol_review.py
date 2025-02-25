@@ -209,14 +209,32 @@ def render_protocol_page(data_manager):
             ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
             ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
             ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
-    
+
     with col3:
         base = "https://app.sigmacomputing.com/embed/1-67yhEkvTMIWzfdYA5dOrEl"+f"?Patient-Id-1={patient_id}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
         st.components.v1.html(html, height=1000, scrolling=False)
 
-    st.header("Protocol Editor")
+    preset_phases={}
+    delivered_phases=None
+    # Create multiple protocol phase tables
+    if protocol_data and "phases" in protocol_data:
+        delivered_phases = protocol_data["phases"]
 
+        n_phases = len(protocol_data["phases"])
+
+        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+
+        if presets and "phases" in presets:
+            preset_phases = presets["phases"]
+            phases = map_preset_to_phases(preset_phases)
+    else:
+        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
+
+        if presets and "phases" in presets:
+            preset_phases = presets["phases"]
+            phases = map_preset_to_phases(preset_phases)
+        protocol_data = {"phases": phases}
 
     # Define the location options
     location_options = [
@@ -248,35 +266,108 @@ def render_protocol_page(data_manager):
         "PO4-O2-PO8",
     ]
 
-    preset_phases={}
-    # Create multiple protocol phase tables
-    if protocol_data and "phases" in protocol_data:
-        phases = protocol_data["phases"]
 
-        n_phases = len(protocol_data["phases"])
 
-        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+    st.header("Protocol")
 
-        if presets and "phases" in presets:
-            preset_phases = presets["phases"]
-            phases = map_preset_to_phases(preset_phases)
-    else:
-        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
+    if not delivered_phases:
+        base_protocol["location"] = None
+        base_protocol["pulseMode"] = None
+        delivered_phases = [base_protocol]
 
-        if presets and "phases" in presets:
-            preset_phases = presets["phases"]
-            phases = map_preset_to_phases(preset_phases)
-        protocol_data = {"phases": phases}
+    for i, phase_dict in enumerate(delivered_phases):
+        if "pulseParameters" in phase_dict:
+            raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
+
+            if raw_phase:
+                # If it contains "MONO", classify as "Monophasic", else "Biphasic"
+                if "MONO" in raw_phase.upper():
+                    phase_dict["pulseMode"] = "Monophasic"
+                else:
+                    phase_dict["pulseMode"] = "Biphasic"
+            else:
+                phase_dict["pulseMode"] = "Biphasic"
+        else:
+            # Default to Biphasic if pulseParameters missing
+            phase_dict["pulseMode"] = None
+
+        #n_submitted_protocols = len(protocol_data["phases"])
+
+        # # If the
+        # if n_submitted_protocols > 1:
+        #     if i < n_submitted_protocols:
+        #         phase_dict["frequency"] = protocol_data["phases"][i]["frequency"]
+
+
+    # Convert phase to DataFrame
+    phase_df = pd.DataFrame(delivered_phases)
+
+    phase_df.insert(0, "Phase", phase_df.index + 1)
+
+    visible_columns = [
+        "Phase",
+        "frequency",
+        "interTrainInterval",
+        "location",
+        "phaseDuration",
+        "trainDuration",
+        "trainNumber",
+        "pulseMode",
+    ]
+
+    # Create editable table for each phase - Added unique key
+    edited_df = st.data_editor(
+        phase_df,
+        disabled=True,
+        num_rows="fixed",
+        use_container_width=True,
+        key=f"phase_display",  # Added unique key based on phase index
+        column_order=visible_columns,
+        column_config={
+            "pulseMode": st.column_config.SelectboxColumn(
+                "Pulse Mode", options=["Biphasic", "Monophasic"], required=True
+            ),
+            "location": st.column_config.SelectboxColumn(
+                "Location", options=location_options, required=True
+            ),
+            "frequency": st.column_config.NumberColumn(
+                "Frequency (Hz)", min_value=0.1, max_value=100, step=0.1
+            ),
+            "trainDuration": st.column_config.NumberColumn(
+                "Train Duration (s)", min_value=1, step=0.1
+            ),
+            "trainNumber": st.column_config.NumberColumn(
+                "Train Number", min_value=1, step=1
+            ),
+            "interTrainInterval": st.column_config.NumberColumn(
+                "Inter-Train Interval (s)", min_value=1, step=0.1
+            ),
+        },
+        hide_index=True,
+    )
+
+
+
+
+    st.header("Phase Editor")
+
+
+    if "add_phase_count" not in st.session_state:
+        st.session_state["add_phase_count"] = 1
 
     # Add a button to add new phase
     if st.button("Add Phase", key="add_phase_button"):
         current_n_phases = len(phases)
         try:
-            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases+1))
+            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases + st.session_state["add_phase_count"]))
 
             if presets and "phases" in presets:
                 preset_phases = presets["phases"]
                 st.session_state["phases"] = map_preset_to_phases(preset_phases)
+
+
+            # Increase the count so that next time more phases are added
+            st.session_state["add_phase_count"] += 1
 
         except Exception as e:
             st.error(f"Failed to add new phase: {str(e)}")
@@ -288,21 +379,25 @@ def render_protocol_page(data_manager):
     for i, phase_dict in enumerate(phases):
         if "pulseParameters" in phase_dict:
             raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
-            # If it contains "MONO", classify as "Monophasic", else "Biphasic"
-            if "MONO" in raw_phase.upper():
-                phase_dict["pulseMode"] = "Monophasic"
+
+            if raw_phase:
+                # If it contains "MONO", classify as "Monophasic", else "Biphasic"
+                if "MONO" in raw_phase.upper():
+                    phase_dict["pulseMode"] = "Monophasic"
+                else:
+                    phase_dict["pulseMode"] = "Biphasic"
             else:
                 phase_dict["pulseMode"] = "Biphasic"
         else:
             # Default to Biphasic if pulseParameters missing
             phase_dict["pulseMode"] = "Biphasic"
 
-        n_submitted_protocols = len(protocol_data["phases"])
+        #n_submitted_protocols = len(protocol_data["phases"])
 
-        # If the
-        if n_submitted_protocols > 1:
-            if i < n_submitted_protocols:
-                phase_dict["frequency"] = protocol_data["phases"][i]["frequency"]
+        # # If the
+        # if n_submitted_protocols > 1:
+        #     if i < n_submitted_protocols:
+        #         phase_dict["frequency"] = protocol_data["phases"][i]["frequency"]
 
 
     # Convert phase to DataFrame
@@ -343,16 +438,16 @@ def render_protocol_page(data_manager):
                     "Location", options=location_options, required=True
                 ),
                 "frequency": st.column_config.NumberColumn(
-                    "Frequency (Hz)", min_value=8, max_value=13, step=0.1
+                    "Frequency (Hz)", min_value=0.1, max_value=100, step=0.1
                 ),
                 "trainDuration": st.column_config.NumberColumn(
-                    "Train Duration (s)", min_value=1, step=1
+                    "Train Duration (s)", min_value=1, step=0.1
                 ),
                 "trainNumber": st.column_config.NumberColumn(
                     "Train Number", min_value=1, step=1
                 ),
                 "interTrainInterval": st.column_config.NumberColumn(
-                    "Inter-Train Interval (s)", min_value=1, step=1
+                    "Inter-Train Interval (s)", min_value=1, step=0.1
                 ),
             },
             hide_index=True,
