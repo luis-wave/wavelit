@@ -216,6 +216,7 @@ def render_protocol_page(data_manager):
         st.components.v1.html(html, height=1000, scrolling=False)
 
     preset_phases={}
+    delivered_phases=None
     # Create multiple protocol phase tables
     if protocol_data and "phases" in protocol_data:
         delivered_phases = protocol_data["phases"]
@@ -269,6 +270,11 @@ def render_protocol_page(data_manager):
 
     st.header("Protocol")
 
+    if not delivered_phases:
+        base_protocol["location"] = None
+        base_protocol["pulseMode"] = None
+        delivered_phases = [base_protocol]
+
     for i, phase_dict in enumerate(delivered_phases):
         if "pulseParameters" in phase_dict:
             raw_phase = phase_dict["pulseParameters"].get("phase", "BIPHASIC")
@@ -283,7 +289,7 @@ def render_protocol_page(data_manager):
                 phase_dict["pulseMode"] = "Biphasic"
         else:
             # Default to Biphasic if pulseParameters missing
-            phase_dict["pulseMode"] = "Biphasic"
+            phase_dict["pulseMode"] = None
 
         #n_submitted_protocols = len(protocol_data["phases"])
 
