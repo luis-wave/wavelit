@@ -571,3 +571,13 @@ class MeRTApi:
             },
         )
 
+    async def fetch_all_protocols_by_patient_id(self) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/protocol_management/add_report_addendum",
+            {
+                "userGroupId": self.clinic_id,
+                "patientId": self.patient_id,
+            },
+        )
+
