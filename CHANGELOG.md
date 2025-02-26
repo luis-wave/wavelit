@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.2] - 2025-02-25
+### Fixed
+- Add/Remove phases with a click of button.
+### Remove
+- Include column from protocol data editor.
+
 ## [2.13.1] - 2025-02-25
 ### Fixed
 - Unbound protocol frequency range, allow train number to be a float.
