@@ -347,30 +347,56 @@ def render_protocol_page(data_manager):
     )
 
 
-
-
     st.header("Phase Editor")
 
-
-    if "add_phase_count" not in st.session_state:
-        st.session_state["add_phase_count"] = 1
-
-    # Add a button to add new phase
-    if st.button("Add Phase", key="add_phase_button"):
-        current_n_phases = len(phases)
-        try:
-            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=current_n_phases + st.session_state["add_phase_count"]))
-
-            if presets and "phases" in presets:
-                preset_phases = presets["phases"]
-                st.session_state["phases"] = map_preset_to_phases(preset_phases)
+    phase_button_col1, phase_button_col2 = st.columns(2)
 
 
-            # Increase the count so that next time more phases are added
-            st.session_state["add_phase_count"] += 1
 
-        except Exception as e:
-            st.error(f"Failed to add new phase: {str(e)}")
+    with phase_button_col1:
+        if "phase_count" not in st.session_state:
+            st.session_state["phase_count"] = len(phases) + 1
+
+        if st.session_state["phase_count"] < 4:
+            # Add a button to add new phase
+            if st.button("Add Phase", key="add_phase_button"):
+                try:
+                    presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"]))
+
+                    if presets and "phases" in presets:
+                        preset_phases = presets["phases"]
+                        st.session_state["phases"] = map_preset_to_phases(preset_phases)
+
+
+                    # Increase the count so that next time more phases are added
+                    st.session_state["phase_count"] += 1
+
+                except Exception as e:
+                    st.error(f"Failed to add new phase: {str(e)}")
+        else:
+            st.write("Cannot add more than three phases.")
+
+    with phase_button_col2:
+        if st.session_state["phase_count"] > 2:
+            # Add a button to add new phase
+            if st.button("Remove Phase", key="remove_phase_button"):
+                try:
+                    presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"] - 1))
+
+                    if presets and "phases" in presets:
+                        preset_phases = presets["phases"]
+                        st.session_state["phases"] = map_preset_to_phases(preset_phases)
+
+
+                    # Increase the count so that next time more phases are added
+                    st.session_state["phase_count"] -= 1
+
+                except Exception as e:
+                    st.error(f"Failed to add new phase: {str(e)}")
+        else:
+            st.write("Need at least one phase for protocol.")
+
+
 
 
     if "phases" in st.session_state:
@@ -416,7 +442,6 @@ def render_protocol_page(data_manager):
         "trainDuration",
         "trainNumber",
         "pulseMode",
-        "include"
     ]
 
 
@@ -452,10 +477,6 @@ def render_protocol_page(data_manager):
             },
             hide_index=True,
         )
-
-        if "include" in edited_df.columns:
-            edited_df = edited_df[edited_df["include"]].reset_index(drop=True)
-            edited_df = edited_df.drop(columns=["include"])
 
         # Validate that only existing columns are checked
         existing_columns = [col for col in visible_columns if col in edited_df.columns]

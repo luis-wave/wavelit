@@ -314,6 +314,21 @@ class MeRTDataManager:
             logger.error(f"Failed to save EEG presets: {str(e)}")
             raise
 
+    async def fetch_all_protocols_by_patient_id(
+        self
+    ) -> Dict[str, Any]:
+        try:
+            result = await self.api.fetch_all_protocols_by_patient_id()
+            logger.info(
+                f"All patient protocols retrieved successfully for patient ID: {self.patient_id}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to save EEG presets: {str(e)}")
+            raise
+
+
+
     @staticmethod
     def parse_eeg_data_extended(data):
         rows = []
