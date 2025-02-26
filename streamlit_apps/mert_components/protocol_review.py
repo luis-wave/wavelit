@@ -379,7 +379,7 @@ def render_protocol_page(data_manager):
             st.write("Cannot add more than three phases.")
 
     with phase_button_col2:
-        if st.session_state["phase_count"] > 2:
+        if st.session_state["phase_count"] > 1:
             # Add a button to add new phase
             if st.button("Remove Phase", key="remove_phase_button"):
                 try:
