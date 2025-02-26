@@ -1,4 +1,5 @@
 import ast
+import os
 import asyncio
 from datetime import datetime
 
@@ -6,10 +7,11 @@ import pandas as pd
 import streamlit as st
 import streamlit_shadcn_ui as ui
 from utils.helpers import calculate_age, format_datetime
-
-
-
 from .review_utils import EEGReviewState, mert2_user
+
+
+SIGMA_PROTOCOLS_MINI_URL = os.getenv("SIGMA_PROTOCOLS_MINI_URL")
+
 
 def map_preset_to_phases(preset_phases):
     mapping = {
@@ -211,7 +213,7 @@ def render_protocol_page(data_manager):
             ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
 
     with col3:
-        base = "https://app.sigmacomputing.com/embed/1-67yhEkvTMIWzfdYA5dOrEl"+f"?Patient-Id-1={patient_id}"
+        base = SIGMA_PROTOCOLS_MINI_URL+f"?Patient-Id-1={patient_id}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
         st.components.v1.html(html, height=1000, scrolling=False)
 
