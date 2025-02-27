@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.13.3] - 2025-02-27
+### Fixed
+- Minimized Protocol History Column in Protocol Review tab.
+
 ## [2.13.2] - 2025-02-25
 ### Fixed
 - Add/Remove phases with a click of button.
