@@ -23,6 +23,9 @@ from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
 import streamlit_shadcn_ui as ui
 
+import boto3
+from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
+
 SIGMA_PROTOCOLS_URL = os.getenv("SIGMA_PROTOCOLS_URL")
 
 logging.basicConfig(
@@ -54,7 +57,19 @@ if (
     base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
 
 
-
+s3 = boto3.client("s3")
+# helper func for checking key exists in s3
+def key_exists(bucket, key):
+    try:
+        s3.head_object(Bucket=bucket, Key=key)
+        return True
+    except ClientError as e:
+        if e.response["Error"]["Code"] == "404":
+            print(f"Key: '{key}' does not exist!")
+        else:
+            print("Something else went wrong")
+            raise
+        return False
 
 
 
@@ -261,7 +276,35 @@ if "tab" in st.session_state:
                             delete_report(data_manager, report_id, ref="cz")
                             st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-
+                eegid = st.session_state["eegid"]
+                eeg_bucket = "lake-superior-prod"
+                eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+                if eegid:
+                  if not key_exists(eeg_bucket, eeg_s3_path):
+                      edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+                      if not key_exists(eeg_bucket, edf_path):
+                          raise Exception("EEG could not be found.")
+                      else:
+                          eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+                          eeg_content = eeg_obj["Body"].read()
+                          fname = f"{eegid}.edf"
+                  else:
+                      eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+                      eeg_content = eeg_obj["Body"].read()
+                      fname = f"{eegid}.dat"
+                else:
+                    eeg_content = "empty file"
+                    fname = "empty_file.txt"
+                if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+                  try:
+                      st.write(f"EEG:'{eegid}' downloaded successfully")
+                  except NoCredentialsError:
+                      st.error("Error: Unable to locate credentials")
+                  except PartialCredentialsError:
+                      st.error("Error: Incomplete credentials provided")
+                  except Exception as e:
+                      st.error(f"Error: {e}")
+                
                 st.header("EEG History")
                 with st.form("data_editor_form", border=False):
                     edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
@@ -495,7 +538,35 @@ else:
                         delete_report(data_manager, report_id, ref="cz")
                         st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-
+            eegid = st.session_state["eegid"]
+            eeg_bucket = "lake-superior-prod"
+            eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+            if eegid:
+              if not key_exists(eeg_bucket, eeg_s3_path):
+                  edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+                  if not key_exists(eeg_bucket, edf_path):
+                      raise Exception("EEG could not be found.")
+                  else:
+                      eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+                      eeg_content = eeg_obj["Body"].read()
+                      fname = f"{eegid}.edf"
+              else:
+                  eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+                  eeg_content = eeg_obj["Body"].read()
+                  fname = f"{eegid}.dat"
+            else:
+                eeg_content = "empty file"
+                fname = "empty_file.txt"
+            if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+              try:
+                  st.write(f"EEG:'{eegid}' downloaded successfully")
+              except NoCredentialsError:
+                  st.error("Error: Unable to locate credentials")
+              except PartialCredentialsError:
+                  st.error("Error: Incomplete credentials provided")
+              except Exception as e:
+                  st.error(f"Error: {e}")
+          
             st.header("EEG History")
             with st.form("data_editor_form", border=False):
                 edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
