@@ -215,7 +215,7 @@ def render_protocol_page(data_manager):
     with col3:
         base = SIGMA_PROTOCOLS_MINI_URL+f"?Patient-Id-1={patient_id}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="400px"></iframe>'
-        st.components.v1.html(html, height=1000, scrolling=False)
+        st.components.v1.html(html, height=400, scrolling=False)
 
     preset_phases={}
     delivered_phases=None
