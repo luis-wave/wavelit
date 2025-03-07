@@ -63,11 +63,15 @@ class EEGDataManager:
             # Convert MyWaveObject MNE raw instance
             raw = mw_object
 
-            # Explicitly set ECG channel to MNE 'ecg' channel type
-            assign_ecg_channel_type(raw)
+            existing_channels = raw.ch_names
 
-            # Select channels based on EEG or ECG type
-            channels = raw.pick_types(eeg=eeg, ecg=ecg).ch_names
+            if "ECG" in existing_channels:
+                # Explicitly set ECG channel to MNE 'ecg' channel type
+                assign_ecg_channel_type(raw)
+                # Select channels based on EEG or ECG type
+                channels = raw.pick_types(eeg=eeg, ecg=ecg).ch_names
+            else:
+                channels = raw.pick_types(eeg=eeg).ch_names
             raw.pick_channels(channels)
 
             # Downsample signal for better render speeds, lower sampling rates may impact graph spectral integrity.
@@ -130,7 +134,6 @@ class EEGDataManager:
             eeg_id, self.headers
         )
         if downloaded_path:
-            st.success(f"EEG Data for ID {eeg_id} downloaded successfully!")
             eeg_type = (
                 0
                 if file_extension.lower() == ".dat"
@@ -144,7 +147,6 @@ class EEGDataManager:
                     self.save_eeg_data_to_session(mw_object, downloaded_path, eeg_id)
                     pipeline = StandardPipeline(mw_object)
                     pipeline.run()
-                st.success("Saved eeg data to session")
             try:
                 os.remove(downloaded_path)
             except Exception as e:
@@ -159,7 +161,13 @@ class EEGDataManager:
             self.api_service.get_aea_onsets(eeg_id, self.headers),
             self.api_service.get_autoreject_annots(eeg_id, self.headers),
         )
-        st.session_state.ahr = serialize_ahr_to_pandas(ahr)
+        try:
+            st.session_state.ahr = serialize_ahr_to_pandas(ahr)
+        except:
+            st.session_state.ahr = pd.DataFrame()
+
+
+
         st.session_state.aea = {
             "linked_ears": serialize_aea_to_pandas(
                 aea.get("linked_ears"), ref="linked_ears"
@@ -175,6 +183,7 @@ class EEGDataManager:
             if aea.get("bipolar_longitudinal") is not None
             else pd.DataFrame(),
         }
+
         st.session_state.autoreject = {
             "linked_ears": serialize_autoreject_to_pandas(autoreject.get("linked_ears"))
             if autoreject.get("linked_ears") is not None

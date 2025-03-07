@@ -53,6 +53,8 @@ if (
 
     # Load all data into session state
     asyncio.run(data_manager.load_all_data())
+    asyncio.run(access_eeg_data(st.session_state["eegid"]))
+
 
     base_url = "https://lab.wavesynchrony.com"
     base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
@@ -305,7 +307,7 @@ if "tab" in st.session_state:
                       st.error("Error: Incomplete credentials provided")
                   except Exception as e:
                       st.error(f"Error: {e}")
-                
+
                 st.header("EEG History")
                 with st.form("data_editor_form", border=False):
                     edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
@@ -350,11 +352,9 @@ if "tab" in st.session_state:
                 render_abnormalities(data_manager)
 
         with tab3:
-            asyncio.run(access_eeg_data(st.session_state["eegid"]))
             eeg_visualization_dashboard()
 
         with tab4:
-            asyncio.run(access_eeg_data(st.session_state["eegid"]))
             ecg_visualization_dashboard()
 else:
     tabs = ["Reports", "Protocols", "EEG", "ECG"]
@@ -539,35 +539,35 @@ else:
                         delete_report(data_manager, report_id, ref="cz")
                         st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-            eegid = st.session_state["eegid"]
-            eeg_bucket = "lake-superior-prod"
-            eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-            if eegid:
-              if not key_exists(eeg_bucket, eeg_s3_path):
-                  edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-                  if not key_exists(eeg_bucket, edf_path):
-                      raise Exception("EEG could not be found.")
-                  else:
-                      eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-                      eeg_content = eeg_obj["Body"].read()
-                      fname = f"{eegid}.edf"
-              else:
-                  eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-                  eeg_content = eeg_obj["Body"].read()
-                  fname = f"{eegid}.dat"
-            else:
-                eeg_content = "empty file"
-                fname = "empty_file.txt"
-            if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-              try:
-                  st.write(f"EEG:'{eegid}' downloaded successfully")
-              except NoCredentialsError:
-                  st.error("Error: Unable to locate credentials")
-              except PartialCredentialsError:
-                  st.error("Error: Incomplete credentials provided")
-              except Exception as e:
-                  st.error(f"Error: {e}")
-          
+            # eegid = st.session_state["eegid"]
+            # eeg_bucket = "lake-superior-prod"
+            # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+            # if eegid:
+            #   if not key_exists(eeg_bucket, eeg_s3_path):
+            #       edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+            #       if not key_exists(eeg_bucket, edf_path):
+            #           raise Exception("EEG could not be found.")
+            #       else:
+            #           eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+            #           eeg_content = eeg_obj["Body"].read()
+            #           fname = f"{eegid}.edf"
+            #   else:
+            #       eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+            #       eeg_content = eeg_obj["Body"].read()
+            #       fname = f"{eegid}.dat"
+            # else:
+            #     eeg_content = "empty file"
+            #     fname = "empty_file.txt"
+            # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+            #   try:
+            #       st.write(f"EEG:'{eegid}' downloaded successfully")
+            #   except NoCredentialsError:
+            #       st.error("Error: Unable to locate credentials")
+            #   except PartialCredentialsError:
+            #       st.error("Error: Incomplete credentials provided")
+            #   except Exception as e:
+            #       st.error(f"Error: {e}")
+
             st.header("EEG History")
             with st.form("data_editor_form", border=False):
                 edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
@@ -624,9 +624,7 @@ else:
         components.html(html, height=1000, scrolling=False)
 
     with tab3:
-        asyncio.run(access_eeg_data(st.session_state["eegid"]))
         eeg_visualization_dashboard()
 
     with tab4:
-        asyncio.run(access_eeg_data(st.session_state["eegid"]))
         ecg_visualization_dashboard()

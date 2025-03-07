@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.0] - 2025-02-27
+### Added
+- As requested by AJR, initial release of the NGBoost model + algorithm for ASD protocol generation.
+### Fixed
+- AEA annotations will appear even if there is an error in the annotation retrieval step for AHR.
+
+
+
 ## [2.13.3] - 2025-02-27
 ### Fixed
 - Minimized Protocol History Column in Protocol Review tab.
