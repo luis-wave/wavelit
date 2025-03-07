@@ -53,6 +53,8 @@ if (
 
     # Load all data into session state
     asyncio.run(data_manager.load_all_data())
+    asyncio.run(access_eeg_data(st.session_state["eegid"]))
+
 
     base_url = "https://lab.wavesynchrony.com"
     base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
@@ -305,7 +307,7 @@ if "tab" in st.session_state:
                       st.error("Error: Incomplete credentials provided")
                   except Exception as e:
                       st.error(f"Error: {e}")
-                
+
                 st.header("EEG History")
                 with st.form("data_editor_form", border=False):
                     edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
@@ -350,11 +352,9 @@ if "tab" in st.session_state:
                 render_abnormalities(data_manager)
 
         with tab3:
-            asyncio.run(access_eeg_data(st.session_state["eegid"]))
             eeg_visualization_dashboard()
 
         with tab4:
-            asyncio.run(access_eeg_data(st.session_state["eegid"]))
             ecg_visualization_dashboard()
 else:
     tabs = ["Reports", "Protocols", "EEG", "ECG"]
@@ -567,7 +567,7 @@ else:
                   st.error("Error: Incomplete credentials provided")
               except Exception as e:
                   st.error(f"Error: {e}")
-          
+
             st.header("EEG History")
             with st.form("data_editor_form", border=False):
                 edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
@@ -624,9 +624,7 @@ else:
         components.html(html, height=1000, scrolling=False)
 
     with tab3:
-        asyncio.run(access_eeg_data(st.session_state["eegid"]))
         eeg_visualization_dashboard()
 
     with tab4:
-        asyncio.run(access_eeg_data(st.session_state["eegid"]))
         ecg_visualization_dashboard()
