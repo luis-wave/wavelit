@@ -1,0 +1,47 @@
+{
+  "name": "Wavelit DevContainer",
+  "image": "mcr.microsoft.com/devcontainers/python:3.10",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "charliermarsh.ruff"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "GITHUB_USER": "${{ secrets.USER }}",
+    "GITHUB_TOKEN": "${{ secrets.TOKEN }}",
+    "BASE_URL": "${{ secrets.BASE_URL }}",
+    "CLINICAL_USERNAME": "${{ secrets.CLINICAL_USERNAME }}",
+    "CLINICAL_PASSWORD": "${{ secrets.CLINICAL_PASSWORD }}",
+    "CLINICAL_API_KEY": "${{ secrets.CLINICAL_API_KEY }}",
+    "CONSUMER_USERNAME": "${{ secrets.CONSUMER_USERNAME }}",
+    "CONSUMER_PASSWORD": "${{ secrets.CONSUMER_PASSWORD }}",
+    "CONSUMER_API_KEY": "${{ secrets.CONSUMER_API_KEY }}",
+    "SIGMA_PROTOCOLS_URL": "${{ secrets.SIGMA_PROTOCOLS_URL }}",
+    "SIGMA_REPORT_URL": "${{ secrets.SIGMA_REPORT_URL }}",
+    "SIGMA_PROTOCOLS_MINI_URL": "${{ secrets.SIGMA_PROTOCOLS_MINI_URL }}",
+    "SIGMA_REPORT_LOGS_URL": "${{ secrets.SIGMA_REPORT_LOGS_URL }}",
+    "APP_CYBERMED_CLOUD_URL": "${{ secrets.APP_CYBERMED_CLOUD_URL }}",
+    "APP_CYBERMED_CLOUD_PROJECT_PREFIX": "${{ secrets.APP_CYBERMED_CLOUD_PROJECT_PREFIX }}",
+    "APP_CYBERMED_CLOUD_USERNAME": "${{ secrets.APP_CYBERMED_CLOUD_USERNAME }}",
+    "APP_CYBERMED_CLOUD_PASSWORD": "${{ secrets.APP_CYBERMED_CLOUD_PASSWORD }}",
+    "APP_MACRO_SERVICE_URL": "${{ secrets.APP_MACRO_SERVICE_URL }}",
+    "TARGET_CLINIC_ID": "${{ secrets.TARGET_CLINIC_ID }}",
+    "APP_CYBERMED_SCIENTIST_PASSWORD": "${{ secrets.APP_CYBERMED_SCIENTIST_PASSWORD }}",
+    "APP_CYBERMED_SCIENTIST_USERNAME": "${{ secrets.APP_CYBERMED_SCIENTIST_USERNAME }}",
+    "SIGMA_DODS_KPI_URL": "${{ secrets.SIGMA_DODS_KPI_URL }}",
+    "SIGMA_DODS_CLINICS_URL": "${{ secrets.SIGMA_DODS_CLINICS_URL }}",
+    "APP_NEURALINK_SERVICE_URL": "${{ secrets.APP_NEURALINK_SERVICE_URL }}"
+  },
+  "postCreateCommand": "poetry install --no-root",
+  "forwardPorts": [8501],
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+  ]
+}
