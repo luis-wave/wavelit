@@ -42,7 +42,7 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
         mode='lines',
         name='Posterior PSD',
         line=dict(color='rgb(80, 80, 80)', width=2),  # Dark Grey
-        showlengend=False
+        showlegend=False
 
     ))
 
@@ -54,7 +54,7 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
             mode='lines',
             name=f'Protocol: {protocol_freq} Hz',
             line=dict(dash='dash', color='blue', width=2),
-            showlengend=False
+            showlegend=False
         ))
 
         # Add shaded confidence interval
