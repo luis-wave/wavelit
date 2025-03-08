@@ -74,7 +74,7 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
                 y=min(power),
                 text=f"Protocol: {protocol_freq} ±{confidence_interval} Hz",
                 showarrow=False,
-                font=dict(size=12, color="cyan")
+                font=dict(size=12, color='rgb(80, 80, 80)')
             )
 
     # Layout settings
