@@ -41,7 +41,9 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
         y=power,
         mode='lines',
         name='Posterior PSD',
-        line=dict(color='rgb(80, 80, 80)', width=2)  # Dark Grey
+        line=dict(color='rgb(80, 80, 80)', width=2),  # Dark Grey
+        showlengend=False
+
     ))
 
     # Add vertical dashed line for protocol frequency
@@ -51,7 +53,8 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
             y=[min(power), max(power)],
             mode='lines',
             name=f'Protocol: {protocol_freq} Hz',
-            line=dict(dash='dash', color='blue', width=2)
+            line=dict(dash='dash', color='blue', width=2),
+            showlengend=False
         ))
 
         # Add shaded confidence interval
@@ -65,7 +68,7 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
                 fill='toself',
                 fillcolor='rgba(0, 150, 255, 0.2)',  # Light blue shade
                 line=dict(color='rgba(0,0,255,0)'),
-                name=f'Confidence: ±{confidence_interval} Hz'
+                name=f'Protocol: {protocol_freq} ±{confidence_interval} Hz'
             ))
 
             # Add annotation for confidence interval
@@ -74,7 +77,7 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
                 y=min(power),
                 text=f"Protocol: {protocol_freq} ±{confidence_interval} Hz",
                 showarrow=False,
-                font=dict(size=12, color='rgb(80, 80, 80)')
+                font=dict(size=15, color='rgb(80, 80, 80)')
             )
 
     # Layout settings
