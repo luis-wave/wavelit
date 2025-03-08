@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.1] - 2025-02-28
+- Make NGBoost protocol graph visible in dark mode.
+
+
 ## [2.14.0] - 2025-02-27
 ### Added
 - As requested by AJR, initial release of the NGBoost model + algorithm for ASD protocol generation.
