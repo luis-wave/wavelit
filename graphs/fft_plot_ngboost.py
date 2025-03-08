@@ -19,31 +19,29 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
 
     fig = go.Figure()
 
-    protocol_freq = round(protocol_freq, 2)
-    confidence_interval = round(confidence_interval, 2)
+    if protocol_freq is not None:
+        protocol_freq = round(protocol_freq, 2)
+    if confidence_interval is not None:
+        confidence_interval = round(confidence_interval, 2)
 
     frequency = np.array(frequency)
-
     power = np.mean(power, axis=0)
 
     min_freq = 4.0
     max_freq = 20.0
-
     mask = (frequency >= min_freq) & (frequency <= max_freq)
 
     # Apply the mask to filter frequencies and corresponding power values
     frequency = frequency[mask]
     power = power[mask]
 
-
-
-    # Plot power spectrum
+    # Plot power spectrum with dark grey line
     fig.add_trace(go.Scatter(
         x=frequency,
         y=power,
         mode='lines',
         name='Posterior PSD',
-        line=dict(color='black')
+        line=dict(color='rgb(80, 80, 80)', width=2)  # Dark Grey
     ))
 
     # Add vertical dashed line for protocol frequency
@@ -65,10 +63,19 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
                 x=[lower_bound, upper_bound, upper_bound, lower_bound],
                 y=[min(power), min(power), max(power), max(power)],
                 fill='toself',
-                fillcolor='rgba(0, 255, 255, 0.2)' ,  # Light blue shade
+                fillcolor='rgba(0, 150, 255, 0.2)',  # Light blue shade
                 line=dict(color='rgba(0,0,255,0)'),
-                name=f'Confidence ±{confidence_interval} Hz'
+                name=f'Confidence: ±{confidence_interval} Hz'
             ))
+
+            # Add annotation for confidence interval
+            fig.add_annotation(
+                x=protocol_freq,
+                y=min(power),
+                text=f"Protocol: {protocol_freq} ±{confidence_interval} Hz",
+                showarrow=False,
+                font=dict(size=12, color="cyan")
+            )
 
     # Layout settings
     fig.update_layout(
@@ -79,4 +86,3 @@ def plot_power_spectrum(frequency, power, protocol_freq=None, confidence_interva
     )
 
     return st.plotly_chart(fig, use_container_width=True)
-
