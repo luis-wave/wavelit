@@ -95,7 +95,7 @@ if "tab" in st.session_state:
             render_protocol_page(data_manager)
             st.title("Protocol Queue")
             pid = st.session_state["pid"]
-            base = SIGMA_PROTOCOLS_URL+f"?c_protocol_Patient-Id-1={pid}"
+            base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-2={pid}"
             html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
             components.html(html, height=1000, scrolling=False)
 
@@ -619,7 +619,7 @@ else:
         render_protocol_page(data_manager)
         st.title("Protocol Queue")
         pid = st.session_state["pid"]
-        base = "https://app.sigmacomputing.com/embed/1-7DtFiDy0cUmAAIztlEecY5"+f"?c_protocol_Patient-Id-1={pid}"
+        base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-2={pid}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
         components.html(html, height=1000, scrolling=False)
 
