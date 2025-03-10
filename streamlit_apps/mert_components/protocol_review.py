@@ -101,7 +101,7 @@ def render_protocol_page(data_manager):
     # Fetch doctor approval state
     doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
 
     with col1:
         patient_data = st.session_state.patient_data
@@ -169,25 +169,18 @@ def render_protocol_page(data_manager):
             ui.element("span", children=["EEG ID"], className="text-gray-500 text-sm font-medium", key="eeg_id_label")
             ui.element("div", children=[eeg_info_data['eegId']], className="mb-2", key="eeg_id_value")
 
+            # Review Status
+            ui.element("hr", className="my-4", key="divider1")
+            analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
 
+            current_state = (
+                EEGReviewState[analysis_meta["reviewState"]]
+                if analysis_meta["reviewState"]
+                else EEGReviewState.PENDING
+            )
 
-    with col2:
-        analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+            current_state_name = current_state.name.replace('_', ' ')
 
-        current_state = (
-            EEGReviewState[analysis_meta["reviewState"]]
-            if analysis_meta["reviewState"]
-            else EEGReviewState.PENDING
-        )
-
-        first_reviewer = mert2_user.get(analysis_meta.get("reviewerStaffId"), "N/A")
-        second_reviewer = mert2_user.get(analysis_meta.get("secondReviewerStaffId"), "N/A")
-
-        current_state_name = current_state.name.replace('_', ' ')
-
-        # Main Review Card
-        with ui.card(key="protocol_eeg_review"):
-            # Header Section
             ui.element("h3", children=["EEG Review Status"], className="text-xl font-bold mb-4", key="header_title")
 
             if current_state_name != 'REJECTED':
@@ -197,24 +190,7 @@ def render_protocol_page(data_manager):
                 ui.element("div", children=[f"Status: {current_state_name}"],
                     className="bg-red-500 text-white px-4 py-2 rounded-full inline-block mb-6", key="header_status")
 
-            # First Review Section
-            ui.element("h4", children=["First Review"], className="text-lg font-semibold mb-2", key="first_review_title")
-            ui.element("span", children=["Review Date:"], className="text-gray-500 text-sm font-medium", key="first_review_date_label")
-            ui.element("div", children=[format_datetime(analysis_meta.get('reviewDatetime'))], className="mb-2", key="first_review_date")
-            ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="first_reviewer_label")
-            ui.element("div", children=[first_reviewer], className="mb-4", key="first_reviewer_value")
-
-            # Divider
-            ui.element("hr", className="my-4", key="divider1")
-
-            # Second Review Section
-            ui.element("h4", children=["Second Review"], className="text-lg font-semibold mb-2", key="second_review_title")
-            ui.element("span", children=["Review Date:"], className="text-gray-500 text-sm font-medium", key="second_review_date_label")
-            ui.element("div", children=[format_datetime(analysis_meta.get('secondReviewDatetime'))], className="mb-2", key="second_review_date")
-            ui.element("span", children=["Reviewer:"], className="text-gray-500 text-sm font-medium", key="second_reviewer_label")
-            ui.element("div", children=[second_reviewer], className="mb-4", key="second_reviewer_value")
-
-    with col3:
+    with col2:
         base = SIGMA_PROTOCOLS_MINI_URL+f"?Patient-Id-1={patient_id}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="400px"></iframe>'
         st.components.v1.html(html, height=400, scrolling=False)
@@ -632,5 +608,3 @@ def render_protocol_page(data_manager):
         pipeline.run(time_window=5.12)
         result = pipeline.analysis_json
         fft_plot_ngboost.plot_power_spectrum(result["freqs"], result["psds"], result["bipolar_ngb_protocol"], result["bipolar_ngb_std_dev"])
-
-

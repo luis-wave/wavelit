@@ -60,9 +60,9 @@ if not eeg_id:
 
     url = "https://app.sigmacomputing.com/embed/1-4j797MKZT5T7Xf8Wf5g8D5"
 
-    html = f'<iframe src="{url}" frameborder="0" width="100%" height="900px"></iframe>'
+    html = f'<iframe src="{url}" frameborder="0" width="100%" height="1200px"></iframe>'
 
-    components.html(html, height=1000, scrolling=False)
+    components.html(html, height=1200, scrolling=False)
 
     asyncio.run(access_eeg_data(eeg_id))
 
