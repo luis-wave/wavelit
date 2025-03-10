@@ -27,7 +27,7 @@ import streamlit_shadcn_ui as ui
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
 
-SIGMA_PROTOCOLS_URL = os.getenv("SIGMA_PROTOCOLS_URL")
+PROTOCOL_FFT_ONLY = os.getenv("PROTOCOL_FFT_ONLY")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
