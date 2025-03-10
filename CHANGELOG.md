@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.2] - 2025-03-10
+- Removed First/Second Review column + moved review status on protocol review page to 1st column.
+- Changed Protocol Queue on Review Page to FFT view only.
+
 ## [2.14.1] - 2025-02-28
 - Make NGBoost protocol graph visible in dark mode.
 
