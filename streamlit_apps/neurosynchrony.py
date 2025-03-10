@@ -96,7 +96,7 @@ if "tab" in st.session_state:
             st.title("Protocol Queue")
             pid = st.session_state["pid"]
             base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-1={pid}"
-            html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
+            html = f'<iframe src="{base}" frameborder="0" width="100%" height="1000px"></iframe>'
             components.html(html, height=1000, scrolling=False)
 
         with tab2:
@@ -620,7 +620,7 @@ else:
         st.title("Protocol Queue")
         pid = st.session_state["pid"]
         base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-1={pid}"
-        html = f'<iframe src="{base}" frameborder="0" width="100%" height="900px"></iframe>'
+        html = f'<iframe src="{base}" frameborder="0" width="100%" height="1000px"></iframe>'
         components.html(html, height=1000, scrolling=False)
 
     with tab3:
