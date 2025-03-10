@@ -26,8 +26,8 @@ components.html(html, height=1000, scrolling=False)
 
 
 st.title("DoDS KPI  Dashboard")
-html = f'<iframe src="{SIGMA_DODS_KPI_URL}" frameborder="0" width="100%" height="900px"></iframe>'
-components.html(html, height=1000, scrolling=False)
+html = f'<iframe src="{SIGMA_DODS_KPI_URL}" frameborder="0" width="100%" height="2500px"></iframe>'
+components.html(html, height=2500, scrolling=False)
 
 
 # Footer section
