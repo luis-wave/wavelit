@@ -39,9 +39,9 @@ if not eeg_id:
     # Title
     st.title("Protocol Review Dashboard")
 
-    html = f'<iframe src="{SIGMA_PROTOCOLS_URL}" width="100%" height="900px"></iframe>'
+    html = f'<iframe src="{SIGMA_PROTOCOLS_URL}" width="100%" height="1300px"></iframe>'
 
-    components.html(html, height=1000, scrolling=False)
+    components.html(html, height=1300, scrolling=False)
 
     asyncio.run(access_eeg_data(eeg_id))
 
