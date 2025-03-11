@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.15.0] - 2025-03-11
 ### Added
 - Allow lab to copy Patient Id with a mouse click.
+- Direct eeg download endpoint from MeRT 2.
 ### Fixed
 - Note sorting logic by datetime.
 

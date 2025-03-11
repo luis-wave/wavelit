@@ -234,6 +234,17 @@ class MeRTApi:
             },
         )
 
+    async def download_eeg_file(self) -> Dict[str, Any]:
+        return await self._make_request(
+            "POST",
+            "macro-service/api/v1/eeg_management/download_eeg_file",
+            {
+                "patientId": self.patient_id,
+                "eegId": self.eeg_id,
+                "userGroupId": self.clinic_id,
+            },
+        )
+
     async def fetch_all_eeg_info_by_patient_id(self) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
