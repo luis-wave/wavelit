@@ -28,7 +28,7 @@ def get_artifact_map():
 
 def translate_artifact_name(artifact_name):
     artifact_map = get_artifact_map()
-    return artifact_map.get(artifact_name, artifact_name.capitalize())
+    return artifact_map.get(artifact_name, artifact_name)
 
 
 @st.fragment
