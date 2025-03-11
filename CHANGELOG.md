@@ -7,15 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.0] - 2025-03-11
+### Added
+- Allow lab to copy Patient Id with a mouse click.
+### Fixed
+- Note sorting logic by datetime.
+
 ## [2.14.3] - 2025-03-11
+### Fixed
 - Artifact statements in other category are no longer automatically capitalized.
-  
+
 
 ## [2.14.2] - 2025-03-10
+### Fixed
 - Removed First/Second Review column + moved review status on protocol review page to 1st column.
 - Changed Protocol Queue on Review Page to FFT view only.
 
 ## [2.14.1] - 2025-02-28
+### Fixed
 - Make NGBoost protocol graph visible in dark mode.
 
 

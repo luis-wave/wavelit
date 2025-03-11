@@ -109,10 +109,13 @@ if "tab" in st.session_state:
                 full_url = f'''{base_url}'''
                 st.code(full_url, language="python", wrap_lines=True)
 
-
             col1, col2 = st.columns(2)
 
             with col1:
+                st.write("PatientId:")
+                full_id = f'''{pid}'''
+                st.code(full_id, language="python", wrap_lines=True)
+
                 patient_data = st.session_state.patient_data
                 clinic_info = st.session_state.clinic_info
 
@@ -372,6 +375,10 @@ else:
         col1, col2 = st.columns(2)
 
         with col1:
+            st.write("PatientId:")
+            full_pid = f'''{st.session_state['pid']}'''
+            st.code(full_pid, language="python", wrap_lines=True)
+
             patient_data = st.session_state.patient_data
             clinic_info = st.session_state.clinic_info
 
@@ -424,9 +431,6 @@ else:
                     key="name")
 
             # Patient ID and Username
-            ui.element("span", children=["Patient ID"], className="text-gray-500 text-sm font-medium", key="id_label")
-            ui.element("div", children=[patient_id], className="mb-2", key="id_value")
-
             ui.element("span", children=["Username"], className="text-gray-500 text-sm font-medium", key="username_label")
             ui.element("div", children=[username], className="mb-4", key="username_value")
 

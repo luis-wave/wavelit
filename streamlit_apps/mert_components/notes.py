@@ -52,18 +52,20 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Consolidate notes by recording date
     consolidated_notes = {}
     for date_key, note in eeg_scientist_patient_notes.items():
+        # Store original ISO format for sorting before formatting for display
+        note["dateEditedIso"] = note["dateEdited"]
         note["dateEdited"] = format_datetime(note["dateEdited"])
         recording_date = note["recordingDate"]
         if recording_date not in consolidated_notes:
             consolidated_notes[recording_date] = []
         consolidated_notes[recording_date].append(note)
 
-    # Sort notes within each recording date by time of edit (newest last)
+    # Sort notes within each recording date by time of edit (newest first)
     for recording_date in consolidated_notes:
         consolidated_notes[recording_date] = sorted(
             consolidated_notes[recording_date],
-            key=lambda n: n["dateEdited"],
-            reverse=True,
+            key=lambda n: datetime.strptime(n["dateEditedIso"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+            reverse=True,  # Using True to put newest notes at the top
         )
 
     # Sort recording dates in descending order
