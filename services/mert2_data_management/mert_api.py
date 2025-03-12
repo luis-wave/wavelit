@@ -255,13 +255,13 @@ class MeRTApi:
             },
         )
 
-    async def get_eeg_report(self) -> Dict[str, Any]:
+    async def get_eeg_report(self, eeg_id=None) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
             "macro-service/api/v1/report_management/get_eeg_report",
             {
                 "patientId": self.patient_id,
-                "eegId": self.eeg_id,
+                "eegId": eeg_id or self.eeg_id,
                 "userGroupId": self.clinic_id,
             },
         )

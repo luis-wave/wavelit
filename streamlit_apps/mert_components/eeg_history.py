@@ -1,5 +1,5 @@
 """
-A clean EEG history component with fixed report association.
+An EEG history component with variable report types.
 """
 
 import asyncio
@@ -28,38 +28,59 @@ def render_eeg_history(data_manager):
         return
 
     eeg_data = st.session_state.all_eeg_info
-    eeg_reports = st.session_state.get("eeg_reports", {})
 
-    # Extract neuroref reports
-    neuroref_reports = eeg_reports.get("neuroRefReports", {})
 
-    # Sort EEGs by recording date (most recent first)
     sorted_eeg_ids = []
+
     for eeg_id, details in eeg_data.items():
+
+        response = asyncio.run(data_manager.api.get_eeg_report(eeg_id=eeg_id))
+
+        report_lists = []
+
+        if "neuroRefReports" in response and response["neuroRefReports"]:
+            report_id = next(iter(response["neuroRefReports"]), None)
+            report_type = "Neuroref"
+            report_lists.append((report_id, report_type))
+
+        if "neurorefcz" in response and response["neurorefcz"]:
+            report_id = next(iter(response["neurorefcz"]), None)
+            report_type = "Neuroref Cz"
+            report_lists.append((report_id, report_type))
+
+        if "documents" in response and response["documents"]:
+            report_id = next(iter(response["documents"]), None)
+            report_type = "Persyst"
+            report_lists.append((report_id, report_type))
+
+
         if eeg_id.startswith("EEG-"):
             datetime_str = details.get('eegInfo', {}).get('dateTime', '')
             try:
                 dt = datetime.fromisoformat(datetime_str.replace('Z', '+00:00'))
-                sorted_eeg_ids.append((eeg_id, dt, details))
+                sorted_eeg_ids.append((eeg_id, dt, details, report_lists))
             except (ValueError, AttributeError):
                 # Fall back to recording date
                 recording_date = details.get('baseProtocol', {}).get('recordingDate', '')
                 try:
                     dt = datetime.fromisoformat(recording_date)
-                    sorted_eeg_ids.append((eeg_id, dt, details))
+                    sorted_eeg_ids.append((eeg_id, dt, details, report_lists))
                 except (ValueError, AttributeError):
                     # Use a default date for sorting if both are invalid
-                    sorted_eeg_ids.append((eeg_id, datetime.min, details))
+                    sorted_eeg_ids.append((eeg_id, datetime.min, details, report_lists))
+
+
+
 
     # Sort by date (most recent first)
     sorted_eeg_ids.sort(key=lambda x: x[1], reverse=True)
 
     # Display each EEG record in an expander
-    for eeg_id, dt, details in sorted_eeg_ids:
+    for eeg_id, dt, details, report_lists in sorted_eeg_ids:
         file_name = details.get('eegInfo', {}).get('fileName', 'EEG File')
         review_state = details.get('eegInfo', {}).get('analysisMeta', {}).get('reviewState', '')
 
-        # Format date nicely
+        # Format date
         try:
             formatted_date = dt.strftime("%Y-%m-%d %H:%M")
         except:
@@ -105,7 +126,7 @@ def render_eeg_history(data_manager):
                                 key=f"dl_eeg_{eeg_id}"
                             )
 
-                            # Restore original EEG ID
+                            # Restore original EEG ID, don't want disrupt the current session in Wavelit
                             data_manager.eeg_id = temp_eeg_id
 
                         except Exception as e:
@@ -113,42 +134,49 @@ def render_eeg_history(data_manager):
 
             # Column 2: Download Neurosynchrony Report
             with col2:
-                if neuroref_reports:
-                    # Get a list of report IDs
-                    report_ids = list(neuroref_reports.keys())
-                    if report_ids:
-                        report_id = report_ids[0]  # Get first report ID
+                if report_lists:
 
-                        if st.button("Download report", key=f"neuro_{eeg_id}"):
+                    for idx,  (report_id, report_type) in enumerate(report_lists):
+                        if st.button(f"Download {report_type} report", key=f"neuro_{eeg_id}_{idx}"):
                             with st.spinner("Downloading Neurosynchrony report..."):
                                 try:
                                     # Save original EEG ID
                                     temp_eeg_id = data_manager.eeg_id
-                                    data_manager.eeg_id = eeg_id
+                                    data_manager.api.eeg_id = eeg_id
 
-                                    # Download report
-                                    report_content = asyncio.run(data_manager.api.download_neuroref_report(report_id=report_id))
+                                    if report_type == "Neuroref":
+                                        report_content = asyncio.run(data_manager.api.download_neuroref_report(report_id=report_id))
+                                        label = "Get Neuroref"
+                                    elif report_type == "Neuroref Cz":
+                                        report_content = asyncio.run(data_manager.api.download_neuroref_cz_report(report_id=report_id))
+                                        label = "Get Neuroref Cz"
+                                    elif report_type == "Persyst":
+                                        report_content = asyncio.run(data_manager.api.download_document(document_id=report_id))
+                                        label = "Get Persyst"
+                                    else:
+                                        label = None
+                                        st.error(f"No report available")
+
 
                                     # Create download button
                                     st.download_button(
-                                        label="Get report",
+                                        label= label or "No report",
                                         data=report_content,
-                                        file_name=f"Neurosynchrony-{eeg_id}.pdf",
+                                        file_name=f"{report_type}-{eeg_id}.pdf",
                                         mime="application/pdf",
-                                        key=f"dl_neuro_{eeg_id}"
+                                        key=f"dl_neuro_{eeg_id}_{idx}"
                                     )
 
                                     # Restore original EEG ID
-                                    data_manager.eeg_id = temp_eeg_id
+                                    data_manager.api.eeg_id = temp_eeg_id
 
                                 except Exception as e:
                                     st.error(f"Error downloading Neurosynchrony report: {str(e)}")
-                    else:
-                        st.write("No Neurosynchrony report available")
+                        st.divider()
                 else:
                     st.write("No Neurosynchrony report available")
 
             # Column 3: Open in Lab
             with col3:
                 lab_url = f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={data_manager.patient_id}&clinicid={data_manager.clinic_id}"
-                st.markdown(f"[Open in Lab]({lab_url})")
+                st.markdown(f"[Navigate to review case]({lab_url})")
