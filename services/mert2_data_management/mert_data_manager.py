@@ -257,6 +257,15 @@ class MeRTDataManager:
             logger.error(f"Failed to download document {document_id}: {str(e)}")
             raise
 
+    async def get_eeg_report(self):
+        try:
+            content = await self.api.get_eeg_report()
+            logger.info(f"Report downloaded successfully")
+            return content
+        except Exception as e:
+            logger.error(f"Failed to download document: {str(e)}")
+            raise
+
     async def save_protocol(self, protocol: Dict[str, Any]) -> Dict[str, Any]:
         try:
             result = await self.api.save_protocol(protocol=protocol)
@@ -325,6 +334,19 @@ class MeRTDataManager:
             return result
         except Exception as e:
             logger.error(f"Failed to save EEG presets: {str(e)}")
+            raise
+
+    async def download_eeg_file(
+        self
+    ) -> Dict[str, Any]:
+        try:
+            result = await self.api.download_eeg_file()
+            logger.info(
+                f"Patient eeg file retrieved successfully for patient ID: {self.patient_id}"
+            )
+            return result
+        except Exception as e:
+            logger.error(f"Failed to download EEG file: {str(e)}")
             raise
 
 

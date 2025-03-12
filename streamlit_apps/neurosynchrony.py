@@ -18,7 +18,8 @@ from streamlit_apps.mert_components import (render_abnormalities,
                                             render_documents,
                                             render_eeg_review, render_notes,
                                             render_protocol_page,
-                                            get_report_addendum_eeg_id)
+                                            get_report_addendum_eeg_id,
+                                            render_eeg_history)
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
@@ -91,10 +92,12 @@ if "tab" in st.session_state:
     if st.session_state['tab'] == "Protocols":
         tabs = ["Protocols", "Reports", "EEG", "ECG"]
         tab1, tab2, tab3, tab4 = st.tabs(tabs)
+
 else:
   tabs = ["Reports", "Protocols", "EEG", "ECG"]
   tab2, tab1, tab3, tab4 = st.tabs(tabs)
 
+  
 with tab1:
     render_protocol_page(data_manager)
     st.title("Protocol Queue")
@@ -117,6 +120,10 @@ with tab2:
     col1, col2 = st.columns(2)
 
     with col1:
+        st.write("PatientId:")
+        full_pid = f'''{st.session_state['pid']}'''
+        st.code(full_pid, language="python", wrap_lines=True)
+            
         patient_data = st.session_state.patient_data
         clinic_info = st.session_state.clinic_info
 
@@ -159,6 +166,7 @@ with col1:
         treatment_count = st.session_state.treatment_count["CORTICAL"]
     else:
         treatment_count = 0
+
 
     with ui.card(key="patient_card"):
         # Patient Name
@@ -352,8 +360,14 @@ with col1:
         render_artifact_distortions(data_manager)
 
         st.divider()
-
+        
         render_abnormalities(data_manager)
+
+        st.divider()
+        
+        render_eeg_history(data_manager)
+
+
 
 with tab3:
     eeg_visualization_dashboard()
