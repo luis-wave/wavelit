@@ -573,7 +573,7 @@ else:
             #   except Exception as e:
             #       st.error(f"Error: {e}")
 
-            st.header("EEG History")
+            st.header("Review Report")
             with st.form("data_editor_form", border=False):
                 edited_eeg_history_df = st.data_editor(eeg_history_df, hide_index=True)
                 regenerate_neuroref = st.form_submit_button("Generate Neuroref Report")
