@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.14.4] - 2025-03-11
+- Code block essentially duplicated in py file for Wavelit review page to allow for query parameter feature. Structure reorganized so that it is easier to read for future development.
+
 ## [2.14.3] - 2025-03-11
 - Artifact statements in other category are no longer automatically capitalized.
   
