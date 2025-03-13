@@ -1,6 +1,8 @@
 [tool.poetry]
 name = "Wavelit"
-version = "2.14.3"
+
+version = "2.15.0"
+
 
 description = "A set of tools and dashboards for enhance EEG review for Wave Neuro's EEG lab"
 authors = ["Luis Camargo <lcamargo@waveneuro.com>", "Joseph Chong <joseph@waveneuro.com>"]
