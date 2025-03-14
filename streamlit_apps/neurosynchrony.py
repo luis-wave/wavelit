@@ -61,6 +61,64 @@ if (
     base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
 
 
+# Callback function to handle EEG selection
+def on_eeg_selected():
+    """Process the EEG selection and fetch data asynchronously"""
+    # Get the selected EEG ID from the dropdown options
+    selected_display = st.session_state.eeg_dropdown
+
+    # Get all the dropdown options
+    eeg_df = st.session_state.eeg_history
+    options = []
+    for idx in eeg_df["EEGId"].keys():
+        eeg_id = eeg_df["EEGId"][idx]
+        recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        display_text = f"{eeg_id} ({recording_date})"
+        options.append((display_text, eeg_id))
+
+    # Find the matching EEG ID from the selected display text
+    selected_eeg_id = next((opt[1] for opt in options if opt[0] == selected_display), None)
+
+    # Run the data access function
+    if selected_eeg_id:
+        try:
+            asyncio.run(access_eeg_data(selected_eeg_id))
+        except Exception as e:
+            st.error(f"Error accessing EEG data: {e}")
+
+def eeg_dropdown():
+    """Create the EEG dropdown menu"""
+    if "eeg_history" not in st.session_state:
+        return None
+
+    # Get the data from session state
+    eeg_df = st.session_state.eeg_history
+
+    # Create options for dropdown
+    options = []
+    for idx in eeg_df["EEGId"].keys():
+        eeg_id = eeg_df["EEGId"][idx]
+        # Format the recording date in mm-dd-yyyy format
+        recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        display_text = f"{eeg_id} ({recording_date})"
+        options.append((display_text, eeg_id))
+
+    # Initialize selected_eeg in session state if it doesn't exist
+    if 'selected_eeg' not in st.session_state and options:
+        st.session_state.selected_eeg = options[0][1]
+
+    # Create dropdown with formatted options
+    selected_option = st.selectbox(
+        "Select EEG:",
+        options=[option[0] for option in options],
+        index=0 if options else None,
+        key="eeg_dropdown",
+        on_change=on_eeg_selected
+    )
+
+    return selected_option
+
+
 s3 = boto3.client("s3")
 # helper func for checking key exists in s3
 def key_exists(bucket, key):
@@ -87,6 +145,7 @@ def delete_report(data_manager, report_id, ref="default"):
         st.success(f"Neuroref Cz {report_id} successfully deleted!")
         st.rerun()
 
+eeg_dropdown()
 
 if "tab" in st.session_state:
     if st.session_state['tab'] == "Protocols":
@@ -97,7 +156,7 @@ else:
   tabs = ["Reports", "Protocols", "EEG", "ECG"]
   tab2, tab1, tab3, tab4 = st.tabs(tabs)
 
-  
+
 with tab1:
     render_protocol_page(data_manager)
     st.title("Protocol Queue")
@@ -123,7 +182,7 @@ with tab2:
         st.write("PatientId:")
         full_pid = f'''{st.session_state['pid']}'''
         st.code(full_pid, language="python", wrap_lines=True)
-            
+
         patient_data = st.session_state.patient_data
         clinic_info = st.session_state.clinic_info
 
@@ -360,11 +419,11 @@ with col1:
         render_artifact_distortions(data_manager)
 
         st.divider()
-        
+
         render_abnormalities(data_manager)
 
         st.divider()
-        
+
         render_eeg_history(data_manager)
 
 
