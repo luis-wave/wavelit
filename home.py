@@ -19,7 +19,7 @@ if __name__ == "__main__":
 
         protocol_page = st.Page("sigma_dashboards/protocols.py", title="Protocols")
 
-        report_page = st.Page("sigma_dashboards/reports.py", title="Queue")
+        report_page = st.Page("sigma_dashboards/reports.py", title="Home")
 
         dods_dashboards_page = st.Page(
             "sigma_dashboards/dods_dashboards.py", title="DoDS Dashboards"

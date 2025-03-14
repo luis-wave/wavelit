@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.16.1] - 2025-03-14
+### Fixed
+- Selected eeg was not rendering.
+
+### Changed
+- Queue is now Home in the navbar.
+
+
 ## [2.16.0] - 2025-03-14
 ### Fixed
 - Add drop down, user can select eeg and load data across any scan in the patient history.
