@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.15.1] - 2025-03-14
+### Fixed
+- Missing alt heart rate measure.
+
 
 ## [2.15.0] - 2025-03-11
 ### Added
