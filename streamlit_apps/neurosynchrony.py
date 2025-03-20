@@ -386,34 +386,34 @@ with col1:
                     delete_report(data_manager, report_id, ref="cz")
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        # eegid = st.session_state["eegid"]
-        # eeg_bucket = "lake-superior-prod"
-        # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-        # if eegid:
-        #     if not key_exists(eeg_bucket, eeg_s3_path):
-        #         edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-        #         if not key_exists(eeg_bucket, edf_path):
-        #             raise Exception("EEG could not be found.")
-        #         else:
-        #             eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-        #             eeg_content = eeg_obj["Body"].read()
-        #             fname = f"{eegid}.edf"
-        #     else:
-        #         eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-        #         eeg_content = eeg_obj["Body"].read()
-        #         fname = f"{eegid}.dat"
-        # else:
-        #     eeg_content = "empty file"
-        #     fname = "empty_file.txt"
-        # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-        #     try:
-        #         st.write(f"EEG:'{eegid}' downloaded successfully")
-        #     except NoCredentialsError:
-        #         st.error("Error: Unable to locate credentials")
-        #     except PartialCredentialsError:
-        #         st.error("Error: Incomplete credentials provided")
-        #     except Exception as e:
-        #         st.error(f"Error: {e}")
+        eegid = st.session_state["eegid"]
+        eeg_bucket = "lake-superior-prod"
+        eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+        if eegid:
+            if not key_exists(eeg_bucket, eeg_s3_path):
+                edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+                if not key_exists(eeg_bucket, edf_path):
+                    raise Exception("EEG could not be found.")
+                else:
+                    eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+                    eeg_content = eeg_obj["Body"].read()
+                    fname = f"{eegid}.edf"
+            else:
+                eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+                eeg_content = eeg_obj["Body"].read()
+                fname = f"{eegid}.dat"
+        else:
+            eeg_content = "empty file"
+            fname = "empty_file.txt"
+        if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+            try:
+                st.write(f"EEG:'{eegid}' downloaded successfully")
+            except NoCredentialsError:
+                st.error("Error: Unable to locate credentials")
+            except PartialCredentialsError:
+                st.error("Error: Incomplete credentials provided")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):

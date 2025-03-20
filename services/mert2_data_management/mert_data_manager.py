@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 from services.mert2_data_management.mert_api import MeRTApi
+from datetime import datetime
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -298,10 +299,10 @@ class MeRTDataManager:
             raise
 
     async def save_eeg_scientist_patient_note(
-        self, note: Dict[str, Any]
+        self, note: Dict[str, Any], note_creation_date = datetime.utcnow().isoformat() + "Z"
     ) -> Dict[str, Any]:
         try:
-            result = await self.api.save_eeg_scientist_patient_note(note=note)
+            result = await self.api.save_eeg_scientist_patient_note(note=note, note_creation_date=note_creation_date)
             logger.info(
                 f"EEG scientist patient note saved successfully for patient ID: {self.patient_id}"
             )

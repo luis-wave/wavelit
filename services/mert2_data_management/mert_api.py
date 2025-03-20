@@ -545,7 +545,7 @@ class MeRTApi:
         )
 
     async def save_eeg_scientist_patient_note(
-        self, note: Dict[str, Any]
+        self, note: Dict[str, Any], note_creation_date=datetime.utcnow().isoformat() + "Z"
     ) -> Dict[str, Any]:
         return await self._make_request(
             "POST",
@@ -553,7 +553,7 @@ class MeRTApi:
             {
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
-                "noteCreationDate": datetime.utcnow().isoformat() + "Z",
+                "noteCreationDate": note_creation_date,
                 "eegScientistPatientNote": {
                     "recordingDate": note["recordingDate"],
                     "subject": note["subject"],

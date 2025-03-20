@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Addendum logic, page will reload with addendum eegId, all MWP data will load with original eegid.
 - Phase editor precision rounding error.
 - Addendum button will only be available when eeg review is complete.
+- User can edit notes when review state is not rejected, completed, or under clinical review.
 
 
 ## [2.16.2] - 2025-03-19
