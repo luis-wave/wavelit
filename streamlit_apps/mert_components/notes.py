@@ -4,6 +4,9 @@ import html
 import streamlit as st
 
 from utils.helpers import format_datetime, parse_recording_date
+from streamlit_apps.mert_components.review_utils import EEGReviewState
+
+
 
 
 @st.fragment
@@ -26,11 +29,26 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         content = st.text_area("Content")
         submitted = st.form_submit_button("Submit Note")
 
+        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+        current_state = (
+            EEGReviewState[analysis_meta["reviewState"]]
+            if analysis_meta["reviewState"]
+            else EEGReviewState.PENDING
+        )
+
+        if current_state.name not in  ("CLINICAL_REVIEW", "REJECTED", "COMPLETED"):
+            edit_note = st.form_submit_button("Edit Note")
+        else:
+            edit_note = None
+
+        eeg_recording_date = recording_dateTime_pst.strftime(
+                    "%a, %B %d %Y, %I:%M:%S %p"
+                )
+
         if submitted:
             new_note = {
-                "recordingDate": recording_dateTime_pst.strftime(
-                    "%a, %B %d %Y, %I:%M:%S %p"
-                ),
+                "recordingDate": eeg_recording_date ,
                 "subject": subject,
                 "content": content,
                 "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -41,6 +59,21 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                 st.rerun()  # Rerun the app to refresh the notes list
             except Exception as e:
                 st.error(f"Failed to add note: {str(e)}")
+
+        if edit_note:
+            new_note = {
+                "recordingDate": eeg_recording_date,
+                "subject": subject,
+                "content": content,
+                "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            try:
+                asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=eeg_recording_date))
+                st.success("Note edited successfully!")
+                st.rerun()  # Rerun the app to refresh the notes list
+            except Exception as e:
+                st.error(f"Failed to add note: {str(e)}")
+
 
 
     st.divider()

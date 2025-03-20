@@ -24,6 +24,7 @@ from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
 import streamlit_shadcn_ui as ui
+from streamlit_apps.mert_components.review_utils import EEGReviewState
 
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
@@ -324,22 +325,31 @@ with col1:
     with col2:
         render_eeg_review(data_manager)
 
+
         st.subheader("Reports")
 
 
+        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+        current_state = (
+            EEGReviewState[analysis_meta["reviewState"]]
+            if analysis_meta["reviewState"]
+            else EEGReviewState.PENDING
+        )
 
-        if st.button(label="Add addendum", key="appended"):
-            eeg_id = st.session_state['eegid']
-            addendum_eeg_id = get_report_addendum_eeg_id(data_manager)
-            st.session_state["addendum"] = True
-            patient_id = st.session_state["pid"]
-            clinic_id = st.session_state["clinicid"]
-            url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}&addendum_eeg_id={addendum_eeg_id}"
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
-        else:
-            st.session_state["addendum"] = False
+        if current_state.name == 'COMPLETED':
+            if st.button(label="Add addendum", key="appended"):
+                eeg_id = st.session_state['eegid']
+                addendum_eeg_id = get_report_addendum_eeg_id(data_manager)
+                st.session_state["addendum"] = True
+                patient_id = st.session_state["pid"]
+                clinic_id = st.session_state["clinicid"]
+                url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}&addendum_eeg_id={addendum_eeg_id}"
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
+            else:
+                st.session_state["addendum"] = False
 
-        addendum = st.session_state["addendum"]
+        addendum = st.session_state.get("addendum", None)
 
 
         eeg_history_df = st.session_state.eeg_history
@@ -376,34 +386,34 @@ with col1:
                     delete_report(data_manager, report_id, ref="cz")
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        # eegid = st.session_state["eegid"]
-        # eeg_bucket = "lake-superior-prod"
-        # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-        # if eegid:
-        #     if not key_exists(eeg_bucket, eeg_s3_path):
-        #         edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-        #         if not key_exists(eeg_bucket, edf_path):
-        #             raise Exception("EEG could not be found.")
-        #         else:
-        #             eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-        #             eeg_content = eeg_obj["Body"].read()
-        #             fname = f"{eegid}.edf"
-        #     else:
-        #         eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-        #         eeg_content = eeg_obj["Body"].read()
-        #         fname = f"{eegid}.dat"
-        # else:
-        #     eeg_content = "empty file"
-        #     fname = "empty_file.txt"
-        # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-        #     try:
-        #         st.write(f"EEG:'{eegid}' downloaded successfully")
-        #     except NoCredentialsError:
-        #         st.error("Error: Unable to locate credentials")
-        #     except PartialCredentialsError:
-        #         st.error("Error: Incomplete credentials provided")
-        #     except Exception as e:
-        #         st.error(f"Error: {e}")
+        eegid = st.session_state["eegid"]
+        eeg_bucket = "lake-superior-prod"
+        eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+        if eegid:
+            if not key_exists(eeg_bucket, eeg_s3_path):
+                edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+                if not key_exists(eeg_bucket, edf_path):
+                    raise Exception("EEG could not be found.")
+                else:
+                    eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+                    eeg_content = eeg_obj["Body"].read()
+                    fname = f"{eegid}.edf"
+            else:
+                eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+                eeg_content = eeg_obj["Body"].read()
+                fname = f"{eegid}.dat"
+        else:
+            eeg_content = "empty file"
+            fname = "empty_file.txt"
+        if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+            try:
+                st.write(f"EEG:'{eegid}' downloaded successfully")
+            except NoCredentialsError:
+                st.error("Error: Unable to locate credentials")
+            except PartialCredentialsError:
+                st.error("Error: Incomplete credentials provided")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):

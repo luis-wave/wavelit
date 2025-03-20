@@ -448,7 +448,7 @@ def render_protocol_page(data_manager):
                         "Location", options=location_options, required=True
                     ),
                     "frequency": st.column_config.NumberColumn(
-                        "Frequency (Hz)", min_value=0.1, max_value=100, step=0.01
+                        "Frequency (Hz)", min_value=0.1, max_value=100, step=0.001
                     ),
                     "trainDuration": st.column_config.NumberColumn(
                         "Train Duration (s)", min_value=1, step=0.1
