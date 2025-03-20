@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [2.16.4] - 2025-03-20
+## [2.17.0] - 2025-03-20
 ### Added
 - New table with ecg_statistics re. patients' historical HR values.
 
