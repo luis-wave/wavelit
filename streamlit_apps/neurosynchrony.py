@@ -305,7 +305,7 @@ with col1:
             st.session_state["addendum"] = True
             patient_id = st.session_state["pid"]
             clinic_id = st.session_state["clinicid"]
-            url=f"http://0.0.0.0:8501?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}"
+            url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}"
 
             st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
         else:

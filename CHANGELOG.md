@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.16.2] - 2025-03-19
+### Fixed
+- Addendum was still pointing to local url
+
+
 ## [2.16.1] - 2025-03-14
 ### Fixed
 - Selected eeg was not rendering.
