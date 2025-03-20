@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.16.3] - 2025-03-19
 ### Fixed
 - Addendum logic, page will reload with addendum eegId, all MWP data will load with original eegid.
+- Phase editor precision rounding error.
+- Addendum button will only be available when eeg review is complete.
 
 
 ## [2.16.2] - 2025-03-19

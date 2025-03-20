@@ -24,6 +24,7 @@ from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
 import streamlit_shadcn_ui as ui
+from streamlit_apps.mert_components.review_utils import EEGReviewState
 
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
@@ -324,22 +325,31 @@ with col1:
     with col2:
         render_eeg_review(data_manager)
 
+
         st.subheader("Reports")
 
 
+        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+        current_state = (
+            EEGReviewState[analysis_meta["reviewState"]]
+            if analysis_meta["reviewState"]
+            else EEGReviewState.PENDING
+        )
 
-        if st.button(label="Add addendum", key="appended"):
-            eeg_id = st.session_state['eegid']
-            addendum_eeg_id = get_report_addendum_eeg_id(data_manager)
-            st.session_state["addendum"] = True
-            patient_id = st.session_state["pid"]
-            clinic_id = st.session_state["clinicid"]
-            url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}&addendum_eeg_id={addendum_eeg_id}"
-            st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
-        else:
-            st.session_state["addendum"] = False
+        if current_state.name == 'COMPLETED':
+            if st.button(label="Add addendum", key="appended"):
+                eeg_id = st.session_state['eegid']
+                addendum_eeg_id = get_report_addendum_eeg_id(data_manager)
+                st.session_state["addendum"] = True
+                patient_id = st.session_state["pid"]
+                clinic_id = st.session_state["clinicid"]
+                url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}&addendum_eeg_id={addendum_eeg_id}"
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
+            else:
+                st.session_state["addendum"] = False
 
-        addendum = st.session_state["addendum"]
+        addendum = st.session_state.get("addendum", None)
 
 
         eeg_history_df = st.session_state.eeg_history
