@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.17.0] - 2025-03-20
+### Added
+- New table with ecg_statistics re. patients' historical HR values.
+
 ## [2.16.3] - 2025-03-19
 ### Fixed
 - Addendum logic, page will reload with addendum eegId, all MWP data will load with original eegid.
