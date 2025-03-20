@@ -45,20 +45,46 @@ if (
     and ("pid" in st.session_state)
     and ("clinicid" in st.session_state)
 ):
-    # Initialize MeRTDataManager
-    data_manager = MeRTDataManager(
-        patient_id=st.session_state["pid"],
-        eeg_id=st.session_state["eegid"],
-        clinic_id=st.session_state["clinicid"],
-    )
-
-    # Load all data into session state
-    asyncio.run(data_manager.load_all_data())
-    asyncio.run(access_eeg_data(st.session_state["eegid"]))
 
 
-    base_url = "https://lab.wavesynchrony.com"
-    base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
+    addendum_eeg_id = st.session_state.get("addendum_eeg_id", None)
+
+
+    if addendum_eeg_id:
+        st.session_state["addendum"] = True
+         # Initialize MeRTDataManager
+        data_manager = MeRTDataManager(
+            patient_id=st.session_state["pid"],
+            eeg_id=addendum_eeg_id,
+            clinic_id=st.session_state["clinicid"],
+        )
+        # Load all data into session state
+        asyncio.run(data_manager.load_all_data())
+
+        # If in addendum mode and we have the original EEG ID stored
+        asyncio.run(access_eeg_data(st.session_state["eegid"]))
+
+        st.header("Addendum")
+
+        base_url = "https://lab.wavesynchrony.com"
+        base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={addendum_eeg_id}&clinicid={st.session_state['clinicid']}"
+
+    else:
+        # Initialize MeRTDataManager
+        data_manager = MeRTDataManager(
+            patient_id=st.session_state["pid"],
+            eeg_id=st.session_state["eegid"],
+            clinic_id=st.session_state["clinicid"],
+        )
+
+        # Load all data into session state
+        asyncio.run(data_manager.load_all_data())
+        # Default behavior - use current EEG ID
+        asyncio.run(access_eeg_data(st.session_state["eegid"]))
+
+
+        base_url = "https://lab.wavesynchrony.com"
+        base_url = base_url + f"/?pid={st.session_state['pid']}&eegid={st.session_state['eegid']}&clinicid={st.session_state['clinicid']}"
 
 
 # Callback function to handle EEG selection
@@ -300,13 +326,15 @@ with col1:
 
         st.subheader("Reports")
 
+
+
         if st.button(label="Add addendum", key="appended"):
-            eeg_id = get_report_addendum_eeg_id(data_manager)
+            eeg_id = st.session_state['eegid']
+            addendum_eeg_id = get_report_addendum_eeg_id(data_manager)
             st.session_state["addendum"] = True
             patient_id = st.session_state["pid"]
             clinic_id = st.session_state["clinicid"]
-            url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}"
-
+            url=f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={patient_id}&clinicid={clinic_id}&addendum_eeg_id={addendum_eeg_id}"
             st.markdown(f'<meta http-equiv="refresh" content="0; url={url}">', unsafe_allow_html=True)
         else:
             st.session_state["addendum"] = False
@@ -348,34 +376,34 @@ with col1:
                     delete_report(data_manager, report_id, ref="cz")
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        eegid = st.session_state["eegid"]
-        eeg_bucket = "lake-superior-prod"
-        eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-        if eegid:
-            if not key_exists(eeg_bucket, eeg_s3_path):
-                edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-                if not key_exists(eeg_bucket, edf_path):
-                    raise Exception("EEG could not be found.")
-                else:
-                    eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-                    eeg_content = eeg_obj["Body"].read()
-                    fname = f"{eegid}.edf"
-            else:
-                eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-                eeg_content = eeg_obj["Body"].read()
-                fname = f"{eegid}.dat"
-        else:
-            eeg_content = "empty file"
-            fname = "empty_file.txt"
-        if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-            try:
-                st.write(f"EEG:'{eegid}' downloaded successfully")
-            except NoCredentialsError:
-                st.error("Error: Unable to locate credentials")
-            except PartialCredentialsError:
-                st.error("Error: Incomplete credentials provided")
-            except Exception as e:
-                st.error(f"Error: {e}")
+        # eegid = st.session_state["eegid"]
+        # eeg_bucket = "lake-superior-prod"
+        # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+        # if eegid:
+        #     if not key_exists(eeg_bucket, eeg_s3_path):
+        #         edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+        #         if not key_exists(eeg_bucket, edf_path):
+        #             raise Exception("EEG could not be found.")
+        #         else:
+        #             eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+        #             eeg_content = eeg_obj["Body"].read()
+        #             fname = f"{eegid}.edf"
+        #     else:
+        #         eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+        #         eeg_content = eeg_obj["Body"].read()
+        #         fname = f"{eegid}.dat"
+        # else:
+        #     eeg_content = "empty file"
+        #     fname = "empty_file.txt"
+        # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+        #     try:
+        #         st.write(f"EEG:'{eegid}' downloaded successfully")
+        #     except NoCredentialsError:
+        #         st.error("Error: Unable to locate credentials")
+        #     except PartialCredentialsError:
+        #         st.error("Error: Incomplete credentials provided")
+        #     except Exception as e:
+        #         st.error(f"Error: {e}")
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):

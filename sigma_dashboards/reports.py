@@ -45,10 +45,16 @@ if "clinicid" in query_params:
 else:
     clinicid = None
 
+if "addendum_eeg_id" in query_params:
+    addendum_eeg_id = query_params["addendum_eeg_id"]
+else:
+    addendum_eeg_id = None
+
 if eegid and clinicid and pid:
     st.session_state["eegid"] = eegid
     st.session_state["pid"] = pid
     st.session_state["clinicid"] = clinicid
+    st.session_state["addendum_eeg_id"] = addendum_eeg_id
     if "tab" in query_params:
         st.session_state['tab'] = query_params["tab"]
     st.switch_page("streamlit_apps/neurosynchrony.py")
