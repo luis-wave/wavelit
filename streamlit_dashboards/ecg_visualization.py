@@ -117,6 +117,7 @@ def ecg_visualization_dashboard():
 
                 eeg_df = st.session_state.eeg_history
                 pid = st.session_state["pid"]
+                clinic_id = st.session_state["clinicid"]
                 options = {'eeg_id':[], 'recording_date':[], 'heartrate_bpm':[], 'stdev_bpm':[], 'wavelit_link': []}
                 for idx in eeg_df["EEGId"].keys():
                     eeg_id = eeg_df["EEGId"][idx]
@@ -126,7 +127,7 @@ def ecg_visualization_dashboard():
                     options['recording_date'].append(recording_date)
                     options['heartrate_bpm'].append(heartrate_bpm)
                     options['stdev_bpm'].append(stdev_bpm)
-                    options['wavelit_link'].append(f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={pid}")
+                    options['wavelit_link'].append(f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={pid}&clinicid={clinic_id}")
 
                 ecg_table = pd.DataFrame(options)
                 st.table(ecg_table)
