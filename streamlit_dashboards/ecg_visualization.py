@@ -1,4 +1,6 @@
 import time
+import json
+import pandas as pd
 
 import boto3
 import streamlit as st
@@ -102,65 +104,92 @@ def ecg_visualization_dashboard():
                     "No ECG data available. Please upload an EEG file on the main page."
                 )
 
-            # Retrieve ahr from session state
-            ahr = st.session_state.get("ahr", None)
+            col3, col4 = st.columns(2)
+            with col3:
+                def get_ecg_stats(eeg_id):
+                    bucket_name = "lake-superior-prod"
+                    json_file_path = f"bronze/analysis/clinical/{eeg_id}.json"
+                    json_obj = s3.get_object(Bucket=bucket_name, Key=json_file_path)
+                    data = json.loads(json_obj['Body'].read())
+                    heartrate_bpm = data['A']['ecg_statistics']['heartrate_bpm']
+                    stdev_bpm = data['A']['ecg_statistics']['stdev_bpm']
+                    return (heartrate_bpm, stdev_bpm)
 
-            if ahr is not None and not ahr.empty:
-                st.header("Edit AHR Predictions")
-                with st.form("ecg_data_editor_form", border=False):
-                    editable_df = ahr.copy()
-                    editable_df["reviewer"] = st.session_state["user"]
-                    edited_df = st.data_editor(
-                        editable_df,
-                        column_config={
-                            "probability": st.column_config.ProgressColumn(
-                                "Probability",
-                                help="The probability of a arrhythmia occurrence (shown as a percentage)",
-                                min_value=0,
-                                max_value=1,  # Assuming the probability is normalized between 0 and 1
-                            ),
-                        },
-                        hide_index=True,
-                    )
-                    # Submit button for the form
-                    submitted = st.form_submit_button("Save Changes")
+                eeg_df = st.session_state.eeg_history
+                pid = st.session_state["pid"]
+                clinic_id = st.session_state["clinicid"]
+                options = {'eeg_id':[], 'recording_date':[], 'heartrate_bpm':[], 'stdev_bpm':[], 'wavelit_link': []}
+                for idx in eeg_df["EEGId"].keys():
+                    eeg_id = eeg_df["EEGId"][idx]
+                    recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+                    (heartrate_bpm, stdev_bpm) = get_ecg_stats(eeg_id)
+                    options['eeg_id'].append(eeg_id)
+                    options['recording_date'].append(recording_date)
+                    options['heartrate_bpm'].append(heartrate_bpm)
+                    options['stdev_bpm'].append(stdev_bpm)
+                    options['wavelit_link'].append(f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={pid}&clinicid={clinic_id}")
 
-                    if submitted:
-                        # Update the session state with the edited DataFrame
-                        st.session_state["ahr"] = edited_df
-                        st.success("Changes saved successfully!")
+                ecg_table = pd.DataFrame(options)
+                st.table(ecg_table)
 
-                        try:
-                            # Convert DataFrame to CSV and save it locally
-                            csv_file_name = f"{st.session_state.eeg_id}.csv"
-                            edited_df.to_csv(csv_file_name, index=False)
+            with col4:
+                # Retrieve ahr from session state
+                ahr = st.session_state.get("ahr", None)
+                if ahr is not None and not ahr.empty:
+                    st.header("Edit AHR Predictions")
+                    with st.form("ecg_data_editor_form", border=False):
+                        editable_df = ahr.copy()
+                        editable_df["reviewer"] = st.session_state["user"]
+                        edited_df = st.data_editor(
+                            editable_df,
+                            column_config={
+                                "probability": st.column_config.ProgressColumn(
+                                    "Probability",
+                                    help="The probability of a arrhythmia occurrence (shown as a percentage)",
+                                    min_value=0,
+                                    max_value=1,  # Assuming the probability is normalized between 0 and 1
+                                ),
+                            },
+                            hide_index=True,
+                        )
+                        # Submit button for the form
+                        submitted = st.form_submit_button("Save Changes")
 
-                            # S3 client setup
-                            s3 = boto3.client("s3")
-                            bucket_name = "lake-superior-prod"
-                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
+                        if submitted:
+                            # Update the session state with the edited DataFrame
+                            st.session_state["ahr"] = edited_df
+                            st.success("Changes saved successfully!")
 
-                            # Adding metadata
-                            processed_date = time.time()
-                            _ = s3.upload_file(
-                                csv_file_name,
-                                bucket_name,
-                                file_path,
-                                ExtraArgs={
-                                    "Metadata": {
-                                        "processed_date": str(processed_date),
-                                        "file_name": csv_file_name,
-                                    }
-                                },
-                            )
-                            print("File uploaded successfully")
-                        except NoCredentialsError:
-                            st.error("Error: Unable to locate credentials")
-                        except PartialCredentialsError:
-                            st.error("Error: Incomplete credentials provided")
-                        except Exception as e:
-                            st.error(f"Error: {e}")
+                            try:
+                                # Convert DataFrame to CSV and save it locally
+                                csv_file_name = f"{st.session_state.eeg_id}.csv"
+                                edited_df.to_csv(csv_file_name, index=False)
 
+                                # S3 client setup
+                                s3 = boto3.client("s3")
+                                bucket_name = "lake-superior-prod"
+                                file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
+
+                                # Adding metadata
+                                processed_date = time.time()
+                                _ = s3.upload_file(
+                                    csv_file_name,
+                                    bucket_name,
+                                    file_path,
+                                    ExtraArgs={
+                                        "Metadata": {
+                                            "processed_date": str(processed_date),
+                                            "file_name": csv_file_name,
+                                        }
+                                    },
+                                )
+                                print("File uploaded successfully")
+                            except NoCredentialsError:
+                                st.error("Error: Unable to locate credentials")
+                            except PartialCredentialsError:
+                                st.error("Error: Incomplete credentials provided")
+                            except Exception as e:
+                                st.error(f"Error: {e}")
 
 # To run the function as a Streamlit app
 if __name__ == "__main__":
