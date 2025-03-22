@@ -17,6 +17,8 @@ from dsp.lab_ecg_stats import ecg_stats
 def ecg_visualization_dashboard():
     # Set page configuration
     # st.set_page_config(page_title="ECG Visualization", layout="wide")
+    # S3 client setup
+    s3 = boto3.client("s3")
 
     # Title
     st.title("ECG Visualization Dashboard")
@@ -165,8 +167,6 @@ def ecg_visualization_dashboard():
                                 csv_file_name = f"{st.session_state.eeg_id}.csv"
                                 edited_df.to_csv(csv_file_name, index=False)
 
-                                # S3 client setup
-                                s3 = boto3.client("s3")
                                 bucket_name = "lake-superior-prod"
                                 file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
 
