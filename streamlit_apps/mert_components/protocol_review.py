@@ -605,6 +605,6 @@ def render_protocol_page(data_manager):
 
 
         pipeline = ngboost_protocol_pipeline.NGBoostProtocolPipeline(mw_object.copy())
-        pipeline.run(time_window=5.12)
+        pipeline.run(time_window=2.56)
         result = pipeline.analysis_json
         fft_plot_ngboost.plot_power_spectrum(result["freqs"], result["psds"], result["bipolar_ngb_protocol"], result["bipolar_ngb_std_dev"])
