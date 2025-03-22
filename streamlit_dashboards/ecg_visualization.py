@@ -17,6 +17,8 @@ from dsp.lab_ecg_stats import ecg_stats
 def ecg_visualization_dashboard():
     # Set page configuration
     # st.set_page_config(page_title="ECG Visualization", layout="wide")
+    # S3 client setup
+    s3 = boto3.client("s3")
 
     # Title
     st.title("ECG Visualization Dashboard")
