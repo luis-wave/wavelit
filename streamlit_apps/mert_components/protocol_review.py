@@ -608,7 +608,7 @@ def render_protocol_page(data_manager):
 
     with visual_col2:
         if "mw_object" not in st.session_state:
-        st.error("Please load EEG data")
+            st.error("Please load EEG data")
 
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
