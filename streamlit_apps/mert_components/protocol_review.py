@@ -330,7 +330,9 @@ def render_protocol_page(data_manager):
             },
             hide_index=True,
         )
+    
 
+    with protocol_col2:
 
         st.header("Phase Editor")
 
@@ -595,10 +597,18 @@ def render_protocol_page(data_manager):
             else:
                 st.warning("Please provide a rejection reason.")
 
-    with protocol_col2:
+    visual_col1, visual_col2 = st.columns([0.67, 0.33])
 
+    with visual_col1:
+
+        pid = st.session_state["pid"]
+        base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-1={pid}"
+        html = f'<iframe src="{base}" frameborder="0" width="100%" height="1000px"></iframe>'
+        components.html(html, height=1000, scrolling=False)
+
+    with visual_col2:
         if "mw_object" not in st.session_state:
-            st.error("Please load EEG data")
+        st.error("Please load EEG data")
 
         if "mw_object" in st.session_state and st.session_state.mw_object:
             mw_object = st.session_state.mw_object
