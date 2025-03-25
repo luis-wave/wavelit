@@ -300,7 +300,7 @@ def render_protocol_page(data_manager):
             "trainNumber",
             "pulseMode",
         ]
-
+        '''
         # Create editable table for each phase - Added unique key
         edited_df = st.data_editor(
             phase_df,
@@ -332,61 +332,7 @@ def render_protocol_page(data_manager):
             hide_index=True,
         )
     
-
-    with protocol_col2:
-
-        st.header("Phase Editor")
-
-        phase_button_col1, phase_button_col2 = st.columns(2)
-
-
-
-        with phase_button_col1:
-            if "phase_count" not in st.session_state:
-                st.session_state["phase_count"] = len(phases) + 1
-
-            if st.session_state["phase_count"] < 4:
-                # Add a button to add new phase
-                if st.button("Add Phase", key="add_phase_button"):
-                    try:
-                        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"]))
-
-                        if presets and "phases" in presets:
-                            preset_phases = presets["phases"]
-                            st.session_state["phases"] = map_preset_to_phases(preset_phases)
-
-
-                        # Increase the count so that next time more phases are added
-                        st.session_state["phase_count"] += 1
-
-                    except Exception as e:
-                        st.error(f"Failed to add new phase: {str(e)}")
-            else:
-                st.write("Cannot add more than three phases.")
-
-        with phase_button_col2:
-            if st.session_state["phase_count"] > 1:
-                # Add a button to add new phase
-                if st.button("Remove Phase", key="remove_phase_button"):
-                    try:
-                        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"] - 1))
-
-                        if presets and "phases" in presets:
-                            preset_phases = presets["phases"]
-                            st.session_state["phases"] = map_preset_to_phases(preset_phases)
-
-
-                        # Increase the count so that next time more phases are added
-                        st.session_state["phase_count"] -= 1
-
-                    except Exception as e:
-                        st.error(f"Failed to add new phase: {str(e)}")
-            else:
-                st.write("Need at least one phase for protocol.")
-
-
-
-
+        '''
         if "phases" in st.session_state:
             phases = st.session_state["phases"]
 
@@ -441,7 +387,7 @@ def render_protocol_page(data_manager):
                 num_rows="fixed",
                 use_container_width=True,
                 key=f"phase_editor",  # Added unique key based on phase index
-                disabled=["recordingDate"] if "recordingDate" in phase_df.columns else [],
+                disabled=True,
                 column_order=visible_columns,
                 column_config={
                     "pulseMode": st.column_config.SelectboxColumn(
@@ -541,62 +487,117 @@ def render_protocol_page(data_manager):
                     except Exception as e:
                         st.error(f"Failed to update protocol: {str(e)}")
 
-        # Create a separate form for actions
-        with st.form("protocol_actions_form"):
-            rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
-            reject_submitted = st.form_submit_button("Reject Protocol")
+    with protocol_col2:
 
-        # Handle form submissions
+        st.header("Phase Editor")
 
-        if reject_submitted:
-            if rejection_reason:
-                try:
-                    # Convert the edited DataFrame back to a list of dicts
-                    edited_phases = edited_df.to_dict(orient="records")
+        @st.dialog("Edit or Reject Protocol")
+        def edit_protocol():
+            phase_button_col1, phase_button_col2 = st.columns(2)
 
-                    for idx,  phase_dict in enumerate(edited_phases):
-                        phase_dict.pop("Phase", None)
-                        if phase_dict["pulseMode"] == "Monophasic":
-                            phase_dict["pulseMode"] = "MONO"
-                        elif phase_dict["pulseMode"] == "Biphasic":
-                            phase_dict["pulseMode"] = "BIPHASIC"
+            with phase_button_col1:
+                if "phase_count" not in st.session_state:
+                    st.session_state["phase_count"] = len(phases) + 1
 
-                        for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
-                            if phase_dict[param] == 0:
-                                phase_dict[param] = None
+                if st.session_state["phase_count"] < 4:
+                    # Add a button to add new phase
+                    if st.button("Add Phase", key="add_phase_button"):
+                        try:
+                            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"]))
 
-                            # Ensure NaN values are explicitly converted to None
-                            if pd.isna(phase_dict[param]):
-                                phase_dict[param] = None
+                            if presets and "phases" in presets:
+                                preset_phases = presets["phases"]
+                                st.session_state["phases"] = map_preset_to_phases(preset_phases)
 
-                        phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
 
-                        if phase_dict["pulseMode"] == "MONO":
-                            phase_dict["pulseParameters"]["phase"] = "MONO"
-                        elif phase_dict["pulseMode"] == "BIPHASIC":
-                            phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+                            # Increase the count so that next time more phases are added
+                            st.session_state["phase_count"] += 1
 
-                    protocol = {
-                        "acknowledgeState": {"clinician": "", "physician": ""},
-                        "approvedByName": "",
-                        "approvedDate": "",
-                        "createdByName": "",
-                        "createdDate": "",
-                        "eegId": data_manager.eeg_id,
-                        "numPhases": len(edited_phases),
-                        "patientId": data_manager.patient_id,
-                        "phases": edited_phases,
-                        "subtype": "CORTICAL",
-                        "totalDuration": 0,
-                        "type": "TREATMENT",
-                    }
+                        except Exception as e:
+                            st.error(f"Failed to add new phase: {str(e)}")
+                else:
+                    st.write("Cannot add more than three phases.")
 
-                    asyncio.run(data_manager.reject_protocol(rejection_reason, protocol))
-                    st.success("Protocol rejected successfully!")
-                except Exception as e:
-                    st.error(f"Failed to reject protocol: {str(e)}")
-            else:
-                st.warning("Please provide a rejection reason.")
+            with phase_button_col2:
+                if st.session_state["phase_count"] > 1:
+                    # Add a button to add new phase
+                    if st.button("Remove Phase", key="remove_phase_button"):
+                        try:
+                            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"] - 1))
+
+                            if presets and "phases" in presets:
+                                preset_phases = presets["phases"]
+                                st.session_state["phases"] = map_preset_to_phases(preset_phases)
+
+
+                            # Increase the count so that next time more phases are added
+                            st.session_state["phase_count"] -= 1
+
+                        except Exception as e:
+                            st.error(f"Failed to add new phase: {str(e)}")
+                else:
+                    st.write("Need at least one phase for protocol.")
+            
+
+            # Create a separate form for actions
+            with st.form("protocol_actions_form"):
+                rejection_reason = st.text_input("Rejection Reason", key="rejection_reason_input")
+                reject_submitted = st.form_submit_button("Reject Protocol")
+
+            # Handle form submissions
+
+            if reject_submitted:
+                if rejection_reason:
+                    try:
+                        # Convert the edited DataFrame back to a list of dicts
+                        edited_phases = edited_df.to_dict(orient="records")
+
+                        for idx,  phase_dict in enumerate(edited_phases):
+                            phase_dict.pop("Phase", None)
+                            if phase_dict["pulseMode"] == "Monophasic":
+                                phase_dict["pulseMode"] = "MONO"
+                            elif phase_dict["pulseMode"] == "Biphasic":
+                                phase_dict["pulseMode"] = "BIPHASIC"
+
+                            for param in  ("burstDuration", "burstFrequency", "burstNumber", "interBurstInterval"):
+                                if phase_dict[param] == 0:
+                                    phase_dict[param] = None
+
+                                # Ensure NaN values are explicitly converted to None
+                                if pd.isna(phase_dict[param]):
+                                    phase_dict[param] = None
+
+                            phase_dict["pulseParameters"] = ast.literal_eval(phase_dict["pulseParameters"])
+
+                            if phase_dict["pulseMode"] == "MONO":
+                                phase_dict["pulseParameters"]["phase"] = "MONO"
+                            elif phase_dict["pulseMode"] == "BIPHASIC":
+                                phase_dict["pulseParameters"]["phase"] = "BIPHASIC"
+
+                        protocol = {
+                            "acknowledgeState": {"clinician": "", "physician": ""},
+                            "approvedByName": "",
+                            "approvedDate": "",
+                            "createdByName": "",
+                            "createdDate": "",
+                            "eegId": data_manager.eeg_id,
+                            "numPhases": len(edited_phases),
+                            "patientId": data_manager.patient_id,
+                            "phases": edited_phases,
+                            "subtype": "CORTICAL",
+                            "totalDuration": 0,
+                            "type": "TREATMENT",
+                        }
+
+                        asyncio.run(data_manager.reject_protocol(rejection_reason, protocol))
+                        st.success("Protocol rejected successfully!")
+                    except Exception as e:
+                        st.error(f"Failed to reject protocol: {str(e)}")
+                else:
+                    st.warning("Please provide a rejection reason.")
+        
+        if st.button("Edit or Reject Protocol"):
+            edit_protocol()
 
     visual_col1, visual_col2 = st.columns([0.67, 0.33])
 
