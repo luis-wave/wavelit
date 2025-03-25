@@ -10,7 +10,7 @@ Wavelit is a Streamlit application designed to streamline and enhance the workfl
 ## Key Features
 
 ### Sigma Dashboards
-Seamless integration with our data platform. These dashboards are specifically designed to pull EEG records on the queue for report and protocol processing. Data from this platform is automatically pulled into Wavelit, allowing for easy retrieval, processing, and analysis. This integration eliminates the need for manual data entry, reducing the risk of errors and freeing up valuable time for lab personnel.
+Seamless integration with our data platform. These dashboards are specifically designed to pull EEG records on the queue for report and protocol processing. Data from this platform is automatically pulled into Wavelit, allowing for easy retrieval, processing, and analysis. This integration eliminates the need for manual data entry, reducing the risk of errors and freeing up valuable time for lab personnel. 
 
 ![sigma](images/sigma.png)
 
