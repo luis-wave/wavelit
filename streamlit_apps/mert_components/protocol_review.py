@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 import streamlit as st
 import streamlit_shadcn_ui as ui
+import streamlit.components.v1 as components
 from utils.helpers import calculate_age, format_datetime
 from .review_utils import EEGReviewState, mert2_user
 from mywaveanalytics.pipelines import ngboost_protocol_pipeline
