@@ -29,7 +29,6 @@ from streamlit_apps.mert_components.review_utils import EEGReviewState
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
 
-PROTOCOL_FFT_ONLY = os.getenv("PROTOCOL_FFT_ONLY")
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"

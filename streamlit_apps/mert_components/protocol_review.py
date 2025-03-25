@@ -600,7 +600,8 @@ def render_protocol_page(data_manager):
     visual_col1, visual_col2 = st.columns([0.67, 0.33])
 
     with visual_col1:
-
+        
+        PROTOCOL_FFT_ONLY = os.getenv("PROTOCOL_FFT_ONLY")
         pid = st.session_state["pid"]
         base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-1={pid}"
         html = f'<iframe src="{base}" frameborder="0" width="100%" height="1000px"></iframe>'
