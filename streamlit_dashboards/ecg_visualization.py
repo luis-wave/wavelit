@@ -106,35 +106,7 @@ def ecg_visualization_dashboard():
                     "No ECG data available. Please upload an EEG file on the main page."
                 )
 
-            # col3, col4 = st.columns(2)
-            # with col3:
-            #     def get_ecg_stats(eeg_id):
-            #         bucket_name = "lake-superior-prod"
-            #         json_file_path = f"bronze/analysis/clinical/{eeg_id}.json"
-            #         json_obj = s3.get_object(Bucket=bucket_name, Key=json_file_path)
-            #         data = json.loads(json_obj['Body'].read())
-            #         heartrate_bpm = data['A']['ecg_statistics']['heartrate_bpm']
-            #         stdev_bpm = data['A']['ecg_statistics']['stdev_bpm']
-            #         return (heartrate_bpm, stdev_bpm)
 
-            #     eeg_df = st.session_state.eeg_history
-            #     pid = st.session_state["pid"]
-            #     clinic_id = st.session_state["clinicid"]
-            #     options = {'eeg_id':[], 'recording_date':[], 'heartrate_bpm':[], 'stdev_bpm':[], 'wavelit_link': []}
-            #     for idx in eeg_df["EEGId"].keys():
-            #         eeg_id = eeg_df["EEGId"][idx]
-            #         recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
-            #         (heartrate_bpm, stdev_bpm) = get_ecg_stats(eeg_id)
-            #         options['eeg_id'].append(eeg_id)
-            #         options['recording_date'].append(recording_date)
-            #         options['heartrate_bpm'].append(heartrate_bpm)
-            #         options['stdev_bpm'].append(stdev_bpm)
-            #         options['wavelit_link'].append(f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={pid}&clinicid={clinic_id}")
-
-            #     ecg_table = pd.DataFrame(options)
-            #     st.table(ecg_table)
-
-            # with col4:
             # Retrieve ahr from session state
             ahr = st.session_state.get("ahr", None)
             if ahr is not None and not ahr.empty:
