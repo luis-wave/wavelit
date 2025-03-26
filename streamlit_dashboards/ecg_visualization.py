@@ -11,7 +11,10 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
 from dsp.lab_ecg_stats import ecg_stats
+import os
 
+DATABRICKS_BUCKET = os.getenv("DATABRICKS_BUCKET")
+ABNORMALITY_FEEDBACK_BUCKET = os.getenv("ABNORMALITY_FEEDBACK_BUCKET")
 
 
 def ecg_visualization_dashboard():
@@ -139,14 +142,13 @@ def ecg_visualization_dashboard():
                             csv_file_name = f"{st.session_state.eeg_id}.csv"
                             edited_df.to_csv(csv_file_name, index=False)
 
-                            bucket_name = "lake-superior-prod"
-                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
+                            file_path = f"{ABNORMALITY_FEEDBACK_BUCKET}/ahr/{csv_file_name}"
 
                             # Adding metadata
                             processed_date = time.time()
                             _ = s3.upload_file(
                                 csv_file_name,
-                                bucket_name,
+                                DATABRICKS_BUCKET,
                                 file_path,
                                 ExtraArgs={
                                     "Metadata": {
