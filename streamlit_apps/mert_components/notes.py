@@ -5,8 +5,6 @@ import streamlit as st
 
 from utils.helpers import format_datetime, parse_recording_date
 from streamlit_apps.mert_components.review_utils import EEGReviewState
-from services.mert2_data_management.mert_data_manager import MeRTDataManager
-
 
 
 @st.fragment
@@ -108,20 +106,21 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         reverse=True
     )
 
-    eeg_df = st.session_state.eeg_history
-    options = {}
-    for idx in eeg_df["EEGId"].keys():
-        eeg_id = eeg_df["EEGId"][idx]
-        recording_date = eeg_df["RecordingDate"][idx].strftime("%a, %B %d %Y, %I:%M:%S %p")
-        options[recording_date] = eeg_id
-
     # Render notes with preserved formatting
     for recording_date in sorted_recording_dates:
         notes = consolidated_notes[recording_date]
+        times = recording_date.split(' ')
+        dow = times[0]
+        month = times[1]
+        day = times[2]
+        year = times[3]
+        toeeg = times[4] + ' ' + times[5]
+        timeHold = dow + ' ' + month + ' ' + day[0:-2] + ' ' + year + ' ' + toeeg
 
+        recording_dateTime = datetime.strptime(timeHold, "%a, %B %d %Y, %I:%M:%S %p")
         st.markdown(f"### Notes from {recording_date}", help="Recording date of the EEG session")
         for note in notes:
-            st.date_input("Recording Date", value=recording_date, disabled=True)
+            st.date_input("Recording Date", value=recording_dateTime, disabled=True)
             st.date_input("Date Edited", value=note["dateEdited"], disabled=True)
             subject = note["subject"]
             content = note['content']
@@ -134,14 +133,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
                     "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 }
                 try:
-                    eegid = options[recording_date]
-                    new_data_manager = MeRTDataManager(
-                        patient_id=st.session_state["pid"],
-                        eeg_id=eegid,
-                        clinic_id=st.session_state["clinicid"],
-                    )
-
-                    asyncio.run(new_data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=recording_date)) 
+                    asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=recording_date))
                     st.success("Note edited successfully!")
                     st.rerun()  # Rerun the app to refresh the notes list
                 except Exception as e:
