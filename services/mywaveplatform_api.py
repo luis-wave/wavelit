@@ -89,8 +89,12 @@ class MyWavePlatformApi:
                     response.raise_for_status()
 
                     ecg_statistics = (await response.json()).get("ecg_statistics", {})
-                    heart_rate = ecg_statistics.get("heartrate_bpm")
-                    stdev_bpm = ecg_statistics.get("stdev_bpm")
+
+                    if ecg_statistics:
+                        heart_rate = ecg_statistics.get("heartrate_bpm")
+                        stdev_bpm = ecg_statistics.get("stdev_bpm")
+                    else:
+                        heart_rate, stdev_bpm = 0, 0
 
                     return heart_rate, stdev_bpm
         except aiohttp.ClientError as e:
