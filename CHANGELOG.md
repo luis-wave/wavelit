@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
 - NAT_Type error, missing EEG recording date.
+- Reconcile heart rate with MWP.
 
 ## [2.17.2] - 2025-03-25
 ### Changed
