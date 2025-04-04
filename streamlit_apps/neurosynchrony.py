@@ -6,6 +6,7 @@ Set up the primary UI for eeg report and protocol review.
 import asyncio
 import logging
 import os
+import pandas as pd
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -123,7 +124,10 @@ def eeg_dropdown():
     for idx in eeg_df["EEGId"].keys():
         eeg_id = eeg_df["EEGId"][idx]
         # Format the recording date in mm-dd-yyyy format
-        recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        recording_date = (
+            "Unknown Date" if pd.isna(eeg_df["RecordingDate"][idx])
+            else eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        )
         display_text = f"{eeg_id} ({recording_date})"
         options.append((display_text, eeg_id))
 
@@ -381,34 +385,34 @@ with col1:
                     delete_report(data_manager, report_id, ref="cz")
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        eegid = st.session_state["eegid"]
-        eeg_bucket = "lake-superior-prod"
-        eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-        if eegid:
-            if not key_exists(eeg_bucket, eeg_s3_path):
-                edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-                if not key_exists(eeg_bucket, edf_path):
-                    raise Exception("EEG could not be found.")
-                else:
-                    eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-                    eeg_content = eeg_obj["Body"].read()
-                    fname = f"{eegid}.edf"
-            else:
-                eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-                eeg_content = eeg_obj["Body"].read()
-                fname = f"{eegid}.dat"
-        else:
-            eeg_content = "empty file"
-            fname = "empty_file.txt"
-        if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-            try:
-                st.write(f"EEG:'{eegid}' downloaded successfully")
-            except NoCredentialsError:
-                st.error("Error: Unable to locate credentials")
-            except PartialCredentialsError:
-                st.error("Error: Incomplete credentials provided")
-            except Exception as e:
-                st.error(f"Error: {e}")
+        # eegid = st.session_state["eegid"]
+        # eeg_bucket = "lake-superior-prod"
+        # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
+        # if eegid:
+        #     if not key_exists(eeg_bucket, eeg_s3_path):
+        #         edf_path = f"bronze/eegs/clinical/{eegid}.edf"
+        #         if not key_exists(eeg_bucket, edf_path):
+        #             raise Exception("EEG could not be found.")
+        #         else:
+        #             eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
+        #             eeg_content = eeg_obj["Body"].read()
+        #             fname = f"{eegid}.edf"
+        #     else:
+        #         eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
+        #         eeg_content = eeg_obj["Body"].read()
+        #         fname = f"{eegid}.dat"
+        # else:
+        #     eeg_content = "empty file"
+        #     fname = "empty_file.txt"
+        # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
+        #     try:
+        #         st.write(f"EEG:'{eegid}' downloaded successfully")
+        #     except NoCredentialsError:
+        #         st.error("Error: Unable to locate credentials")
+        #     except PartialCredentialsError:
+        #         st.error("Error: Incomplete credentials provided")
+        #     except Exception as e:
+        #         st.error(f"Error: {e}")
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):
