@@ -40,6 +40,10 @@ phases:
         --build-arg DODS_PATIENT_DASHBOARD=$DODS_PATIENT_DASHBOARD
         --build-arg SIGMA_DODS_AB_DBOARD=$SIGMA_DODS_AB_DBOARD
         --build-arg APP_NEURALINK_SERVICE_URL=$APP_NEURALINK_SERVICE_URL
+        --build-arg DATABRICKS_BUCKET=$DATABRICKS_BUCKET
+        --build-arg ABNORMALITY_FEEDBACK_BUCKET=$ABNORMALITY_FEEDBACK_BUCKET
+
+
         .
       - echo Tagging the Docker image...
       - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG

@@ -18,6 +18,11 @@ import graph_helpers.eeg_viewer_helper as evh
 from data_models.abnormality_parsers import serialize_aea_to_pandas
 from graphs.eeg_viewer import draw_eeg_graph
 
+import os
+
+DATABRICKS_BUCKET = os.getenv("DATABRICKS_BUCKET")
+ABNORMALITY_FEEDBACK_BUCKET = os.getenv("ABNORMALITY_FEEDBACK_BUCKET")
+
 
 def eeg_visualization_dashboard():
     # Title
@@ -337,14 +342,13 @@ def eeg_visualization_dashboard():
 
                                             # S3 client setup
                                             s3 = boto3.client("s3")
-                                            bucket_name = "lake-superior-prod"
-                                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/aea/{csv_file_name}_{selected_reference}.csv"
+                                            file_path = f"{ABNORMALITY_FEEDBACK_BUCKET}/aea/{csv_file_name}_{selected_reference}.csv"
 
                                             # Adding metadata
                                             processed_date = time.time()
                                             _ = s3.upload_file(
                                                 csv_file_name,
-                                                bucket_name,
+                                                DATABRICKS_BUCKET,
                                                 file_path,
                                                 ExtraArgs={
                                                     "Metadata": {
