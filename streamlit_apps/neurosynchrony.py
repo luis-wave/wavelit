@@ -368,7 +368,11 @@ with col1:
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
 
-        if st.download_button(label="Download EEG", data= asyncio.run(data_manager.download_eeg_file()), mime="application/octet-stream", file_name=eeg_filename):
+        # Swap out original filename with eeg id, life is better that way.
+        base, ext = os.path.splitext(os.path.basename(eeg_filename))
+        new_filename = eeg_filename.replace(base, st.session_state.eegid)
+
+        if st.download_button(label="Download EEG", data= asyncio.run(data_manager.download_eeg_file()), mime="application/octet-stream", file_name=new_filename):
             pass
 
         st.header("EEG History")
