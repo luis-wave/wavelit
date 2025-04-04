@@ -125,8 +125,7 @@ class EEGDataManager:
                 if mw_object:
                     st.success("EEG Data loaded successfully!")
                     self.save_eeg_data_to_session(mw_object, uploaded_file.name, None)
-                    pipeline = StandardPipeline(mw_object)
-                    pipeline.run()
+
 
 
     async def handle_downloaded_file(self, eeg_id):
@@ -145,15 +144,17 @@ class EEGDataManager:
                 mw_object = self.load_mw_object(downloaded_path, eeg_type)
                 if mw_object:
                     self.save_eeg_data_to_session(mw_object, downloaded_path, eeg_id)
-                    pipeline = StandardPipeline(mw_object)
-                    pipeline.run()
+
             try:
                 os.remove(downloaded_path)
             except Exception as e:
                 st.error(f"Failed to delete the temporary file: {e}")
 
     async def get_heart_rate_variables(self, eeg_id):
-        return await self.api_service.get_heart_rate_variables(eeg_id, self.headers)
+        heart_rate, stdev_bpm = await self.api_service.get_heart_rate_variables(eeg_id, self.headers)
+        st.session_state.heart_rate = heart_rate or 0
+        st.session_state.heart_rate_std_dev = stdev_bpm or 0
+
 
     async def fetch_additional_data(self, eeg_id):
         ahr, aea, autoreject = await asyncio.gather(
