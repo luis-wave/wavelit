@@ -27,9 +27,6 @@ from utils.helpers import calculate_age
 import streamlit_shadcn_ui as ui
 from streamlit_apps.mert_components.review_utils import EEGReviewState
 
-import boto3
-from botocore.exceptions import NoCredentialsError, PartialCredentialsError, ClientError
-
 
 logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
@@ -147,19 +144,7 @@ def eeg_dropdown():
     return selected_option
 
 
-s3 = boto3.client("s3")
-# helper func for checking key exists in s3
-def key_exists(bucket, key):
-    try:
-        s3.head_object(Bucket=bucket, Key=key)
-        return True
-    except ClientError as e:
-        if e.response["Error"]["Code"] == "404":
-            print(f"Key: '{key}' does not exist!")
-        else:
-            print("Something else went wrong")
-            raise
-        return False
+
 
 
 
@@ -330,6 +315,7 @@ with col1:
 
         eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
         analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
+        eeg_filename = eeg_info["eegInfo"]['fileName']
         current_state = (
             EEGReviewState[analysis_meta["reviewState"]]
             if analysis_meta["reviewState"]
@@ -385,34 +371,15 @@ with col1:
                     delete_report(data_manager, report_id, ref="cz")
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
-        # eegid = st.session_state["eegid"]
-        # eeg_bucket = "lake-superior-prod"
-        # eeg_s3_path = f"bronze/eegs/clinical/{eegid}.dat"
-        # if eegid:
-        #     if not key_exists(eeg_bucket, eeg_s3_path):
-        #         edf_path = f"bronze/eegs/clinical/{eegid}.edf"
-        #         if not key_exists(eeg_bucket, edf_path):
-        #             raise Exception("EEG could not be found.")
-        #         else:
-        #             eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=edf_path)
-        #             eeg_content = eeg_obj["Body"].read()
-        #             fname = f"{eegid}.edf"
-        #     else:
-        #         eeg_obj = s3.get_object(Bucket=eeg_bucket, Key=eeg_s3_path)
-        #         eeg_content = eeg_obj["Body"].read()
-        #         fname = f"{eegid}.dat"
-        # else:
-        #     eeg_content = "empty file"
-        #     fname = "empty_file.txt"
-        # if st.download_button(label="Download EEG", data=eeg_content, file_name=fname):
-        #     try:
-        #         st.write(f"EEG:'{eegid}' downloaded successfully")
-        #     except NoCredentialsError:
-        #         st.error("Error: Unable to locate credentials")
-        #     except PartialCredentialsError:
-        #         st.error("Error: Incomplete credentials provided")
-        #     except Exception as e:
-        #         st.error(f"Error: {e}")
+
+
+        # Swap out original filename with eeg id, life is better that way.
+        base, ext = os.path.splitext(os.path.basename(eeg_filename))
+        new_filename = eeg_filename.replace(base, st.session_state.eegid)
+
+        if st.download_button(label="Download EEG", data= asyncio.run(data_manager.download_eeg_file()), mime="application/octet-stream", file_name=new_filename):
+            pass
+
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):
