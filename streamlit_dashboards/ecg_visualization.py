@@ -47,7 +47,10 @@ def ecg_visualization_dashboard():
 
             col2.metric("Recording Date", st.session_state.recording_date)
 
-            st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
+            if heart_rate_bpm==0 and heart_rate_std_dev==0:
+                st.header(f"Heart Rate (bpm): No results available")
+            else:
+                st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
             # Check if `mw_object` is available
             if (

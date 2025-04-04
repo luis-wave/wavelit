@@ -6,6 +6,7 @@ Set up the primary UI for eeg report and protocol review.
 import asyncio
 import logging
 import os
+import pandas as pd
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -120,7 +121,10 @@ def eeg_dropdown():
     for idx in eeg_df["EEGId"].keys():
         eeg_id = eeg_df["EEGId"][idx]
         # Format the recording date in mm-dd-yyyy format
-        recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        recording_date = (
+            "Unknown Date" if pd.isna(eeg_df["RecordingDate"][idx])
+            else eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
+        )
         display_text = f"{eeg_id} ({recording_date})"
         options.append((display_text, eeg_id))
 
@@ -368,12 +372,14 @@ with col1:
                     st.success(f"Neuroref Cz {report_id} successfully deleted!")
 
 
+
         # Swap out original filename with eeg id, life is better that way.
         base, ext = os.path.splitext(os.path.basename(eeg_filename))
         new_filename = eeg_filename.replace(base, st.session_state.eegid)
 
         if st.download_button(label="Download EEG", data= asyncio.run(data_manager.download_eeg_file()), mime="application/octet-stream", file_name=new_filename):
             pass
+
 
         st.header("EEG History")
         with st.form("data_editor_form", border=False):
