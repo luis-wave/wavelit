@@ -11,7 +11,10 @@ from mywaveanalytics.pipelines.abnormality_detection_pipeline import \
 from data_models.abnormality_parsers import serialize_ahr_to_pandas
 from graphs.ecg_viewer import draw_ecg_figure
 from dsp.lab_ecg_stats import ecg_stats
+import os
 
+DATABRICKS_BUCKET = os.getenv("DATABRICKS_BUCKET")
+ABNORMALITY_FEEDBACK_BUCKET = os.getenv("ABNORMALITY_FEEDBACK_BUCKET")
 
 
 def ecg_visualization_dashboard():
@@ -44,7 +47,10 @@ def ecg_visualization_dashboard():
 
             col2.metric("Recording Date", st.session_state.recording_date)
 
-            st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
+            if heart_rate_bpm==0 and heart_rate_std_dev==0:
+                st.header(f"Heart Rate (bpm): No results available")
+            else:
+                st.header(f"Heart Rate (bpm): {heart_rate_bpm} ± {heart_rate_std_dev}")
 
             # Check if `mw_object` is available
             if (
@@ -106,35 +112,7 @@ def ecg_visualization_dashboard():
                     "No ECG data available. Please upload an EEG file on the main page."
                 )
 
-            # col3, col4 = st.columns(2)
-            # with col3:
-            #     def get_ecg_stats(eeg_id):
-            #         bucket_name = "lake-superior-prod"
-            #         json_file_path = f"bronze/analysis/clinical/{eeg_id}.json"
-            #         json_obj = s3.get_object(Bucket=bucket_name, Key=json_file_path)
-            #         data = json.loads(json_obj['Body'].read())
-            #         heartrate_bpm = data['A']['ecg_statistics']['heartrate_bpm']
-            #         stdev_bpm = data['A']['ecg_statistics']['stdev_bpm']
-            #         return (heartrate_bpm, stdev_bpm)
 
-            #     eeg_df = st.session_state.eeg_history
-            #     pid = st.session_state["pid"]
-            #     clinic_id = st.session_state["clinicid"]
-            #     options = {'eeg_id':[], 'recording_date':[], 'heartrate_bpm':[], 'stdev_bpm':[], 'wavelit_link': []}
-            #     for idx in eeg_df["EEGId"].keys():
-            #         eeg_id = eeg_df["EEGId"][idx]
-            #         recording_date = eeg_df["RecordingDate"][idx].strftime("%b %d, %Y")
-            #         (heartrate_bpm, stdev_bpm) = get_ecg_stats(eeg_id)
-            #         options['eeg_id'].append(eeg_id)
-            #         options['recording_date'].append(recording_date)
-            #         options['heartrate_bpm'].append(heartrate_bpm)
-            #         options['stdev_bpm'].append(stdev_bpm)
-            #         options['wavelit_link'].append(f"https://lab.wavesynchrony.com/?eegid={eeg_id}&pid={pid}&clinicid={clinic_id}")
-
-            #     ecg_table = pd.DataFrame(options)
-            #     st.table(ecg_table)
-
-            # with col4:
             # Retrieve ahr from session state
             ahr = st.session_state.get("ahr", None)
             if ahr is not None and not ahr.empty:
@@ -167,14 +145,13 @@ def ecg_visualization_dashboard():
                             csv_file_name = f"{st.session_state.eeg_id}.csv"
                             edited_df.to_csv(csv_file_name, index=False)
 
-                            bucket_name = "lake-superior-prod"
-                            file_path = f"eeg-lab/abnormality_bucket/streamlit_validations/ahr/{csv_file_name}"
+                            file_path = f"{ABNORMALITY_FEEDBACK_BUCKET}/ahr/{csv_file_name}"
 
                             # Adding metadata
                             processed_date = time.time()
                             _ = s3.upload_file(
                                 csv_file_name,
-                                bucket_name,
+                                DATABRICKS_BUCKET,
                                 file_path,
                                 ExtraArgs={
                                     "Metadata": {
