@@ -109,18 +109,9 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Render notes with preserved formatting
     for recording_date in sorted_recording_dates:
         notes = consolidated_notes[recording_date]
-        times = recording_date.split(' ')
-        dow = times[0]
-        month = times[1]
-        day = times[2]
-        year = times[3]
-        toeeg = times[4] + ' ' + times[5]
-        timeHold = dow + ' ' + month + ' ' + day[0:-2] + ' ' + year + ' ' + toeeg
-
-        recording_dateTime = datetime.strptime(timeHold, "%a, %B %d %Y, %I:%M:%S %p")
         st.markdown(f"### Notes from {recording_date}", help="Recording date of the EEG session")
         for note in notes:
-            st.date_input("Recording Date", value=recording_dateTime, disabled=True)
+            st.text_input("Recording Date", value=recording_date, disabled=True)
             st.date_input("Date Edited", value=note["dateEdited"], disabled=True)
             subject = note["subject"]
             content = note['content']
