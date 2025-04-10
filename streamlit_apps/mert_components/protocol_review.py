@@ -1,6 +1,7 @@
 import ast
 import os
 import asyncio
+import numpy as np
 from datetime import datetime
 
 import pandas as pd
@@ -331,7 +332,7 @@ def render_protocol_page(data_manager):
             },
             hide_index=True,
         )
-    
+
 
     with protocol_col2:
 
@@ -601,7 +602,7 @@ def render_protocol_page(data_manager):
     visual_col1, visual_col2 = st.columns([0.67, 0.33])
 
     with visual_col1:
-        
+
         PROTOCOL_FFT_ONLY = os.getenv("PROTOCOL_FFT_ONLY")
         pid = st.session_state["pid"]
         base = PROTOCOL_FFT_ONLY+f"?c_protocol_Patient-Id-1={pid}"
@@ -619,4 +620,23 @@ def render_protocol_page(data_manager):
         pipeline = ngboost_protocol_pipeline.NGBoostProtocolPipeline(mw_object.copy())
         pipeline.run(time_window=2.56)
         result = pipeline.analysis_json
-        fft_plot_ngboost.plot_power_spectrum(result["freqs"], result["psds"], result["bipolar_ngb_protocol"], result["bipolar_ngb_std_dev"])
+
+        f = np.array(result["freqs"])
+        psd = np.array(result["psds"])
+        magnitude_spectra = (psd * 10**12) ** 0.5
+
+        bipolar_ngb_protocol = result["bipolar_ngb_protocol"]
+        bipolar_ngb_std_dev = result["bipolar_ngb_std_dev"]
+        burst_ngb_protocol = result["burst_ngb_protocol"]
+        burst = result["burst_freq"]
+
+        if bipolar_ngb_std_dev > 0.4:
+            bipolar_ngb_protocol = burst
+
+        fft_plot_ngboost.plot_power_spectrum(f, magnitude_spectra, bipolar_ngb_protocol, bipolar_ngb_std_dev)
+
+        # Plot detected alpha bursts oscillations across posterior region.
+        cycle_df =pd.DataFrame(result['cycles_data'])
+
+        fft_plot_ngboost.plot_burst_analysis(cycle_df, f, magnitude_spectra.mean(axis=0), burst_ngb_protocol, burst)
+

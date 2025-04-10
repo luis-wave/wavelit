@@ -441,6 +441,24 @@ files = [
 beautifulsoup4 = "*"
 
 [[package]]
+name = "bycycle"
+version = "1.1.0"
+description = "Cycle-by-cycle analyses of neural oscillations."
+optional = false
+python-versions = ">=3.6"
+files = [
+    {file = "bycycle-1.1.0-py3-none-any.whl", hash = "sha256:e5c4430fd25070d912adfb5eea9247b17ee958ccc31091f1bb5e09d894b2d95a"},
+    {file = "bycycle-1.1.0.tar.gz", hash = "sha256:086ae9f8f8f976ae9dc2f9180af384a70d8fe06b60035283754b5b7d7e23c33f"},
+]
+
+[package.dependencies]
+matplotlib = ">=3.0.3"
+neurodsp = ">=2.2.1"
+numpy = ">=1.18.5"
+pandas = ">=0.25.3"
+scipy = ">=1.4.1"
+
+[[package]]
 name = "cachetools"
 version = "5.5.0"
 description = "Extensible memoizing collections and decorators"
@@ -1958,7 +1976,7 @@ files = [
 
 [[package]]
 name = "mywaveanalytics"
-version = "4.0.0"
+version = "4.0.5"
 description = "Analytics engine for Wave Neuro's eeg processing data pipelines."
 optional = false
 python-versions = "^3.10, <3.13"
@@ -1970,6 +1988,7 @@ antropy = "0.1.5"
 astropy = "5.1.1"
 autoreject = "0.4.3"
 boto3 = "1.16.63"
+bycycle = "^1.1.0"
 dataclasses-json = "^0.6.4"
 fooof = "^1.1.0"
 hrv-analysis = "1.0.4"
@@ -1977,7 +1996,6 @@ joblib = "1.2.0"
 mne = "1.1.0"
 mne-connectivity = "0.5.0"
 networkx = "2.8.8"
-neurodsp = "2.1.0"
 ngboost = "0.5.1"
 numpy = "1.23.5"
 pandas = "1.4.0"
@@ -1996,7 +2014,7 @@ toml = "0.10.2"
 type = "git"
 url = "https://github.com/waveneuroscience/MyWaveAnalytics.git"
 reference = "MWP-290"
-resolved_reference = "87f69aa3a3977d05f5a9445fa60a2d4d7a8a4a19"
+resolved_reference = "4e4384fd7b2eb378e1d31ce2534838047380285a"
 
 [[package]]
 name = "netcdf4"
@@ -2065,13 +2083,13 @@ test = ["codecov (>=2.1)", "pytest (>=7.2)", "pytest-cov (>=4.0)"]
 
 [[package]]
 name = "neurodsp"
-version = "2.1.0"
+version = "2.3.0"
 description = "Digital signal processing for neural time series."
 optional = false
-python-versions = ">=3.5"
+python-versions = ">=3.6"
 files = [
-    {file = "neurodsp-2.1.0-py3-none-any.whl", hash = "sha256:9307269367aa2fdc6e571158979cb3d9071c6ecaa5ba6580667afac492ab74b3"},
-    {file = "neurodsp-2.1.0.tar.gz", hash = "sha256:4ec713c3dda5bc3af7facf5b81ee5374fe520b131e71cc16e66f02834a07ff7f"},
+    {file = "neurodsp-2.3.0-py3-none-any.whl", hash = "sha256:a88698fb05298a9b682488140c2ce93a095699ba895e91817191fde79806c48f"},
+    {file = "neurodsp-2.3.0.tar.gz", hash = "sha256:0aab3d2bf5729b06f9925f8251f5111f0e6119f07aaa5522a0a1f750765b5639"},
 ]
 
 [package.dependencies]
