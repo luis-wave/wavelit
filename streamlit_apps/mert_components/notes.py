@@ -112,7 +112,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         st.markdown(f"### Notes from {recording_date}", help="Recording date of the EEG session")
         for note in notes:
             st.text_input("Recording Date", value=recording_date, disabled=True)
-            st.date_input("Date Edited", value=note["dateEdited"], disabled=True)
+            st.text_input("Date Edited", value=note["dateEdited"], disabled=True)
             subject = note["subject"]
             content = note['content']
             edit_note = st.form_submit_button("Edit Note")
