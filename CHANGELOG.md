@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.19.0] - 2025-04-10
+### Added
+- Ability to edit all historical pt notes.
+
+## [2.18.0] - 2025-04-10
+### Added
+- NGBoost Protocol generator, trained with burst data.
+
 
 ## [2.17.4]
 ### Fixed
@@ -15,10 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - NAT_Type error, missing EEG recording date.
 - Reconcile heart rate with MWP.
-
-## [2.18.0] - 2025-03-27
-### Added
-- All historical notes are editable now
 
 ## [2.17.2] - 2025-03-25
 ### Changed
