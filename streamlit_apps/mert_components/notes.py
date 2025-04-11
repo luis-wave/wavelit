@@ -109,24 +109,24 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Render notes with preserved formatting
     for recording_date in sorted_recording_dates:
         notes = consolidated_notes[recording_date]
-        st.markdown(f"### Notes from {recording_date}", help="Recording date of the EEG session")
         for note in notes:
-            st.text_input("Recording Date", value=recording_date, disabled=True)
-            st.text_input("Date Edited", value=note["dateEdited"], disabled=True)
-            subject = note["subject"]
-            content = note['content']
-            edit_note = st.form_submit_button("Edit Note")
-            if edit_note:
-                new_note = {
-                    "recordingDate": recording_date, 
-                    "subject": subject,
-                    "content": content,
-                    "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                }
-                try:
-                    asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=recording_date))
-                    st.success("Note edited successfully!")
-                    st.rerun()  # Rerun the app to refresh the notes list
-                except Exception as e:
-                    st.error(f"Failed to add note: {str(e)}")
+            with st.form(f"### Notes from {recording_date}"):
+                st.text_input("Recording Date", value=recording_date, disabled=True)
+                st.text_input("Date Edited", value=note["dateEdited"], disabled=True)
+                subject = note["subject"]
+                content = note['content']
+                edit_note = st.form_submit_button("Edit Note")
+                if edit_note:
+                    new_note = {
+                        "recordingDate": recording_date, 
+                        "subject": subject,
+                        "content": content,
+                        "dateEdited": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    }
+                    try:
+                        asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=recording_date))
+                        st.success("Note edited successfully!")
+                        st.rerun()  # Rerun the app to refresh the notes list
+                    except Exception as e:
+                        st.error(f"Failed to add note: {str(e)}")
         st.divider()
