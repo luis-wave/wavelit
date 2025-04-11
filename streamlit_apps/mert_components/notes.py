@@ -113,8 +113,8 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
             with st.form(f"### Notes from {recording_date}"):
                 st.text_input("Recording Date", value=recording_date, disabled=True)
                 st.text_input("Date Edited", value=note["dateEdited"], disabled=True)
-                subject = note["subject"]
-                content = note['content']
+                subject = st.text_input(label="Subject", value=note["subject"])
+                content = st.text_area(label="Content", value=note['content'])
                 edit_note = st.form_submit_button("Edit Note")
                 if edit_note:
                     new_note = {
