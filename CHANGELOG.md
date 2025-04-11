@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - NGBoost Protocol generator, trained with burst data.
 
 
+## [2.18.0] - 2025-04-10
+### Added
+- NGBoost Protocol generator, trained with burst data.
+
+
 ## [2.17.4]
 ### Fixed
 - Download button uses MeRT 2 API, prevents app from breaking in local development.
