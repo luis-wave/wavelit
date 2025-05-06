@@ -1,20 +1,34 @@
 {
-  "name": "MyWaveAnalytics Dev Container",
-  "image": "mcr.microsoft.com/devcontainers/python:3.9",
-  "features": {
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.9"
-    }
+  "name": "WaveNeuro Analytics",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
   },
-  "postCreateCommand": "pip install --upgrade pip && pip install -r requirements.txt && pip install -e .",
   "customizations": {
     "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.formatting.provider": "black",
+        "python.formatting.blackPath": "${workspaceFolder}/.venv/bin/black",
+        "python.linting.enabled": true,
+        "python.linting.pylintEnabled": true,
+        "python.linting.pylintPath": "${workspaceFolder}/.venv/bin/pylint",
+        "editor.formatOnSave": true,
+        "editor.rulers": [
+          88
+        ],
+        "python.analysis.extraPaths": [
+          "${workspaceFolder}"
+        ]
+      },
       "extensions": [
         "ms-python.python",
-        "ms-python.vscode-pylance"
+        "ms-python.vscode-pylance",
+        "ms-toolsai.jupyter",
+        "njpwerner.autodocstring"
       ]
     }
   },
-  "forwardPorts": [],
+  "postCreateCommand": "poetry install",
   "remoteUser": "vscode"
 }
