@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 - EEG Review Status is no longer updated when the protocol is reviewed.
 
+### Fixed
+- Alpha burst detection.
+
 
 
 ## [2.18.0] - 2025-04-10
