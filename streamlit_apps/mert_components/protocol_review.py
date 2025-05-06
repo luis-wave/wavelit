@@ -531,12 +531,6 @@ def render_protocol_page(data_manager):
                         asyncio.run(data_manager.save_protocol(protocol))
                         asyncio.run(data_manager.save_protocol(protocol))
 
-                        asyncio.run(
-                            data_manager.update_eeg_review(
-                                is_first_reviewer=(current_state == EEGReviewState.PENDING),
-                                state=EEGReviewState.COMPLETED.name,
-                            )
-                        )
                         st.success("Protocol updated successfully!")
                         st.rerun()
                     except Exception as e:
@@ -618,7 +612,7 @@ def render_protocol_page(data_manager):
 
 
         pipeline = ngboost_protocol_pipeline.NGBoostProtocolPipeline(mw_object.copy())
-        pipeline.run(time_window=2.56)
+        pipeline.run(time_window=2.56, age=age)
         result = pipeline.analysis_json
 
         f = np.array(result["freqs"])
