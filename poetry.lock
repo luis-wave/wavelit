@@ -2089,7 +2089,7 @@ toml = "0.10.2"
 type = "git"
 url = "https://github.com/waveneuroscience/MyWaveAnalytics.git"
 reference = "MWP-290"
-resolved_reference = "24e6e6940f6b61ab504b501391a64338c7ef65cc"
+resolved_reference = "c9dd2d34501936a4170acd0b1ebef58447e69b54"
 
 [[package]]
 name = "netcdf4"
