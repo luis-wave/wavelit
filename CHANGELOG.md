@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+
+## [2.19.0] - 2025-05-07
+### Added
+- Presets will output dual phase automatically for eeg where the patient chief complaint is Autism Spectrum Disorder.
+
+
+
 ## [2.18.1] - 2025-05-05
 ### Removed
 - EEG Review Status is no longer updated when the protocol is reviewed.
