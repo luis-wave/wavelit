@@ -216,7 +216,10 @@ def render_protocol_page(data_manager):
                 preset_phases = presets["phases"]
                 phases = map_preset_to_phases(preset_phases)
         else:
-            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
+            if primary_complaint == "Autism Spectrum Disorder":
+                presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=2))
+            else:
+                presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
 
             if presets and "phases" in presets:
                 preset_phases = presets["phases"]
@@ -345,6 +348,8 @@ def render_protocol_page(data_manager):
         with phase_button_col1:
             if "phase_count" not in st.session_state:
                 st.session_state["phase_count"] = len(phases) + 1
+
+
 
             if st.session_state["phase_count"] < 4:
                 # Add a button to add new phase
