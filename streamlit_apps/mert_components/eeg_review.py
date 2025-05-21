@@ -111,7 +111,9 @@ def render_eeg_review(data_manager):
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Approve Review", type="primary", key="approve_btn"):
-                handle_approve(data_manager, current_state)
+                handle_approve(data_manager, current_state) # first review done by Stepanie
+                handle_approve(data_manager, current_state) 
+
 
         with col2:
             with st.form(key="reject_form", clear_on_submit=True):
