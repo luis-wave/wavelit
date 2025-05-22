@@ -10,6 +10,7 @@ mert2_user = {
     "STF-7a0aa2d4-241c-11ef-a5ac-06026d518b71": "Rey Mendoza",
     "STF-0710bc38-2e40-11ed-a807-027d8017651d": "Jay Kumar",
     "STF-472808de-ba89-11eb-967d-029e69ddbc8b": "Jijeong Kim",
+    "STF-61788d46-eb07-11ef-9a16-0a311438920d": "Jason Cheng"
 }
 
 

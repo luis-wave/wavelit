@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [2.20.0] - 2025-05-21
+### Change
+- Approval button in Reports will automatically register Stephanie (current Lab Manager) as first reviewer. Second review will be filled by the analyst. This should take only one press.
+
+
+
 ## [2.19.0] - 2025-05-07
 ### Added
 - Presets will output dual phase automatically for eeg where the patient chief complaint is Autism Spectrum Disorder.
