@@ -1,4 +1,3 @@
-
 """
 Set up the primary UI for eeg report and protocol review.
 """
@@ -35,6 +34,18 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
+# Ensure user is set in session state for EEG/ECG viewers
+if "user" not in st.session_state:
+    # Try to get user from user_info if available
+    if "user_info" in st.session_state and st.session_state.user_info:
+        user_info = st.session_state.user_info
+        if "firstName" in user_info and "lastName" in user_info:
+            st.session_state["user"] = f"{user_info['firstName']} {user_info['lastName']}"
+        else:
+            st.session_state["user"] = "Unknown User"
+    else:
+        st.session_state["user"] = "Unknown User"
 
 data_manager = None
 base_url=None
@@ -439,10 +450,158 @@ with col1:
 
 
 with tab3:
-    eeg_visualization_dashboard()
+    # EEG Visualization Tab
+    st.title("EEG Visualization")
+    
+    # Check if required data is loaded
+    if "mw_object" not in st.session_state:
+        st.warning("EEG data not loaded for visualization.")
+        
+        # Add a button to load EEG data
+        if st.button("Load EEG Data for Visualization", key="load_eeg_viz"):
+            with st.spinner("Loading EEG data..."):
+                try:
+                    # Try to load EEG data using the current EEG ID
+                    current_eeg_id = st.session_state.get("eegid")
+                    if current_eeg_id:
+                        st.info(f"Loading EEG data for ID: {current_eeg_id}")
+                        
+                        # Clear any existing EEG visualization data first
+                        keys_to_clear = ["mw_object", "eeg_graph", "ecg_graph", "recording_date", 
+                                       "filename", "heart_rate", "heart_rate_std_dev", "aea", "ahr", "eqi"]
+                        for key in keys_to_clear:
+                            if key in st.session_state:
+                                del st.session_state[key]
+                        
+                        # Load the EEG data
+                        asyncio.run(access_eeg_data(current_eeg_id))
+                        
+                        # Check if data was loaded successfully
+                        if "mw_object" in st.session_state:
+                            st.success("EEG data loaded successfully!")
+                            st.rerun()
+                        else:
+                            st.error("EEG data loading failed. The mw_object was not created.")
+                            st.info("This could be due to:")
+                            st.info("• Network connectivity issues")
+                            st.info("• Invalid EEG ID")
+                            st.info("• File format not supported")
+                            st.info("• Authentication problems")
+                    else:
+                        st.error("No EEG ID available. Please select an EEG from the dropdown.")
+                except Exception as e:
+                    st.error(f"Failed to load EEG data: {str(e)}")
+                    st.info("Please check the debug info in the sidebar for more details.")
+        
+        # Show instructions
+        st.info("""
+        **To view EEG data:**
+        1. Ensure an EEG is selected from the dropdown above
+        2. Click 'Load EEG Data for Visualization' 
+        3. Wait for the data to load
+        4. Use the debug info in the sidebar to troubleshoot issues
+        """)
+    else:
+        # Data is loaded, show the dashboard
+        eeg_visualization_dashboard()
 
 with tab4:
-    ecg_visualization_dashboard()
+    # ECG Visualization Tab  
+    st.title("ECG Visualization")
+    
+    # Check if required data is loaded
+    if "mw_object" not in st.session_state:
+        st.warning("EEG/ECG data not loaded for visualization.")
+        
+        # Add a button to load EEG data (which includes ECG)
+        if st.button("Load EEG/ECG Data for Visualization", key="load_ecg_viz"):
+            with st.spinner("Loading EEG/ECG data..."):
+                try:
+                    # Try to load EEG data using the current EEG ID
+                    current_eeg_id = st.session_state.get("eegid")
+                    if current_eeg_id:
+                        st.info(f"Loading EEG/ECG data for ID: {current_eeg_id}")
+                        
+                        # Clear any existing EEG visualization data first
+                        keys_to_clear = ["mw_object", "eeg_graph", "ecg_graph", "recording_date", 
+                                       "filename", "heart_rate", "heart_rate_std_dev", "aea", "ahr", "eqi"]
+                        for key in keys_to_clear:
+                            if key in st.session_state:
+                                del st.session_state[key]
+                        
+                        # Load the EEG data
+                        asyncio.run(access_eeg_data(current_eeg_id))
+                        
+                        # Check if data was loaded successfully
+                        if "mw_object" in st.session_state:
+                            st.success("EEG/ECG data loaded successfully!")
+                            st.rerun()
+                        else:
+                            st.error("EEG/ECG data loading failed. The mw_object was not created.")
+                            st.info("This could be due to:")
+                            st.info("• Network connectivity issues")
+                            st.info("• Invalid EEG ID")
+                            st.info("• File format not supported")
+                            st.info("• Authentication problems")
+                            st.info("• No ECG channel in the EEG file")
+                    else:
+                        st.error("No EEG ID available. Please select an EEG from the dropdown.")
+                except Exception as e:
+                    st.error(f"Failed to load EEG/ECG data: {str(e)}")
+                    st.info("Please check the debug info in the sidebar for more details.")
+        
+        # Show instructions
+        st.info("""
+        **To view ECG data:**
+        1. Ensure an EEG is selected from the dropdown above
+        2. Click 'Load EEG/ECG Data for Visualization'
+        3. Wait for the data to load
+        4. Note: ECG data is extracted from the EEG file
+        5. Use the debug info in the sidebar to troubleshoot issues
+        """)
+    else:
+        # Data is loaded, show the dashboard
+        ecg_visualization_dashboard()
 
 # Show performance metrics in sidebar
 show_performance_metrics()
+
+# Debug section in sidebar
+with st.sidebar:
+    if st.checkbox("Show Debug Info", help="Show session state data for troubleshooting"):
+        st.subheader("Session State Debug")
+        
+        # Check for EEG visualization data
+        st.write("**EEG/ECG Visualization Data:**")
+        eeg_viz_data = {
+            "mw_object": "mw_object" in st.session_state,
+            "eeg_graph": "eeg_graph" in st.session_state,
+            "ecg_graph": "ecg_graph" in st.session_state,
+            "recording_date": "recording_date" in st.session_state,
+            "filename": "filename" in st.session_state,
+            "heart_rate": "heart_rate" in st.session_state,
+            "heart_rate_std_dev": "heart_rate_std_dev" in st.session_state,
+            "aea": "aea" in st.session_state,
+            "ahr": "ahr" in st.session_state,
+        }
+        
+        for key, exists in eeg_viz_data.items():
+            status = "✅" if exists else "❌"
+            st.text(f"{status} {key}")
+        
+        # Show current EEG ID
+        current_eeg_id = st.session_state.get("eegid", "Not set")
+        st.write(f"**Current EEG ID:** {current_eeg_id}")
+        
+        # Show user info
+        user_info = st.session_state.get("user", "Not set")
+        st.write(f"**User:** {user_info}")
+        
+        if st.button("Clear EEG Visualization Data", help="Clear mw_object and related data to force reload"):
+            keys_to_clear = ["mw_object", "eeg_graph", "ecg_graph", "recording_date", "filename", 
+                           "heart_rate", "heart_rate_std_dev", "aea", "ahr", "eqi", "autoreject"]
+            for key in keys_to_clear:
+                if key in st.session_state:
+                    del st.session_state[key]
+            st.success("EEG visualization data cleared!")
+            st.rerun()
