@@ -91,9 +91,17 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         # Store original format for API calls and sorting
         note["dateEditedIso"] = note["dateEdited"]
         
-        # Keep the dateEdited field as-is for display
-        # If it's already in user-friendly format (like "May 26, 2025 at 07:54 AM PDT"), display it
-        # If it's in ISO format, it will be displayed as-is (no reformatting to avoid errors)
+        # Format the dateEdited field for user-friendly display
+        try:
+            # Only try to format if it looks like an ISO timestamp
+            if "T" in note["dateEdited"] and ("Z" in note["dateEdited"] or "+" in note["dateEdited"]):
+                note["dateEdited"] = format_datetime(note["dateEdited"])
+            # If it doesn't look like ISO format, assume it's already user-friendly and leave it alone
+        except (ValueError, TypeError) as e:
+            # If formatting fails, keep the original value and log the issue
+            if st.session_state.get("debug_mode", False):
+                st.write(f"DEBUG: Could not format date '{note['dateEditedIso']}': {e}")
+            pass
             
         recording_date = note["recordingDate"]
         if recording_date not in consolidated_notes:
