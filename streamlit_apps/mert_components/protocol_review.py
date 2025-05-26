@@ -97,7 +97,28 @@ def render_protocol_page(data_manager):
 
         if ("approvedByName" in protocol_data) and  ("isRejected" not in protocol_data):
             approver_name = protocol_data["approvedByName"]
-            st.markdown(f"**Approved by:** {approver_name}")
+            approval_info = f"**Approved by:** {approver_name}"
+            
+            # Add approval date if available
+            if "approvedDate" in protocol_data and protocol_data["approvedDate"]:
+                from datetime import datetime
+                import pytz
+                try:
+                    # Parse the ISO date and convert to PST/PDT
+                    approval_date_utc = datetime.fromisoformat(protocol_data["approvedDate"].replace('Z', '+00:00'))
+                    
+                    # Convert to Pacific timezone (handles PST/PDT automatically)
+                    pacific_tz = pytz.timezone('America/Los_Angeles')
+                    approval_date_pacific = approval_date_utc.astimezone(pacific_tz)
+                    
+                    # Format with timezone abbreviation (PST/PDT)
+                    formatted_date = approval_date_pacific.strftime("%B %d, %Y at %I:%M %p %Z")
+                    approval_info += f" on {formatted_date}"
+                except (ValueError, AttributeError):
+                    # If date parsing fails, just show the raw date
+                    approval_info += f" on {protocol_data['approvedDate']}"
+            
+            st.markdown(approval_info)
 
         if "isRejected" in protocol_data:
             st.markdown("**Protocol is REJECTED**")
