@@ -108,7 +108,12 @@ class MeRTDataManager:
                 "userGroupId": self.clinic_id,
                 "patientId": self.patient_id,
                 "eegId": self.eeg_id,
-                "staffId": "STF-ac677ad4-a595-11ec-82d9-02fd9bf033d7" if is_first_reviewer else st.session_state["id"], # Stephanie will be first reviewer by default, enabling single approval by analyst.
+                "staffId": (
+                    "STF-e8b6c0a2-27f5-11ed-b837-02b0e344b06f" 
+                    if is_first_reviewer and st.session_state["id"] == "STF-ac677ad4-a595-11ec-82d9-02fd9bf033d7"
+                    else "STF-ac677ad4-a595-11ec-82d9-02fd9bf033d7" if is_first_reviewer 
+                    else st.session_state["id"]
+                ), # If Stephanie is first reviewer, Patrick will sign as first reviewer, Stephanie will provide first review for everyone else. Everyone will sign as second reviewer.
                 "isProtocol": False,
                 "isFirstReviewer": is_first_reviewer,
                 "state": state,
