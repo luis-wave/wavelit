@@ -314,7 +314,8 @@ def eeg_visualization_dashboard():
                         aea = st.session_state.get("aea", None)
 
                         if aea is not None:
-                            if not aea[selected_reference].empty:
+                            # Check if the selected reference exists in AEA data
+                            if selected_reference in aea and not aea[selected_reference].empty:
                                 with st.form("aea_data_editor_form", border=False):
                                     editable_df = st.session_state.aea[
                                         selected_reference
@@ -377,6 +378,37 @@ def eeg_visualization_dashboard():
                                             )
                                         except Exception as e:
                                             st.error(f"Error: {e}")
+                            else:
+                                # AEA data exists but is empty for this reference
+                                if selected_reference in aea:
+                                    st.info(f"No ML onsets found for {selected_reference} montage.")
+                                else:
+                                    st.warning(f"ML onset data not available for {selected_reference} montage.")
+                                st.write("**Possible reasons:**")
+                                st.write("• No abnormal EEG activity detected.")
+                                st.write("• Selected montage not analyzed")
+                        else:
+                            # No AEA data at all
+                            st.warning("ML onset data not loaded.")
+                            st.write("**Possible reasons:**")
+                            st.write("• EEG data was uploaded manually (ML analysis only available for downloaded EEGs)")
+                            
+                            # Add a button to try reloading the data
+                            if st.button("Try Reloading ML Data", key="reload_ml_data"):
+                                current_eeg_id = st.session_state.get("eeg_id")
+                                if current_eeg_id:
+                                    with st.spinner("Reloading ML onset data..."):
+                                        try:
+                                            # Re-run the access_eeg_data function to reload ML data
+                                            import asyncio
+                                            from access_control import access_eeg_data
+                                            asyncio.run(access_eeg_data(current_eeg_id))
+                                            st.success("ML data reloaded! Please check the ML Onsets tab again.")
+                                            st.rerun()
+                                        except Exception as e:
+                                            st.error(f"Failed to reload ML data: {str(e)}")
+                                else:
+                                    st.error("No EEG ID available for reloading.")
 
                 with col2:
                     st.subheader(" ")
