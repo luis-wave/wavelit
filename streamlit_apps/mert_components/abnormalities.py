@@ -26,7 +26,8 @@ def render_abnormalities(data_manager):
         abnormalities = st.session_state.eeg_reports["abnormalities"]
         if abnormalities:
             st.write("Existing Abnormalities:")
-            for abnormality_id, abnormality in abnormalities.items():
+            # Create a copy of items to avoid "dictionary changed size during iteration" error
+            for abnormality_id, abnormality in list(abnormalities.items()):
                 name = reverse_converter.get(
                     abnormality["name"], abnormality["name"].upper()
                 )
