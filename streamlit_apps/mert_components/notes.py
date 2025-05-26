@@ -88,19 +88,73 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Consolidate notes by recording date
     consolidated_notes = {}
     for date_key, note in eeg_scientist_patient_notes.items():
-        # Store original ISO format for sorting before formatting for display
+        # Store original format for sorting before formatting for display
         note["dateEditedIso"] = note["dateEdited"]
-        note["dateEdited"] = format_datetime(note["dateEdited"])
+        
+        # Try to format the dateEdited field, but handle cases where it might already be formatted
+        try:
+            note["dateEdited"] = format_datetime(note["dateEdited"])
+        except (ValueError, TypeError):
+            # If formatting fails, keep the original value
+            pass
+            
         recording_date = note["recordingDate"]
         if recording_date not in consolidated_notes:
             consolidated_notes[recording_date] = []
         consolidated_notes[recording_date].append(note)
 
     # Sort notes within each recording date by time of edit (newest first)
+    def parse_date_safely(date_str):
+        """Parse date string with multiple format attempts"""
+        if not date_str:
+            return datetime(1900, 1, 1)
+            
+        formats_to_try = [
+            "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with microseconds
+            "%Y-%m-%dT%H:%M:%SZ",     # ISO format without microseconds
+            "%Y-%m-%dT%H:%M:%S",      # ISO format without Z
+            "%b %d, %Y at %I:%M %p PST",  # Format like "Jan 04, 2024 at 04:10 PM PST"
+            "%b %d, %Y at %I:%M %p PDT",  # Format like "Jan 04, 2024 at 04:10 PM PDT"
+            "%b %d, %Y at %I:%M %p",   # Format without timezone
+            "%Y-%m-%d %H:%M:%S",       # Standard datetime format
+            "%Y-%m-%d",                # Just date
+        ]
+        
+        for fmt in formats_to_try:
+            try:
+                return datetime.strptime(date_str, fmt)
+            except ValueError:
+                continue
+        
+        # If all formats fail, try to extract just the date part and use a default time
+        try:
+            # Try to parse just the date part
+            date_part = date_str.split(" at ")[0] if " at " in date_str else date_str
+            return datetime.strptime(date_part, "%b %d, %Y")
+        except ValueError:
+            pass
+            
+        # Try to handle other common formats
+        try:
+            # Handle formats like "Jan 4, 2024" (without leading zero) by normalizing
+            date_part = date_str.split(" at ")[0] if " at " in date_str else date_str
+            # Try to normalize the day part by adding leading zero if needed
+            import re
+            normalized_date = re.sub(r'\b(\d)\b', r'0\1', date_part)
+            return datetime.strptime(normalized_date, "%b %d, %Y")
+        except (ValueError, ImportError):
+            pass
+            
+        # Last resort: return a very old date so it sorts to the bottom
+        # Only show warning in debug mode to avoid cluttering the UI
+        if st.session_state.get("debug_mode", False):
+            st.warning(f"Could not parse date: '{date_str}'. Using fallback date for sorting.")
+        return datetime(1900, 1, 1)
+    
     for recording_date in consolidated_notes:
         consolidated_notes[recording_date] = sorted(
             consolidated_notes[recording_date],
-            key=lambda n: datetime.strptime(n["dateEditedIso"], "%Y-%m-%dT%H:%M:%S.%fZ"),
+            key=lambda n: parse_date_safely(n["dateEditedIso"]),
             reverse=True,  # Using True to put newest notes at the top
         )
 
