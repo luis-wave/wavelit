@@ -9,6 +9,13 @@ import streamlit as st
 import streamlit_shadcn_ui as ui
 import streamlit.components.v1 as components
 from utils.helpers import calculate_age, format_datetime
+from utils.performance_cache import (
+    get_protocol_defaults_optimized, 
+    get_eeg_info_cached,
+    get_doctor_approval_state_cached,
+    validate_phase_change,
+    performance_monitor
+)
 from .review_utils import EEGReviewState, mert2_user
 from mywaveanalytics.pipelines import ngboost_protocol_pipeline
 from graphs import fft_plot_ngboost
@@ -73,8 +80,8 @@ def render_protocol_page(data_manager):
     else:
         treatment_count = 0
 
-    # Fetch EEG info
-    eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+    # Fetch EEG info using cached version
+    eeg_info = get_eeg_info_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
     base_protocol = eeg_info["baseProtocol"]
     analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
     eeg_info_data = eeg_info["eegInfo"]
@@ -100,8 +107,8 @@ def render_protocol_page(data_manager):
     else:
         protocol_data = None
 
-    # Fetch doctor approval state
-    doctor_approval_state = asyncio.run(data_manager.get_doctor_approval_state())
+    # Fetch doctor approval state using cached version
+    doctor_approval_state = get_doctor_approval_state_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
 
     col1, col2 = st.columns(2)
 
@@ -207,19 +214,16 @@ def render_protocol_page(data_manager):
         # Create multiple protocol phase tables
         if protocol_data and "phases" in protocol_data:
             delivered_phases = protocol_data["phases"]
-
             n_phases = len(protocol_data["phases"])
-
-            presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+            presets = get_protocol_defaults_optimized(n_phases, data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
 
             if presets and "phases" in presets:
                 preset_phases = presets["phases"]
                 phases = map_preset_to_phases(preset_phases)
         else:
-            if primary_complaint == "Autism Spectrum Disorder":
-                presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=2))
-            else:
-                presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=1))
+            # Determine initial phase count based on primary complaint
+            initial_phases = 2 if primary_complaint == "Autism Spectrum Disorder" else 1
+            presets = get_protocol_defaults_optimized(initial_phases, data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
 
             if presets and "phases" in presets:
                 preset_phases = presets["phases"]
@@ -345,48 +349,52 @@ def render_protocol_page(data_manager):
 
 
 
+        # Initialize phase count if not exists
+        if "phase_count" not in st.session_state:
+            if protocol_data and "phases" in protocol_data:
+                st.session_state["phase_count"] = len(protocol_data["phases"])
+            elif primary_complaint == "Autism Spectrum Disorder":
+                st.session_state["phase_count"] = 2
+            else:
+                st.session_state["phase_count"] = 1
+
+        # Only fetch defaults when phase count actually changes
+        current_phase_count = st.session_state["phase_count"]
+        
+        if "last_phase_count" not in st.session_state or st.session_state["last_phase_count"] != current_phase_count:
+            with st.spinner(f"Loading defaults for {current_phase_count} phases..."):
+                presets = get_protocol_defaults_optimized(current_phase_count, data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
+                
+                if presets and "phases" in presets:
+                    preset_phases = presets["phases"]
+                    st.session_state["phases"] = map_preset_to_phases(preset_phases)
+                    st.session_state["last_phase_count"] = current_phase_count
+
         with phase_button_col1:
-            if "phase_count" not in st.session_state:
-                st.session_state["phase_count"] = len(phases) + 1
-
-
-
             if st.session_state["phase_count"] < 4:
-                # Add a button to add new phase
                 if st.button("Add Phase", key="add_phase_button"):
-                    try:
-                        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"]))
-
-                        if presets and "phases" in presets:
-                            preset_phases = presets["phases"]
-                            st.session_state["phases"] = map_preset_to_phases(preset_phases)
-
-
-                        # Increase the count so that next time more phases are added
-                        st.session_state["phase_count"] += 1
-
-                    except Exception as e:
-                        st.error(f"Failed to add new phase: {str(e)}")
+                    new_count = st.session_state["phase_count"] + 1
+                    is_valid, message = validate_phase_change(st.session_state["phase_count"], new_count)
+                    
+                    if is_valid:
+                        st.session_state["phase_count"] = new_count
+                        st.rerun()
+                    else:
+                        st.warning(message)
             else:
                 st.write("Cannot add more than three phases.")
 
         with phase_button_col2:
             if st.session_state["phase_count"] > 1:
-                # Add a button to add new phase
                 if st.button("Remove Phase", key="remove_phase_button"):
-                    try:
-                        presets = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=st.session_state["phase_count"] - 1))
-
-                        if presets and "phases" in presets:
-                            preset_phases = presets["phases"]
-                            st.session_state["phases"] = map_preset_to_phases(preset_phases)
-
-
-                        # Increase the count so that next time more phases are added
-                        st.session_state["phase_count"] -= 1
-
-                    except Exception as e:
-                        st.error(f"Failed to add new phase: {str(e)}")
+                    new_count = st.session_state["phase_count"] - 1
+                    is_valid, message = validate_phase_change(st.session_state["phase_count"], new_count)
+                    
+                    if is_valid:
+                        st.session_state["phase_count"] = new_count
+                        st.rerun()
+                    else:
+                        st.warning(message)
             else:
                 st.write("Need at least one phase for protocol.")
 

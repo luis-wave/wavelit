@@ -4,6 +4,7 @@ import streamlit_shadcn_ui as ui
 
 from .review_utils import EEGReviewState, get_next_state, mert2_user
 from utils.helpers import format_datetime
+from utils.performance_cache import get_eeg_info_cached, performance_monitor
 
 REJECTION_REASONS = {
     "possibleDrowsiness": "Possible Drowsiness",
@@ -14,8 +15,9 @@ REJECTION_REASONS = {
 }
 
 
+@performance_monitor
 def get_eeg_info(data_manager):
-    return asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+    return get_eeg_info_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
 
 
 def handle_approve(data_manager, current_state):

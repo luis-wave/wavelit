@@ -43,7 +43,8 @@ def render_documents(data_manager):
                             st.success(
                                 f"Document {doc_info['filename']} deleted successfully."
                             )
-                            st.rerun()
+                            # Update session state instead of full rerun
+                            st.session_state.data_updated = True
                         except Exception as e:
                             st.error(
                                 f"Failed to delete {doc_info['filename']}. Please try again.{e}"
@@ -63,7 +64,8 @@ def render_documents(data_manager):
                 st.success(
                     f"Document uploaded successfully! Document ID: {document_id}"
                 )
-                st.rerun()
+                # Update session state instead of full rerun
+                st.session_state.data_updated = True
             except Exception as e:
                 st.error(f"Failed to upload document. Error: {str(e)}")
 

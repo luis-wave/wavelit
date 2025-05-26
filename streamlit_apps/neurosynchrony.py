@@ -24,6 +24,7 @@ from streamlit_apps.mert_components import (render_abnormalities,
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
+from utils.performance_cache import load_data_conditionally, show_performance_metrics
 import streamlit_shadcn_ui as ui
 from streamlit_apps.mert_components.review_utils import EEGReviewState
 
@@ -56,8 +57,11 @@ if (
             eeg_id=addendum_eeg_id,
             clinic_id=st.session_state["clinicid"],
         )
-        # Load all data into session state
+        # Load all data into session state with conditional loading
         asyncio.run(data_manager.load_all_data())
+        
+        # Load additional data conditionally
+        load_data_conditionally(st.session_state["pid"], addendum_eeg_id, st.session_state["clinicid"])
 
         # If in addendum mode and we have the original EEG ID stored
         asyncio.run(access_eeg_data(st.session_state["eegid"]))
@@ -75,8 +79,12 @@ if (
             clinic_id=st.session_state["clinicid"],
         )
 
-        # Load all data into session state
+        # Load all data into session state with conditional loading
         asyncio.run(data_manager.load_all_data())
+        
+        # Load additional data conditionally
+        load_data_conditionally(st.session_state["pid"], st.session_state["eegid"], st.session_state["clinicid"])
+        
         # Default behavior - use current EEG ID
         asyncio.run(access_eeg_data(st.session_state["eegid"]))
 
@@ -435,3 +443,6 @@ with tab3:
 
 with tab4:
     ecg_visualization_dashboard()
+
+# Show performance metrics in sidebar
+show_performance_metrics()

@@ -27,17 +27,40 @@ class MeRTDataManager:
         await self.api._login()
 
     async def load_all_data(self):
+        """Load all data with conditional loading to avoid redundant API calls"""
         await self.initialize()
-        await asyncio.gather(
-            self.load_user_info(),
-            self.load_user_profile(),
-            self.load_patient_data(),
-            self.load_all_eeg_info(),
-            self.load_clinic_info(),
-            self.load_treatment_count(),
-            self.load_eeg_reports(),
-        )
-        await self.load_neuroref_reports()
+        
+        # Check what data needs to be loaded
+        tasks = []
+        
+        if 'user_info' not in st.session_state:
+            tasks.append(self.load_user_info())
+        
+        if 'user_profile' not in st.session_state:
+            tasks.append(self.load_user_profile())
+        
+        if 'patient_data' not in st.session_state:
+            tasks.append(self.load_patient_data())
+        
+        if 'all_eeg_info' not in st.session_state:
+            tasks.append(self.load_all_eeg_info())
+        
+        if 'clinic_info' not in st.session_state:
+            tasks.append(self.load_clinic_info())
+        
+        if 'treatment_count' not in st.session_state:
+            tasks.append(self.load_treatment_count())
+        
+        if 'eeg_reports' not in st.session_state:
+            tasks.append(self.load_eeg_reports())
+        
+        # Only run tasks for data that hasn't been loaded
+        if tasks:
+            await asyncio.gather(*tasks)
+        
+        # Load neuroref reports if eeg_reports was just loaded or doesn't exist
+        if 'downloaded_neuroref_report' not in st.session_state or 'downloaded_neuroref_cz_report' not in st.session_state:
+            await self.load_neuroref_reports()
 
     async def load_user_info(self):
         st.session_state.user_info = await self.api.get_user()

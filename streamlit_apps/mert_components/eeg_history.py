@@ -16,7 +16,8 @@ def render_eeg_history(data_manager):
         st.warning("EEG data not loaded. Please load the data first.")
         if st.button("Load EEG Data"):
             asyncio.run(data_manager.load_all_eeg_info())
-            st.rerun()
+            # Update session state instead of full rerun
+            st.session_state.data_updated = True
         return
 
     # Check if EEG reports are loaded

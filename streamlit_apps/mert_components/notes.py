@@ -56,7 +56,8 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
             try:
                 asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note))
                 st.success("Note added successfully!")
-                st.rerun()  # Rerun the app to refresh the notes list
+                # Update session state instead of full rerun
+                st.session_state.data_updated = True
             except Exception as e:
                 st.error(f"Failed to add note: {str(e)}")
 
@@ -70,7 +71,8 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
             try:
                 asyncio.run(data_manager.save_eeg_scientist_patient_note(new_note, note_creation_date=eeg_recording_date))
                 st.success("Note edited successfully!")
-                st.rerun()  # Rerun the app to refresh the notes list
+                # Update session state instead of full rerun
+                st.session_state.data_updated = True
             except Exception as e:
                 st.error(f"Failed to add note: {str(e)}")
 

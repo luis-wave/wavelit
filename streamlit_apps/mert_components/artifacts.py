@@ -51,7 +51,8 @@ def render_artifact_distortions(data_manager):
                     if st.button("Delete", key=f"delete_artifact_{artifact_id}"):
                         asyncio.run(data_manager.delete_artifact(artifact_id))
                         st.success(f"{full_label} has been deleted.")
-                        st.rerun()
+                        # Update session state instead of full rerun
+                        st.session_state.data_updated = True
         else:
             st.write("No existing artifacts found.")
     else:
@@ -79,4 +80,5 @@ def render_artifact_distortions(data_manager):
                 artifacts.append(other_input)
             asyncio.run(data_manager.save_artifact_distortions(artifacts))
             st.success("Artifacts saved successfully!")
-            st.rerun()
+            # Update session state instead of full rerun
+            st.session_state.data_updated = True

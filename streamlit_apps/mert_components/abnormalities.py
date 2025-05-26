@@ -42,12 +42,14 @@ def render_abnormalities(data_manager):
                                 data_manager.approve_abnormality(abnormality_id)
                             )
                             st.success(f"{name} has been approved.")
-                            st.rerun()
+                            # Update session state instead of full rerun
+                            st.session_state.data_updated = True
                 with col3:
                     if st.button("Delete", key=f"delete_{abnormality_id}"):
                         asyncio.run(data_manager.delete_abnormality(abnormality_id))
                         st.success(f"{name} has been deleted.")
-                        st.rerun()
+                        # Update session state instead of full rerun
+                        st.session_state.data_updated = True
         else:
             st.write("No existing abnormalities found.")
     else:
@@ -72,4 +74,5 @@ def render_abnormalities(data_manager):
 
             asyncio.run(data_manager.save_abnormalities(converted_options))
             st.success("Irregularities added successfully!")
-            st.rerun()
+            # Update session state instead of full rerun
+            st.session_state.data_updated = True
