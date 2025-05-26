@@ -216,6 +216,12 @@ def eeg_visualization_dashboard():
                     # on_select="rerun",
                     on_select=select_event_callback,
                     selection_mode="points",
+                    config={
+                        'scrollZoom': True,
+                        'displayModeBar': True,
+                        'displaylogo': False,
+                        'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+                    }
                 )
 
             with st.container():

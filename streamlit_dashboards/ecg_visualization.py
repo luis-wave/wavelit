@@ -106,7 +106,16 @@ def ecg_visualization_dashboard():
                     fig = draw_ecg_figure(df, offset_value)
 
                     # Display the Plotly figure
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(
+                        fig, 
+                        use_container_width=True,
+                        config={
+                            'scrollZoom': True,
+                            'displayModeBar': True,
+                            'displaylogo': False,
+                            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+                        }
+                    )
             else:
                 st.error(
                     "No ECG data available. Please upload an EEG file on the main page."
