@@ -33,66 +33,91 @@ def performance_monitor(func):
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_protocol_defaults_by_phase_count(n_phases: int, patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache protocol defaults by phase count"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
+    async def _get_protocol_defaults():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.get_protocol_review_default_values(n_phases=n_phases)
+    return asyncio.run(_get_protocol_defaults())
 
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def preload_all_protocol_defaults(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[int, Dict[str, Any]]:
     """Preload defaults for all common phase counts"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+    async def _preload_defaults():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        
+        defaults = {}
+        for n_phases in [1, 2, 3]:  # Common phase counts
+            try:
+                result = await data_manager.get_protocol_review_default_values(n_phases=n_phases)
+                defaults[n_phases] = result
+            except Exception as e:
+                st.warning(f"Could not preload defaults for {n_phases} phases: {e}")
+        
+        return defaults
     
-    defaults = {}
-    for n_phases in [1, 2, 3]:  # Common phase counts
-        try:
-            result = asyncio.run(data_manager.get_protocol_review_default_values(n_phases=n_phases))
-            defaults[n_phases] = result
-        except Exception as e:
-            st.warning(f"Could not preload defaults for {n_phases} phases: {e}")
-    
-    return defaults
+    return asyncio.run(_preload_defaults())
 
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def get_patient_data_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache patient data loading"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.fetch_patient_by_id())
+    async def _get_patient_data():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.api.fetch_patient_by_id()
+    return asyncio.run(_get_patient_data())
 
 
 @st.cache_data(ttl=600)  # Cache for 10 minutes
 def get_clinic_info_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache clinic info loading"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.fetch_clinic_info())
+    async def _get_clinic_info():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.api.fetch_clinic_info()
+    return asyncio.run(_get_clinic_info())
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_eeg_info_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache EEG info loading"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.fetch_eeg_info_by_patient_id_and_eeg_id())
+    async def _get_eeg_info():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.fetch_eeg_info_by_patient_id_and_eeg_id()
+    return asyncio.run(_get_eeg_info())
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_treatment_count_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache treatment count loading"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.get_completed_treatment_count_by_patient_id())
+    async def _get_treatment_count():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.api.get_completed_treatment_count_by_patient_id()
+    return asyncio.run(_get_treatment_count())
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_eeg_reports_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache EEG reports loading"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.get_eeg_report())
+    async def _get_eeg_reports():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.api.get_eeg_report()
+    return asyncio.run(_get_eeg_reports())
 
 
 @st.cache_data(ttl=300)  # Cache for 5 minutes
 def get_doctor_approval_state_cached(patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:
     """Cache doctor approval state"""
-    data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
-    return asyncio.run(data_manager.api.get_doctor_approval_state())
+    async def _get_doctor_approval_state():
+        data_manager = MeRTDataManager(patient_id, eeg_id, clinic_id)
+        await data_manager.initialize()
+        return await data_manager.api.get_doctor_approval_state()
+    return asyncio.run(_get_doctor_approval_state())
 
 
 def get_protocol_defaults_optimized(n_phases: int, patient_id: str, eeg_id: str, clinic_id: str) -> Dict[str, Any]:

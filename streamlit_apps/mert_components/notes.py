@@ -4,6 +4,7 @@ import html
 import streamlit as st
 
 from utils.helpers import format_datetime, parse_recording_date
+from utils.performance_cache import get_eeg_info_cached
 from streamlit_apps.mert_components.review_utils import EEGReviewState
 
 
@@ -16,7 +17,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Form for adding a new note
     with st.form("new_note_form"):
         st.write("Add New Note")
-        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        eeg_info = get_eeg_info_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
         eeg_info_data = eeg_info["eegInfo"]
         dateTime = eeg_info_data["dateTime"]
         recording_dateTime = datetime.strptime(dateTime, "%Y-%m-%dT%H:%M:%S.%fZ")
@@ -29,7 +30,7 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         content = st.text_area("Content")
         submitted = st.form_submit_button("Submit Note")
 
-        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        eeg_info = get_eeg_info_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
         analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
         current_state = (
             EEGReviewState[analysis_meta["reviewState"]]

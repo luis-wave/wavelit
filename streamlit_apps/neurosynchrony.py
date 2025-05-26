@@ -24,7 +24,7 @@ from streamlit_apps.mert_components import (render_abnormalities,
 from streamlit_dashboards import eeg_visualization_dashboard
 from streamlit_dashboards import ecg_visualization_dashboard
 from utils.helpers import calculate_age
-from utils.performance_cache import load_data_conditionally, show_performance_metrics
+from utils.performance_cache import load_data_conditionally, show_performance_metrics, get_eeg_info_cached
 import streamlit_shadcn_ui as ui
 from streamlit_apps.mert_components.review_utils import EEGReviewState
 
@@ -321,7 +321,7 @@ with col1:
         st.subheader("Reports")
 
 
-        eeg_info = asyncio.run(data_manager.fetch_eeg_info_by_patient_id_and_eeg_id())
+        eeg_info = get_eeg_info_cached(data_manager.patient_id, data_manager.eeg_id, data_manager.clinic_id)
         analysis_meta = eeg_info["eegInfo"]["analysisMeta"]
         eeg_filename = eeg_info["eegInfo"]['fileName']
         current_state = (
