@@ -88,15 +88,12 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
     # Consolidate notes by recording date
     consolidated_notes = {}
     for date_key, note in eeg_scientist_patient_notes.items():
-        # Store original format for sorting before formatting for display
+        # Store original format for API calls and sorting
         note["dateEditedIso"] = note["dateEdited"]
         
-        # Try to format the dateEdited field, but handle cases where it might already be formatted
-        try:
-            note["dateEdited"] = format_datetime(note["dateEdited"])
-        except (ValueError, TypeError):
-            # If formatting fails, keep the original value
-            pass
+        # Keep the dateEdited field as-is for display
+        # If it's already in user-friendly format (like "May 26, 2025 at 07:54 AM PDT"), display it
+        # If it's in ISO format, it will be displayed as-is (no reformatting to avoid errors)
             
         recording_date = note["recordingDate"]
         if recording_date not in consolidated_notes:
@@ -108,6 +105,10 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         """Parse date string with multiple format attempts"""
         if not date_str:
             return datetime(1900, 1, 1)
+        
+        # Debug logging
+        if st.session_state.get("debug_mode", False):
+            st.write(f"DEBUG: Attempting to parse date: '{date_str}'")
             
         formats_to_try = [
             "%Y-%m-%dT%H:%M:%S.%fZ",  # ISO format with microseconds
@@ -122,7 +123,10 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         
         for fmt in formats_to_try:
             try:
-                return datetime.strptime(date_str, fmt)
+                result = datetime.strptime(date_str, fmt)
+                if st.session_state.get("debug_mode", False):
+                    st.write(f"DEBUG: Successfully parsed with format '{fmt}': {result}")
+                return result
             except ValueError:
                 continue
         
@@ -130,7 +134,10 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
         try:
             # Try to parse just the date part
             date_part = date_str.split(" at ")[0] if " at " in date_str else date_str
-            return datetime.strptime(date_part, "%b %d, %Y")
+            result = datetime.strptime(date_part, "%b %d, %Y")
+            if st.session_state.get("debug_mode", False):
+                st.write(f"DEBUG: Parsed date part '{date_part}': {result}")
+            return result
         except ValueError:
             pass
             
@@ -141,22 +148,32 @@ def render_notes(data_manager, eeg_scientist_patient_notes):
             # Try to normalize the day part by adding leading zero if needed
             import re
             normalized_date = re.sub(r'\b(\d)\b', r'0\1', date_part)
-            return datetime.strptime(normalized_date, "%b %d, %Y")
+            result = datetime.strptime(normalized_date, "%b %d, %Y")
+            if st.session_state.get("debug_mode", False):
+                st.write(f"DEBUG: Parsed normalized date '{normalized_date}': {result}")
+            return result
         except (ValueError, ImportError):
             pass
             
         # Last resort: return a very old date so it sorts to the bottom
-        # Only show warning in debug mode to avoid cluttering the UI
-        if st.session_state.get("debug_mode", False):
-            st.warning(f"Could not parse date: '{date_str}'. Using fallback date for sorting.")
+        st.warning(f"Could not parse date: '{date_str}'. Using fallback date for sorting.")
         return datetime(1900, 1, 1)
     
     for recording_date in consolidated_notes:
-        consolidated_notes[recording_date] = sorted(
-            consolidated_notes[recording_date],
-            key=lambda n: parse_date_safely(n["dateEditedIso"]),
-            reverse=True,  # Using True to put newest notes at the top
-        )
+        try:
+            consolidated_notes[recording_date] = sorted(
+                consolidated_notes[recording_date],
+                key=lambda n: parse_date_safely(n["dateEditedIso"]),
+                reverse=True,  # Using True to put newest notes at the top
+            )
+        except Exception as e:
+            st.error(f"Error sorting notes for {recording_date}: {str(e)}")
+            # Show the problematic data for debugging
+            st.write("Problematic note data:")
+            for note in consolidated_notes[recording_date]:
+                st.write(f"dateEditedIso: '{note.get('dateEditedIso', 'MISSING')}'")
+            # Keep unsorted as fallback
+            pass
 
     # Sort recording dates in descending order
     sorted_recording_dates = sorted(
