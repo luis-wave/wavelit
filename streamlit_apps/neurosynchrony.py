@@ -563,45 +563,45 @@ with tab4:
         # Data is loaded, show the dashboard
         ecg_visualization_dashboard()
 
-# Show performance metrics in sidebar
-show_performance_metrics()
+# Show performance metrics in sidebar (disabled)
+# show_performance_metrics()
 
-# Debug section in sidebar
-with st.sidebar:
-    if st.checkbox("Show Debug Info", help="Show session state data for troubleshooting"):
-        st.subheader("Session State Debug")
-        
-        # Check for EEG visualization data
-        st.write("**EEG/ECG Visualization Data:**")
-        eeg_viz_data = {
-            "mw_object": "mw_object" in st.session_state,
-            "eeg_graph": "eeg_graph" in st.session_state,
-            "ecg_graph": "ecg_graph" in st.session_state,
-            "recording_date": "recording_date" in st.session_state,
-            "filename": "filename" in st.session_state,
-            "heart_rate": "heart_rate" in st.session_state,
-            "heart_rate_std_dev": "heart_rate_std_dev" in st.session_state,
-            "aea": "aea" in st.session_state,
-            "ahr": "ahr" in st.session_state,
-        }
-        
-        for key, exists in eeg_viz_data.items():
-            status = "✅" if exists else "❌"
-            st.text(f"{status} {key}")
-        
-        # Show current EEG ID
-        current_eeg_id = st.session_state.get("eegid", "Not set")
-        st.write(f"**Current EEG ID:** {current_eeg_id}")
-        
-        # Show user info
-        user_info = st.session_state.get("user", "Not set")
-        st.write(f"**User:** {user_info}")
-        
-        if st.button("Clear EEG Visualization Data", help="Clear mw_object and related data to force reload"):
-            keys_to_clear = ["mw_object", "eeg_graph", "ecg_graph", "recording_date", "filename", 
-                           "heart_rate", "heart_rate_std_dev", "aea", "ahr", "eqi", "autoreject"]
-            for key in keys_to_clear:
-                if key in st.session_state:
-                    del st.session_state[key]
-            st.success("EEG visualization data cleared!")
-            st.rerun()
+# Debug section in sidebar (disabled for production)
+# with st.sidebar:
+#     if st.checkbox("Show Debug Info", help="Show session state data for troubleshooting"):
+#         st.subheader("Session State Debug")
+#         
+#         # Check for EEG visualization data
+#         st.write("**EEG/ECG Visualization Data:**")
+#         eeg_viz_data = {
+#             "mw_object": "mw_object" in st.session_state,
+#             "eeg_graph": "eeg_graph" in st.session_state,
+#             "ecg_graph": "ecg_graph" in st.session_state,
+#             "recording_date": "recording_date" in st.session_state,
+#             "filename": "filename" in st.session_state,
+#             "heart_rate": "heart_rate" in st.session_state,
+#             "heart_rate_std_dev": "heart_rate_std_dev" in st.session_state,
+#             "aea": "aea" in st.session_state,
+#             "ahr": "ahr" in st.session_state,
+#         }
+#         
+#         for key, exists in eeg_viz_data.items():
+#             status = "✅" if exists else "❌"
+#             st.text(f"{status} {key}")
+#         
+#         # Show current EEG ID
+#         current_eeg_id = st.session_state.get("eegid", "Not set")
+#         st.write(f"**Current EEG ID:** {current_eeg_id}")
+#         
+#         # Show user info
+#         user_info = st.session_state.get("user", "Not set")
+#         st.write(f"**User:** {user_info}")
+#         
+#         if st.button("Clear EEG Visualization Data", help="Clear mw_object and related data to force reload"):
+#             keys_to_clear = ["mw_object", "eeg_graph", "ecg_graph", "recording_date", "filename", 
+#                            "heart_rate", "heart_rate_std_dev", "aea", "ahr", "eqi", "autoreject"]
+#             for key in keys_to_clear:
+#                 if key in st.session_state:
+#                     del st.session_state[key]
+#             st.success("EEG visualization data cleared!")
+#             st.rerun()
