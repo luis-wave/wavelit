@@ -153,21 +153,25 @@ class MeRTDataManager:
         st.session_state.neuroref_report = await self.api.get_neuroref_report(
             eeg_ids=eeg_ids
         )
-        st.session_state.downloaded_neuroref_report = (
-            await self.api.download_neuroref_report(
-                report_id=st.session_state.neuroref_report["reportId"]
-            )
+        report_content = await self.api.download_neuroref_report(
+            report_id=st.session_state.neuroref_report["reportId"]
         )
+        # Format as list of tuples to match expected structure: [(report_content, report_id)]
+        st.session_state.downloaded_neuroref_report = [
+            (report_content, st.session_state.neuroref_report["reportId"])
+        ]
 
     async def update_neuroref_cz_reports(self, eeg_ids):
         st.session_state.neuroref_cz_report = await self.api.get_neuroref_cz_report(
             eeg_ids=eeg_ids
         )
-        st.session_state.downloaded_neuroref_cz_report = (
-            await self.api.download_neuroref_cz_report(
-                report_id=st.session_state.neuroref_cz_report["reportId"]
-            )
+        report_content = await self.api.download_neuroref_cz_report(
+            report_id=st.session_state.neuroref_cz_report["reportId"]
         )
+        # Format as list of tuples to match expected structure: [(report_content, report_id)]
+        st.session_state.downloaded_neuroref_cz_report = [
+            (report_content, st.session_state.neuroref_cz_report["reportId"])
+        ]
 
     async def delete_neuroref_report(self, report_id):
         await self.api.delete_neuroref_report(report_id=report_id)
