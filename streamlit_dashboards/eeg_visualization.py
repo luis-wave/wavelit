@@ -217,10 +217,11 @@ def eeg_visualization_dashboard():
                     on_select=select_event_callback,
                     selection_mode="points",
                     config={
-                        'scrollZoom': True,
+                        'scrollZoom': 'x',  # Enable horizontal scrolling with mouse wheel
                         'displayModeBar': True,
                         'displaylogo': False,
-                        'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+                        'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+                        'doubleClick': 'reset+autosize'
                     }
                 )
 

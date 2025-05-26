@@ -110,10 +110,11 @@ def ecg_visualization_dashboard():
                         fig, 
                         use_container_width=True,
                         config={
-                            'scrollZoom': True,
+                            'scrollZoom': 'x',  # Enable horizontal scrolling with mouse wheel
                             'displayModeBar': True,
                             'displaylogo': False,
-                            'modeBarButtonsToRemove': ['lasso2d', 'select2d']
+                            'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+                            'doubleClick': 'reset+autosize'
                         }
                     )
             else:
