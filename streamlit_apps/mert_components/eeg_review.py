@@ -23,13 +23,6 @@ def handle_approve(data_manager, current_state):
     try:
         asyncio.run(
             data_manager.update_eeg_review(
-                is_first_reviewer=True,
-                state="SECOND_REVIEW_NEEDED",
-            )
-        )
-
-        asyncio.run(
-            data_manager.update_eeg_review(
                 is_first_reviewer=False,
                 state='CLINIC_REVIEW',
             )
