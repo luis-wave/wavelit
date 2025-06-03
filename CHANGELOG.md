@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [2.21.0] - 2025-06-03
+### Removed
+- Approval button changes have been reverted. First reviews are automatically approved by a member outside of Dods. This will enable Stephanie to help with second reviews.
+
 
 ## [2.20.0] - 2025-05-21
 ### Change
